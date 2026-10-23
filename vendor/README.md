@@ -1,12 +1,14 @@
 # Vendored GPUI
 
 `gpui-pre`, `gpui-pre-apple` and `gpui-pre-macos` 0.3.9 from crates.io (Apache-2.0, see each
-crate's `LICENSE-APACHE`), with four patches: a **backdrop blur** primitive, so a panel can show
+crate's `LICENSE-APACHE`), with five patches: a **backdrop blur** primitive, so a panel can show
 what's under it frosted; drop shadows that stay outside their element; translucent layers that
-stack instead of adding up, so a see-through window stays see-through; and the window's macOS blur
-kept as the whole sidebar material (fill, clamp, tint, saturation) instead of a bare blur. The root
-`Cargo.toml` points Saturn at these copies with `[patch.crates-io]`; the workspace excludes them,
-so Saturn's lints and formatter leave them alone. `gpui-pre`'s examples were left out.
+stack instead of adding up, so a see-through window stays see-through; the window's macOS blur
+kept as the whole sidebar material (fill, clamp, tint, saturation) instead of a bare blur; and
+lists that keep their items' heights as hints when their width changes, so a diff review scrolls.
+The root `Cargo.toml` points Saturn at these copies with `[patch.crates-io]`; the workspace
+excludes them, so Saturn's lints and formatter leave them alone. `gpui-pre`'s examples were left
+out.
 
 The idea and the shape of the API come from the
 [`gpui_rn` fork](https://github.com/rngpui/zed-react-native-gpui) (Apache-2.0); the code here is
@@ -29,5 +31,10 @@ written against this version of GPUI. Every change is marked "Saturn's patch":
   to `MATERIAL_FILL` (0.65) and hides the wallpaper tint, keeping the blur and saturation.
 - `gpui-pre-macos/src/gpui_macos.rs`: `#![allow(deprecated, dead_code)]`, so upstream's use of the
   deprecated `cocoa` crate doesn't print a thousand warnings on every build.
+
+- `gpui-pre/src/elements/list.rs`: when a list's width changes (its first frame included), items
+  keep their last height as a hint instead of none. Unmeasured items without a hint count as zero
+  high, which wiped the uniform row height gpui-component's diff gives before its first frame, so
+  a review couldn't scroll past the rows already drawn.
 
 To move to a newer GPUI: copy the new crates here, then re-apply the changes above.

@@ -1545,9 +1545,13 @@ impl Element for List {
             .last_layout_bounds
             .is_none_or(|last_bounds| last_bounds.size.width != bounds.size.width)
         {
+            // Saturn's patch: the old height stays as a hint until the item is measured again.
+            // Without it, unmeasured items count as zero high, so a list whose owner hinted a
+            // uniform height before its first frame (a diff review) can't scroll past the rows
+            // already drawn.
             let new_items = SumTree::from_iter(
                 state.items.iter().map(|item| ListItem::Unmeasured {
-                    size_hint: None,
+                    size_hint: item.size_hint(),
                     focus_handle: item.focus_handle(),
                 }),
                 (),
