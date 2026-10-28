@@ -439,6 +439,10 @@ fn new_agent_menu() -> Vec<menu::Item> {
 /// What applies to one pane: its app, its checks, its pull request, what its agent is told.
 fn pane_menu() -> Vec<menu::Item> {
     vec![
+        Some(("square-terminal", "New terminal", Box::new(NewTab))),
+        Some(("columns-2", "Split right", Box::new(SplitRight))),
+        Some(("rows-2", "Split down", Box::new(SplitDown))),
+        None,
         Some(("play", "Start the app", Box::new(StartApp))),
         Some(("globe", "Preview the app", Box::new(ShowPreview))),
         Some(("camera", "Pictures of the app", Box::new(ShowPictures))),
@@ -1480,6 +1484,13 @@ impl Workspace {
 
     /// Starts an agent on work named by hand (`fix-login`), with no tracker: always in a worktree
     /// of its own, which is the point of naming it.
+    /// Starts `agent` in a new pane with no task and no worktree, where new terminals open.
+    pub fn start_agent_here(&mut self, agent: Agent, window: &mut Window, cx: &mut Context<Self>) {
+        if let Some(tab) = self.open_terminal(Placement::New, window, cx) {
+            self.type_into(tab, &agent.start(None, settings::shell_quote), cx);
+        }
+    }
+
     pub fn start_named(&mut self, name: &str, agent: Agent, window: &mut Window, cx: &mut Context<Self>) {
         self.start_work(name, name, agent, true, window, cx);
     }
@@ -3119,12 +3130,6 @@ impl Workspace {
             .collect()
     }
 
-    /// Opens a terminal next to a given cell (from its header buttons).
-    fn open_in_cell(&mut self, cell: CellId, placement: Placement, window: &mut Window, cx: &mut Context<Self>) {
-        self.layout.focus_cell(cell);
-        self.open_terminal(placement, window, cx);
-    }
-
     pub fn terminal(&self, tab: TabId) -> Option<&Entity<TerminalView>> {
         self.terminals.get(&tab)
     }
@@ -3807,24 +3812,11 @@ impl Workspace {
         )
     }
 
-    /// The right of a pane's tab strip: its ticket and pull request, then split and the
-    /// pane's menu. In a narrow pane the chips are cut off, never the buttons: the menu is where the
-    /// pane's other features are found.
+    /// The right of a pane's title: its ticket and pull request, then the pane's menu, which also
+    /// opens new terminals and splits. In a narrow pane the chips are cut off, never the buttons:
+    /// the menu is where the pane's other features are found.
     fn render_pane_actions(&self, cell: &Cell, cx: &mut Context<Self>) -> impl IntoElement {
         let cell_id: CellId = cell.id;
-        let header_button = |id: &'static str, icon: &str, placement: Placement, cx: &mut Context<Self>| {
-            let button = chrome::icon_button((id, cell_id.key()), icon, true)
-                .on_click(cx.listener(move |this, _, window, cx| this.open_in_cell(cell_id, placement, window, cx)));
-            match placement {
-                Placement::Right => {
-                    button.tooltip(chrome::tip_for("Split right: a new terminal beside this one", SplitRight))
-                }
-                Placement::Down => {
-                    button.tooltip(chrome::tip_for("Split down: a new terminal below this one", SplitDown))
-                }
-                Placement::New => button.tooltip(chrome::tip_for("New terminal", NewTab)),
-            }
-        };
 
         // The work's chips (its ticket, pull request, checks) show while an agent runs in the pane.
         // A pane reopened after a restart holds only a shell with `claude --resume` typed in it, and
@@ -3840,8 +3832,6 @@ impl Workspace {
             .flex_none()
             .items_center()
             .gap(len(space::SPACE_1))
-            .child(header_button("split-right", "columns-2", Placement::Right, cx))
-            .child(header_button("split-down", "rows-2", Placement::Down, cx))
             .child(
                 self.with_menu(
                     OpenMenu::Pane(cell_id),
@@ -3849,7 +3839,9 @@ impl Workspace {
                         .when(self.open_menu == Some(OpenMenu::Pane(cell_id)), |button| {
                             button.bg(theme::fill_pressed())
                         })
-                        .tooltip(chrome::tip("This pane: its app, checks, pull request and what its agent is told"))
+                        .tooltip(chrome::tip(
+                            "This pane: new terminals and splits, its app, checks, pull request and what its agent is told",
+                        ))
                         .on_click(cx.listener(move |this, _, _, cx| this.toggle_menu(OpenMenu::Pane(cell_id), cx))),
                     cx,
                 ),
