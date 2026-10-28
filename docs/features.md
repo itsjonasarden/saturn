@@ -69,7 +69,7 @@ Each pane shows whether its agent is working, waiting for you, done or failed.
 - Every terminal is a pane of its own, with its session's name at the top; there are no tabs
   inside panes. New terminal (⌘N), Split right (⌘D) and Split down (⌘⇧D) are in each pane's ⋯. Drag a
   pane by its name onto another's edge to move it there, or onto its middle to swap the two.
-  Maximise the focused pane over everything with its button or ⌘⇧↩. Panes share the space
+  Maximise a pane over everything from its ⋯, or ⌘⇧↩. Panes share the space
   evenly whenever one opens or closes; drag a divider to change that, or double-click it to even
   out its two panes. ⌘⌃= evens out them all.
 - A real terminal underneath (alacritty's engine), so TUIs, colours and the mouse work as they should.

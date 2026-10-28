@@ -437,11 +437,14 @@ fn new_agent_menu() -> Vec<menu::Item> {
 }
 
 /// What applies to one pane: its app, its checks, its pull request, what its agent is told.
-fn pane_menu() -> Vec<menu::Item> {
+/// `maximized`: the pane is maximised, so its line restores it.
+fn pane_menu(maximized: bool) -> Vec<menu::Item> {
+    let maximize = if maximized { ("minimize-2", "Restore the pane") } else { ("maximize-2", "Maximise the pane") };
     vec![
         Some(("square-terminal", "New terminal", Box::new(NewTab))),
         Some(("columns-2", "Split right", Box::new(SplitRight))),
         Some(("rows-2", "Split down", Box::new(SplitDown))),
+        Some((maximize.0, maximize.1, Box::new(ToggleMaximize))),
         None,
         Some(("play", "Start the app", Box::new(StartApp))),
         Some(("globe", "Preview the app", Box::new(ShowPreview))),
@@ -3850,17 +3853,11 @@ impl Workspace {
                             button.bg(theme::fill_pressed())
                         })
                         .tooltip(chrome::tip(
-                            "This pane: new terminals and splits, its app, checks, pull request and what its agent is told",
+                            "This pane: new terminals, splits and maximise, its app, checks, pull request and what its agent is told",
                         ))
                         .on_click(cx.listener(move |this, _, _, cx| this.toggle_menu(OpenMenu::Pane(cell_id), cx))),
                     cx,
                 ),
-            )
-            // On the focused pane only, and the maximised one to restore it: one more button on
-            // every pane would crowd out their chips. ⌘⇧↩ works from any pane.
-            .children(
-                (self.layout.focused == Some(cell_id) || self.layout.maximized == Some(cell_id))
-                    .then(|| self.render_maximize_button(cell_id, cx)),
             );
         div().flex().flex_shrink(1.).min_w_0().items_center().gap(len(space::SPACE_1)).child(chips).child(buttons)
     }
@@ -3940,7 +3937,7 @@ impl Workspace {
         cx.notify();
         let items = match which {
             OpenMenu::NewAgent => new_agent_menu(),
-            OpenMenu::Pane(_) => pane_menu(),
+            OpenMenu::Pane(cell) => pane_menu(self.layout.maximized == Some(cell)),
             OpenMenu::Repo => repo_menu(),
         };
         if let Some(action) = pick.and_then(|index| items.into_iter().flatten().nth(index)).map(|(_, _, action)| action)
@@ -3954,7 +3951,7 @@ impl Workspace {
         let menu = (self.open_menu == Some(which)).then(|| {
             let items = match which {
                 OpenMenu::NewAgent => new_agent_menu(),
-                OpenMenu::Pane(_) => pane_menu(),
+                OpenMenu::Pane(cell) => pane_menu(self.layout.maximized == Some(cell)),
                 OpenMenu::Repo => repo_menu(),
             };
             let workspace = cx.weak_entity();
@@ -3972,21 +3969,6 @@ impl Workspace {
             menu::render("menu", items, pick, dismiss)
         });
         div().relative().flex_none().child(button).children(menu)
-    }
-
-    /// Maximises this pane over the grid and the panels, or restores it. The pane takes focus
-    /// first, so the button maximises the pane it sits on, not the one focused before.
-    fn render_maximize_button(&self, cell_id: CellId, cx: &mut Context<Self>) -> impl IntoElement {
-        let maximized = self.layout.maximized == Some(cell_id);
-        let (icon, tip) = if maximized { ("minimize-2", "Minimise") } else { ("maximize-2", "Maximise") };
-        chrome::icon_button(("maximize", cell_id.key()), icon, true)
-            .tooltip(chrome::tip_for(tip, ToggleMaximize))
-            .on_click(cx.listener(move |this, _, window, cx| {
-                this.update_layout(window, cx, |layout| {
-                    layout.focus_cell(cell_id);
-                    layout.toggle_maximize();
-                });
-            }))
     }
 
     fn render_cell(&self, cell: &Cell, cx: &mut Context<Self>) -> AnyElement {
