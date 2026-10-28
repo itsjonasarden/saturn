@@ -37,7 +37,7 @@ pub struct StatusBar {
     branch: Option<Branch>,
     /// The file in front, watched so the cursor's place stays current.
     watched: Option<EntityId>,
-    _editor: Subscription,
+    editor_changes: Subscription,
     file_watch: Option<Subscription>,
 }
 
@@ -58,11 +58,22 @@ impl StatusBar {
             root: root.to_owned(),
             branch: None,
             watched: None,
-            _editor: observed,
+            editor_changes: observed,
             file_watch: None,
         };
         bar.refresh(cx);
         bar
+    }
+
+    /// Follows another editor: the one of the repo now showing.
+    pub fn set_editor(&mut self, editor: Entity<EditorView>, cx: &mut Context<Self>) {
+        self.editor_changes = cx.observe(&editor, |this, _, cx| {
+            this.watch_front(cx);
+            cx.notify();
+        });
+        self.editor = editor;
+        self.watch_front(cx);
+        cx.notify();
     }
 
     /// Follows the file in front: a new one is watched, so moving its cursor redraws the bar.

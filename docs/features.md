@@ -80,7 +80,7 @@ Each pane shows whether its agent is working, waiting for you, done or failed.
 - Each pane shows the servers its agent runs, named after their app and port (`web :5173`); click one
   to open it. The repo's Docker Compose services (`postgres :5432`) sit in the bar at the bottom.
 - Several repos in one window, as tabs in the title bar (the + after them, or ⌘O, adds one). Each
-  repo has its own grid, as a browser tab has its own page: click a repo and its terminals show,
+  repo has its own grid and open files, as a browser tab has its own page: click a repo and its terminals and files show,
   while the others' keep running out of sight. A repo whose agent waits for you shows a dot on its
   tab, and ⌘⇧A goes to it.
 - Turn on Follow (the target beside the repo's name), and the sidebar follows the focused pane into

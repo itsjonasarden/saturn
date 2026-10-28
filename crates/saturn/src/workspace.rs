@@ -311,8 +311,10 @@ pub struct Workspace {
     root: PathBuf,
     /// Whether the sidebar follows the focused pane's worktree.
     follow_pane: bool,
-    /// Open files, in the top panel.
+    /// Open files, in the top panel: the showing repo's.
     editor: Entity<EditorView>,
+    /// The other repos' open files, put aside with their grids.
+    editors: HashMap<PathBuf, Entity<EditorView>>,
     /// Along the window's foot: problems, the language server, the cursor, the branch.
     status_bar: Entity<StatusBar>,
     /// Your ClickUp tickets, on the right (made the first time it opens).
@@ -1074,21 +1076,7 @@ impl Workspace {
             .detach();
         }
         let roots = HashMap::from([(project.clone(), Self::root_views(&project, window, cx))]);
-        // The editor panel can take the grid's room; the workbench follows its changes.
-        let editor = cx.new(|_| EditorView::default());
-        cx.observe(&editor, |_, _, cx| cx.notify()).detach();
-        // Review comments go to the agent working where the changes are.
-        cx.subscribe_in(&editor, window, |this, _, event: &SendToAgent, window, cx| {
-            this.send_to_agent(&event.repo, &event.message, window, cx);
-        })
-        .detach();
-        // A change staged or reverted from the review: the list of changes reads again.
-        cx.subscribe(&editor, |this, _, event: &Touched, cx| {
-            if let Some(views) = this.roots.get(&event.repo) {
-                views.changes.update(cx, ChangesView::reload);
-            }
-        })
-        .detach();
+        let editor = Self::new_editor(window, cx);
         let handle = window.window_handle();
         let weak = cx.weak_entity();
         OPEN.with_borrow_mut(|open| open.push((handle, weak)));
@@ -1134,6 +1122,7 @@ impl Workspace {
             // Off to begin with: the sidebar stays on the repo until you ask it to follow panes.
             follow_pane: false,
             editor,
+            editors: HashMap::new(),
             projects: vec![project.clone()],
             page: project.clone(),
             project,
@@ -1196,7 +1185,10 @@ impl Workspace {
                     this.status_bar.update(cx, StatusBar::refresh);
                 }
                 FilesEvent::Changed(paths) => {
-                    this.editor.update(cx, |editor, cx| editor.files_changed(paths, window, cx));
+                    // A file open in a repo out of sight is kept current too.
+                    for editor in std::iter::once(&this.editor).chain(this.editors.values()) {
+                        editor.update(cx, |editor, cx| editor.files_changed(paths, window, cx));
+                    }
                 }
             })
         };
@@ -1352,6 +1344,14 @@ impl Workspace {
 
     /// Shows `project` in the sidebar, and its own grid in place of the one showing.
     fn switch_to(&mut self, project: PathBuf, window: &mut Window, cx: &mut Context<Self>) {
+        if self.page != project {
+            // Each repo keeps its own open files, as it keeps its own grid.
+            let next = self.editors.remove(&project).unwrap_or_else(|| Self::new_editor(window, cx));
+            let hidden = std::mem::replace(&mut self.editor, next);
+            self.editors.insert(self.page.clone(), hidden);
+            let editor = self.editor.clone();
+            self.status_bar.update(cx, |bar, cx| bar.set_editor(editor, cx));
+        }
         self.show_page(&project);
         self.project = project;
         if !self.roots.contains_key(&self.project) {
@@ -1362,6 +1362,26 @@ impl Workspace {
         let root = self.root.clone();
         self.status_bar.update(cx, |bar, cx| bar.set_root(&root, cx));
         cx.notify();
+    }
+
+    /// An editor panel, for a repo's open files. The panel can take the grid's room; the workbench
+    /// follows its changes.
+    fn new_editor(window: &mut Window, cx: &mut Context<Self>) -> Entity<EditorView> {
+        let editor = cx.new(|_| EditorView::default());
+        cx.observe(&editor, |_, _, cx| cx.notify()).detach();
+        // Review comments go to the agent working where the changes are.
+        cx.subscribe_in(&editor, window, |this, _, event: &SendToAgent, window, cx| {
+            this.send_to_agent(&event.repo, &event.message, window, cx);
+        })
+        .detach();
+        // A change staged or reverted from the review: the list of changes reads again.
+        cx.subscribe(&editor, |this, _, event: &Touched, cx| {
+            if let Some(views) = this.roots.get(&event.repo) {
+                views.changes.update(cx, ChangesView::reload);
+            }
+        })
+        .detach();
+        editor
     }
 
     /// Puts the grid showing aside and shows `project`'s, empty if it has none yet.
