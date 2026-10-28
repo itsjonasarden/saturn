@@ -1,7 +1,9 @@
-//! New agent (⌘⇧N): Return alone starts an agent where new terminals open, with no task; name the
-//! work and Saturn starts an agent on it in a worktree of its own; with
+//! New agent (⌘⇧N): name the work and Saturn starts an agent on it in a worktree of its own; with
 //! ClickUp connected, the same field searches your open tickets, grouped by status, and picking one
-//! starts an agent on it the way the project's ticket settings say.
+//! starts an agent on it the way the project's ticket settings say. Claude Code | Codex | Terminal
+//! says what the pane runs, and Return with nothing typed starts that here, with no task.
+
+use std::sync::atomic::{AtomicBool, Ordering};
 
 use gpui_kit::component::WindowExt as _;
 use gpui_kit::component::input::{Input, InputState};
@@ -16,6 +18,9 @@ use saturn_design::{color, radius, space};
 use crate::theme::{self, len};
 use crate::workspace::Workspace;
 
+/// Terminal is picked in the open dialog: its panes get a shell and no agent.
+static TERMINAL: AtomicBool = AtomicBool::new(false);
+
 /// Opens the dialog. `connected` says whether ClickUp is, given by the caller: the workspace opens
 /// this from inside its own update, where reading it would abort.
 pub fn open(workspace: WeakEntity<Workspace>, connected: bool, window: &mut Window, cx: &mut App) {
@@ -26,6 +31,7 @@ pub fn open(workspace: WeakEntity<Workspace>, connected: bool, window: &mut Wind
     search.update(cx, |search, cx| search.focus(window, cx));
     // Later: the button and the shortcut that open this run inside the workspace's own update, and
     // updating it again from there aborts.
+    TERMINAL.store(false, Ordering::Relaxed);
     let refresh = workspace.clone();
     cx.defer(move |cx| {
         let _ = refresh.update(cx, Workspace::refresh_tickets);
@@ -36,7 +42,7 @@ pub fn open(workspace: WeakEntity<Workspace>, connected: bool, window: &mut Wind
         let rows = picks(&workspace, &query, cx);
         let state = workspace.read(cx).clickup();
         let note = if query.trim().is_empty() && !state.connected() {
-            Some("Return starts the agent here. Or name the work, and Saturn makes a worktree for it and starts the agent there. Connect ClickUp in Settings (⌘,) to start from your tickets too.".to_owned())
+            Some("Or name the work and press Return: Saturn makes a worktree for it and starts the agent there. Connect ClickUp in Settings (⌘,) to start from your tickets too.".to_owned())
         } else if let Some(problem) = state.problem.clone().filter(|_| state.connected()) {
             Some(problem)
         } else if state.loading && rows.is_empty() {
@@ -47,15 +53,19 @@ pub fn open(workspace: WeakEntity<Workspace>, connected: bool, window: &mut Wind
             None
         };
         // Return is the dialog's OK: it starts the top row, so typing a name and pressing it is all
-        // it takes. With nothing to start, the dialog stays open.
+        // it takes; with nothing typed, the agent or terminal picked starts on its own.
         let confirm = (workspace.downgrade(), search.clone());
         dialog
             .on_ok(move |_, window, cx| {
                 let (workspace, search) = &confirm;
                 let Some(workspace) = workspace.upgrade() else { return true };
                 let query = search.read(cx).value().to_string();
+                if query.trim().is_empty() {
+                    start(&workspace, None, window, cx);
+                    return false;
+                }
                 let Some(pick) = picks(&workspace, &query, cx).into_iter().next() else { return false };
-                start(&workspace, &pick, window, cx);
+                start(&workspace, Some(&pick), window, cx);
                 false
             })
             .title("New agent")
@@ -63,7 +73,7 @@ pub fn open(workspace: WeakEntity<Workspace>, connected: bool, window: &mut Wind
             .bg(crate::chrome::dialog_surface())
             .w(px(600.))
             .child(Input::new(&search))
-            .children(crate::agent_choice::row("new-agent-agent", "Agent", cx))
+            .child(kind_row(cx))
             .children(also_in_row(&workspace, cx))
             .children(note.map(|note| {
                 div().py(len(space::SPACE_4)).text_size(px(14.)).text_color(theme::color(color::INK_MUTED)).child(note)
@@ -111,23 +121,18 @@ fn also_in_row(workspace: &Entity<Workspace>, cx: &App) -> Option<impl IntoEleme
     )
 }
 
-/// A row of the dialog: a ticket, work named by what was typed, or (with nothing typed) the agent
-/// or a terminal on their own.
+/// A row of the dialog: a ticket, or work named by what was typed.
 #[derive(Clone)]
 enum Pick {
     Ticket(Box<Ticket>),
     Name(String),
-    Agent,
-    Terminal,
 }
 
 /// The rows for `query`: the tickets it matches, and the typed name as work of its own, first when
-/// no ticket matches so that Return starts it. With nothing typed, the agent without a task comes
-/// first, so Return on its own starts one.
+/// no ticket matches so that Return starts it.
 fn picks(workspace: &Entity<Workspace>, query: &str, cx: &App) -> Vec<Pick> {
     let tickets = workspace.read(cx).clickup().tickets.iter().filter(|ticket| ticket.matches(query)).cloned();
-    let mut picks: Vec<Pick> = if query.trim().is_empty() { vec![Pick::Agent, Pick::Terminal] } else { Vec::new() };
-    picks.extend(tickets.map(|ticket| Pick::Ticket(Box::new(ticket))));
+    let mut picks: Vec<Pick> = tickets.map(|ticket| Pick::Ticket(Box::new(ticket))).collect();
     let name = query.trim();
     if !git::branch_for(name).is_empty() {
         picks.push(Pick::Name(name.to_owned()));
@@ -136,17 +141,54 @@ fn picks(workspace: &Entity<Workspace>, query: &str, cx: &App) -> Vec<Pick> {
     picks
 }
 
-fn start(workspace: &Entity<Workspace>, pick: &Pick, window: &mut Window, cx: &mut App) {
-    let agent = crate::agent_choice::current(cx);
+/// Starts `pick` with the agent picked (or a shell, with Terminal); with no pick, the agent or
+/// terminal on its own, here.
+fn start(workspace: &Entity<Workspace>, pick: Option<&Pick>, window: &mut Window, cx: &mut App) {
+    let agent = (!TERMINAL.load(Ordering::Relaxed)).then(|| crate::agent_choice::current(cx));
     workspace.update(cx, |workspace, cx| match pick {
-        Pick::Ticket(ticket) => workspace.start_ticket(ticket, agent, window, cx),
-        Pick::Name(name) => workspace.start_named(name, agent, window, cx),
-        Pick::Agent => workspace.start_agent_here(agent, window, cx),
-        Pick::Terminal => {
-            workspace.open_terminal(crate::workspace::Placement::New, window, cx);
-        }
+        Some(Pick::Ticket(ticket)) => workspace.start_ticket(ticket, agent, window, cx),
+        Some(Pick::Name(name)) => workspace.start_named(name, agent, window, cx),
+        None => workspace.start_here(agent, window, cx),
     });
     window.close_dialog(cx);
+}
+
+/// Claude Code | Codex | Terminal: what the new pane runs. An agent picked here is remembered for
+/// every later start; Terminal holds while the dialog is open.
+fn kind_row(cx: &App) -> impl IntoElement {
+    let terminal = TERMINAL.load(Ordering::Relaxed);
+    let current = crate::agent_choice::current(cx);
+    let item = |index: usize, picked: bool, name: &'static str| {
+        crate::chrome::track_item(("new-agent-kind", index), picked)
+            .px(len(space::SPACE_3))
+            .text_size(px(12.))
+            .child(name)
+    };
+    let mut track = crate::chrome::track();
+    for (index, agent) in crate::agent_choice::ready(cx).into_iter().enumerate() {
+        track = track.child(item(index, !terminal && agent == current, agent.name()).on_click(move |_, window, _| {
+            TERMINAL.store(false, Ordering::Relaxed);
+            crate::agent_choice::remember(agent);
+            window.refresh();
+        }));
+    }
+    track = track.child(item(usize::MAX, terminal, "Terminal").on_click(|_, window, _| {
+        TERMINAL.store(true, Ordering::Relaxed);
+        window.refresh();
+    }));
+    div()
+        .flex()
+        .items_center()
+        .gap(len(space::SPACE_2))
+        .pt(len(space::SPACE_2))
+        .child(div().text_size(px(13.)).text_color(theme::color(color::INK_MUTED)).child("Start"))
+        .child(track)
+        .child(
+            div()
+                .text_size(px(12.))
+                .text_color(theme::color(color::INK_FAINT))
+                .child("Return with nothing typed starts it here, with no task"),
+        )
 }
 
 fn list(workspace: &Entity<Workspace>, picks: &[Pick], cx: &App) -> impl IntoElement {
@@ -156,18 +198,6 @@ fn list(workspace: &Entity<Workspace>, picks: &[Pick], cx: &App) -> impl IntoEle
         .filter_map(|pick| if let Pick::Ticket(ticket) = pick { Some((**ticket).clone()) } else { None })
         .collect();
     let named = picks.iter().find_map(|pick| if let Pick::Name(name) = pick { Some(name.clone()) } else { None });
-    if picks.iter().any(|pick| matches!(pick, Pick::Agent)) {
-        let agent = crate::agent_choice::current(cx).name();
-        rows = rows
-            .child(plain_row(workspace, Pick::Agent, "bot", format!("Start {agent} here"), "no task, no worktree"))
-            .child(plain_row(
-                workspace,
-                Pick::Terminal,
-                "square-terminal",
-                "Open a terminal".to_owned(),
-                "just a shell",
-            ));
-    }
     let named_first = matches!(picks.first(), Some(Pick::Name(_)));
     if named_first && let Some(name) = &named {
         rows = rows.child(name_row(workspace, name, cx));
@@ -191,36 +221,6 @@ fn list(workspace: &Entity<Workspace>, picks: &[Pick], cx: &App) -> impl IntoEle
         rows = rows.child(div().h(len(space::SPACE_2))).child(name_row(workspace, name, cx));
     }
     rows
-}
-
-/// The agent with no task, or a plain terminal, in a new pane where new terminals open.
-fn plain_row(
-    workspace: &Entity<Workspace>,
-    pick: Pick,
-    icon: &str,
-    label: String,
-    hint: &'static str,
-) -> impl IntoElement {
-    let handle = workspace.downgrade();
-    let id = if matches!(pick, Pick::Agent) { "start-agent-here" } else { "open-terminal" };
-    div()
-        .id(id)
-        .flex()
-        .items_center()
-        .gap(len(space::SPACE_3))
-        .px(len(space::SPACE_3))
-        .py(len(space::SPACE_2))
-        .rounded(len(radius::RADIUS_SM))
-        .cursor_pointer()
-        .hover(|s| s.bg(theme::fill_hover()))
-        .child(crate::chrome::icon(icon, 14., theme::color(color::INK_MUTED)))
-        .child(div().flex_1().min_w_0().text_size(px(14.)).text_color(theme::color(color::INK)).truncate().child(label))
-        .child(div().flex_none().text_size(px(12.)).text_color(theme::color(color::INK_FAINT)).child(hint))
-        .on_click(move |_, window, cx| {
-            if let Some(workspace) = handle.upgrade() {
-                start(&workspace, &pick, window, cx);
-            }
-        })
 }
 
 /// Work named by hand: where its worktree will be, so the name's effect is plain before Return.
@@ -264,7 +264,7 @@ fn name_row(workspace: &Entity<Workspace>, name: &str, cx: &App) -> impl IntoEle
         )
         .on_click(move |_, window, cx| {
             if let Some(workspace) = handle.upgrade() {
-                start(&workspace, &pick, window, cx);
+                start(&workspace, Some(&pick), window, cx);
             }
         })
 }
@@ -309,7 +309,7 @@ fn row(workspace: &Entity<Workspace>, ticket: &Ticket) -> impl IntoElement {
         )
         .on_click(move |_, window, cx| {
             if let Some(workspace) = workspace.upgrade() {
-                start(&workspace, &Pick::Ticket(Box::new(picked.clone())), window, cx);
+                start(&workspace, Some(&Pick::Ticket(Box::new(picked.clone()))), window, cx);
             }
         })
 }

@@ -1475,34 +1475,37 @@ impl Workspace {
         .detach();
     }
 
-    /// Starts an agent on `ticket` in a new pane: in its own worktree when the project asks
-    /// Saturn to make one, running the project's ticket command.
-    pub fn start_ticket(&mut self, ticket: &Ticket, agent: Agent, window: &mut Window, cx: &mut Context<Self>) {
+    /// Starts an agent (or, with `None`, only a shell) on `ticket` in a new pane: in its own
+    /// worktree when the project asks Saturn to make one, running the project's ticket command.
+    pub fn start_ticket(&mut self, ticket: &Ticket, agent: Option<Agent>, window: &mut Window, cx: &mut Context<Self>) {
         let make_worktree = self.settings.project(&self.project).create_worktree;
         self.start_work(ticket.key(), &ticket.title, agent, make_worktree, window, cx);
     }
 
-    /// Starts an agent on work named by hand (`fix-login`), with no tracker: always in a worktree
-    /// of its own, which is the point of naming it.
-    /// Starts `agent` in a new pane with no task and no worktree, where new terminals open.
-    pub fn start_agent_here(&mut self, agent: Agent, window: &mut Window, cx: &mut Context<Self>) {
-        if let Some(tab) = self.open_terminal(Placement::New, window, cx) {
+    /// Starts `agent` in a new pane with no task and no worktree, where new terminals open; with
+    /// `None`, the pane is a plain terminal.
+    pub fn start_here(&mut self, agent: Option<Agent>, window: &mut Window, cx: &mut Context<Self>) {
+        if let Some(tab) = self.open_terminal(Placement::New, window, cx)
+            && let Some(agent) = agent
+        {
             self.type_into(tab, &agent.start(None, settings::shell_quote), cx);
         }
     }
 
-    pub fn start_named(&mut self, name: &str, agent: Agent, window: &mut Window, cx: &mut Context<Self>) {
+    /// Starts an agent (or only a shell) on work named by hand (`fix-login`), with no tracker:
+    /// always in a worktree of its own, which is the point of naming it.
+    pub fn start_named(&mut self, name: &str, agent: Option<Agent>, window: &mut Window, cx: &mut Context<Self>) {
         self.start_work(name, name, agent, true, window, cx);
     }
 
     /// Starts `agent` on a piece of work, `key` (a ticket's id or a name) with its `title`, in a new
     /// pane: in a worktree of its own when `make_worktree`, set up by the repo's recipe, running the
-    /// project's command for that agent.
+    /// project's command for that agent. With no agent, the pane is a shell there once set up.
     fn start_work(
         &mut self,
         key: &str,
         title: &str,
-        agent: Agent,
+        agent: Option<Agent>,
         make_worktree: bool,
         window: &mut Window,
         cx: &mut Context<Self>,
@@ -1532,6 +1535,13 @@ impl Workspace {
         if let Some(problem) = problem {
             self.note(tab, &problem, cx);
         }
+        let Some(agent) = agent else {
+            if made && let Some(setup) = self.setup_for(tab, &cwd, cx) {
+                self.type_into(tab, &setup, cx);
+            }
+            self.after_layout_change(window, cx);
+            return;
+        };
         let mut command = project.command_for(agent, key, title);
         if make_worktree && cwd != self.project {
             let folders = self.also_in_worktrees(key, tab, cx);

@@ -359,7 +359,7 @@ fn start_named_from_env(window: &mut Window, cx: &mut Context<Workspace>) {
                 }
             }
             let agent = crate::agent_choice::current(cx);
-            workspace.start_named(&name, agent, window, cx);
+            workspace.start_named(&name, Some(agent), window, cx);
         });
     })
     .detach();

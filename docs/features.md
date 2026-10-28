@@ -19,8 +19,8 @@ Each pane shows whether its agent is working, waiting for you, done or failed.
   each waits for: a permission with the command or file it's for, a question, a finished turn with
   the start of its last words, a failure. Allow or deny a permission right there (Saturn presses the
   agent's own key in the pane), or go to the pane.
-- **New agent** (⌘⇧N): press Return to start your agent right away, in a new pane with no task
-  (or open a plain terminal from the same list). Or name the work (`fix-login`) and Saturn makes a worktree for it on a branch of
+- **New agent** (⌘⇧N): pick Claude Code, Codex or Terminal and press Return to start it right
+  away, in a new pane with no task. Or name the work (`fix-login`) and Saturn makes a worktree for it on a branch of
   that name, sets it up with the [worktree recipe](worktree-recipe.md), and starts your agent there.
   With both agents on your Mac, a Claude Code | Codex switch picks which, and remembers it.
 - **Send to several agents** (the arrow beside New agent): one message, typed into every pane you

@@ -243,7 +243,8 @@ impl TicketsView {
             .tooltip(chrome::tip("Start an agent on this ticket"))
             .on_click(cx.listener(move |this, _, window, cx| {
                 let agent = crate::agent_choice::current(cx);
-                let _ = this.workspace.update(cx, |workspace, cx| workspace.start_ticket(&picked, agent, window, cx));
+                let _ =
+                    this.workspace.update(cx, |workspace, cx| workspace.start_ticket(&picked, Some(agent), window, cx));
             }))
             .into_any_element()
     }
