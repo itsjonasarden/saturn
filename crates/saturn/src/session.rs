@@ -121,8 +121,7 @@ pub fn take_open_windows() -> Vec<PathBuf> {
     open.into_iter().filter(|project| project.is_dir()).collect()
 }
 
-/// What to type into a restored tab to resume its agent's session: typed, not run, so resuming is
-/// one Enter and never a surprise.
+/// What runs in a restored tab to resume its agent's session.
 pub fn resume_command(agent: Agent, session: &str) -> Option<String> {
     // Session ids are UUIDs; anything else is not typed into a shell.
     session.chars().all(|c| c.is_ascii_hexdigit() || c == '-').then(|| agent.resume(session))

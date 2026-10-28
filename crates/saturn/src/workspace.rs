@@ -3015,7 +3015,7 @@ impl Workspace {
     }
 
     /// Opens the grid as it was: each tab in its folder, with its name, and a Claude session's
-    /// resume command typed (not run) where one was running. False when nothing was saved.
+    /// agent's session resumed where one was running. False when nothing was saved.
     pub fn restore(&mut self, window: &mut Window, cx: &mut Context<Self>) -> bool {
         let Some(saved) = session::load(&self.project) else { return false };
         for project in &saved.projects {
@@ -3072,19 +3072,9 @@ impl Workspace {
             if let Some(id) = saved_tab.session.clone() {
                 self.sessions.insert(tab, (agent, id));
             }
-            if let Some(command) = saved_tab
-                .session
-                .as_deref()
-                .and_then(|id| session::resume_command(agent, id))
-                .map(|command| crate::agent_choice::as_typed(&command, cx))
-                && let Some(view) = self.terminals.get(&tab).cloned()
-            {
-                // Once the shell has drawn its prompt; typed text waits there for Enter.
-                cx.spawn(async move |_, cx| {
-                    cx.background_executor().timer(std::time::Duration::from_millis(800)).await;
-                    let () = view.update(cx, |view, _| view.write(command.into_bytes()));
-                })
-                .detach();
+            // The agent picks up where it was, as the person left it, with their own command.
+            if let Some(command) = saved_tab.session.as_deref().and_then(|id| session::resume_command(agent, id)) {
+                self.type_into(tab, &command, cx);
             }
             tabs.push(tab);
         }

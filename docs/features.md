@@ -54,11 +54,10 @@ Each pane shows whether its agent is working, waiting for you, done or failed.
   begin with), each Claude Code agent shows under its prompt roughly how much of the 5-hour limit it
   used (`session 40% (≈2% here)`).
 - Saturn opens where you left off, the windows you had open when it quit, however it's started (the
-  Dock, an update's relaunch), and offers to resume the sessions that were running, each with its
-  own agent (`claude --resume …`, `codex -p saturn resume …`): the command is typed for you, never
-  run. Each agent can start with your own alias instead (`cdsk`, in Settings → Agents). A pane
-  shows its work's chips (ticket, pull request, checks) only while an agent runs in it,
-  so a reopened pane is free for something else.
+  Dock, an update's relaunch), and resumes the sessions that were running, each in its pane with its
+  own agent (`claude --resume …`, `codex -p saturn resume …`), so every agent is back as you left it.
+  Each agent can start with your own alias instead (`cdsk`, in Settings → Agents). A pane shows its
+  work's chips (ticket, pull request, checks) only while an agent runs in it.
 
 | ![Search sessions: every Claude Code and Codex session, found by what was asked in it](images/sessions.png) | ![Routines: agents on a schedule, with the runs and a missed one](images/routines.png) |
 | :---------------------------------------------------------------------------------------------------------: | :------------------------------------------------------------------------------------: |
