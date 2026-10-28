@@ -286,8 +286,6 @@ pub struct Workspace {
     /// The other repos' grids, put aside while another shows; their terminals keep running.
     pages: HashMap<PathBuf, Layout>,
     terminals: HashMap<TabId, Entity<TerminalView>>,
-    attention_glows: HashMap<TabId, Entity<AttentionGlow>>,
-    terminal_panes: HashMap<TabId, Entity<TerminalPane>>,
     /// Names typed by hand; they win over the terminal's own title.
     names: HashMap<TabId, String>,
     /// Tabs that changed into a state asking for the user while they looked elsewhere.
@@ -949,46 +947,6 @@ fn breathing_glow(t: f32) -> Vec<saturn_design::Shadow> {
     glow
 }
 
-static ATTENTION_FRAMES: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
-pub(crate) fn take_attention_frames() -> u64 {
-    ATTENTION_FRAMES.swap(0, std::sync::atomic::Ordering::Relaxed)
-}
-
-/// Static pane chrome and terminal content are cached separately from the attention ring.
-struct TerminalPane {
-    workspace: gpui_kit::WeakEntity<Workspace>,
-    tab: TabId,
-}
-impl Render for TerminalPane {
-    fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
-        self.workspace
-            .update(cx, |workspace, cx| {
-                let cell = workspace
-                    .layout
-                    .rows
-                    .iter()
-                    .flat_map(|row| row.cells.iter())
-                    .find(|cell| cell.active == self.tab)
-                    .cloned();
-                cell.map_or_else(|| div().into_any_element(), |cell| workspace.render_pane_body(&cell, cx))
-            })
-            .unwrap_or_else(|_| div().into_any_element())
-    }
-}
-
-/// A separate reactive boundary for the attention ring; no terminal content belongs to it.
-struct AttentionGlow;
-impl Render for AttentionGlow {
-    fn render(&mut self, _: &mut Window, _: &mut Context<Self>) -> impl IntoElement {
-        ATTENTION_FRAMES.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-        div().absolute().top_0().left_0().size_full().rounded(len(radius::RADIUS_MD)).with_animation(
-            "attention-ring",
-            Animation::new(Duration::from_millis(2400)).repeat().with_max_fps(30.).with_easing(bounce(ease_in_out)),
-            |ring, t| ring.shadow(theme::layers(&breathing_glow(t))),
-        )
-    }
-}
-
 /// Moves the divider after `index` to `at` (0–1 across the container), keeping both neighbours
 /// above the minimum share.
 fn move_divider(sizes: &[f32], index: usize, at: f32) -> Vec<f32> {
@@ -1089,7 +1047,6 @@ impl Workspace {
         .detach();
     }
 
-    #[expect(clippy::too_many_lines, reason = "workspace construction initializes independent view state")]
     pub fn new(project: PathBuf, window: &mut Window, cx: &mut Context<Self>) -> Self {
         Self::keep_fresh(window, cx);
         // Pane sizes change by dragging, which saves nothing on its own; quitting saves them, and
@@ -1186,8 +1143,6 @@ impl Workspace {
             layout: Layout::default(),
             pages: HashMap::new(),
             terminals: HashMap::new(),
-            attention_glows: HashMap::new(),
-            terminal_panes: HashMap::new(),
             names: HashMap::new(),
             unseen: HashSet::new(),
             renaming: None,
@@ -3059,23 +3014,12 @@ impl Workspace {
                 return None;
             }
         };
-        let view = cx.new(|cx| TerminalView::new(terminal, output, cwd, window, cx));
+        let view = cx.new(|cx| TerminalView::new(terminal, output, cwd, cx));
         cx.subscribe_in(&view, window, move |this, _view, event, window, cx| {
             this.terminal_event(tab, event, window, cx);
         })
         .detach();
         self.terminals.insert(tab, view);
-        self.attention_glows.insert(tab, cx.new(|_| AttentionGlow));
-        let workspace = cx.entity();
-        let terminal = self.terminals[&tab].clone();
-        self.terminal_panes.insert(
-            tab,
-            cx.new(|cx| {
-                cx.observe(&workspace, |_, _, cx| cx.notify()).detach();
-                cx.observe(&terminal, |_, _, cx| cx.notify()).detach();
-                TerminalPane { workspace: workspace.downgrade(), tab }
-            }),
-        );
         self.refresh_checkouts(cx);
         Some(tab)
     }
@@ -3370,8 +3314,6 @@ impl Workspace {
     /// Keeps an agent's steps (from its task list) and context (from its transcript) current.
     fn forget(&mut self, tab: TabId, window: &mut Window, cx: &mut Context<Self>) {
         self.terminals.remove(&tab);
-        self.attention_glows.remove(&tab);
-        self.terminal_panes.remove(&tab);
         self.unseen.remove(&tab);
         self.names.remove(&tab);
         self.checkouts.remove(&tab);
@@ -4073,30 +4015,6 @@ impl Workspace {
     }
 
     fn render_cell(&self, cell: &Cell, cx: &mut Context<Self>) -> AnyElement {
-        let needs_you = cell
-            .tabs
-            .iter()
-            .filter(|tab| self.unseen.contains(tab))
-            .any(|tab| matches!(self.tab_state(*tab, cx), AgentState::NeedsYou | AgentState::Error));
-        div()
-            .relative()
-            .size_full()
-            .children(
-                self.terminal_panes
-                    .get(&cell.active)
-                    .cloned()
-                    .map(|pane| pane.cached(gpui_kit::StyleRefinement::default().size_full())),
-            )
-            .children(
-                needs_you
-                    .then(|| self.attention_glows.get(&cell.active).cloned())
-                    .flatten()
-                    .map(|glow| div().absolute().top_0().left_0().size_full().child(glow)),
-            )
-            .into_any_element()
-    }
-
-    fn render_pane_body(&self, cell: &Cell, cx: &mut Context<Self>) -> AnyElement {
         let focused = self.layout.focused == Some(cell.id);
         let unseen_states: Vec<AgentState> =
             cell.tabs.iter().filter(|tab| self.unseen.contains(tab)).map(|tab| self.tab_state(*tab, cx)).collect();
@@ -4161,7 +4079,7 @@ impl Workspace {
                     .on_drop(cx.listener(move |this, dragged: &DraggedTab, window, cx| {
                         this.drop_on_pane(dragged.tab, cell_id, window, cx);
                     }))
-                    .children(terminal.map(|view| view.cached(gpui_kit::StyleRefinement::default().size_full())))
+                    .children(terminal)
                     .children(
                         self.drop_target
                             .filter(|(cell, _)| *cell == cell_id && cx.has_active_drag())
@@ -4169,11 +4087,17 @@ impl Workspace {
                     ),
             );
         if let Some(glow) = glow {
-            pane = pane.border_color(gpui_kit::transparent_black()).shadow(if needs_you {
-                vec![]
-            } else {
-                theme::shadows(glow)
-            });
+            pane = pane.border_color(gpui_kit::transparent_black()).shadow(theme::shadows(glow));
+        }
+        if needs_you {
+            // Needs you breathes, slowly, so it is seen from the corner of the eye without flashing.
+            return pane
+                .with_animation(
+                    ("breathe", cell_id.key()),
+                    Animation::new(Duration::from_millis(2400)).repeat().with_easing(bounce(ease_in_out)),
+                    |pane, t| pane.shadow(theme::layers(&breathing_glow(t))),
+                )
+                .into_any_element();
         }
         pane.into_any_element()
     }
