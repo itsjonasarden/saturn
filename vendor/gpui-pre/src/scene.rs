@@ -159,8 +159,14 @@ impl Scene {
         self.quads.sort_by_key(|quad| quad.order);
         self.paths.sort_by_key(|path| path.order);
         self.underlines.sort_by_key(|underline| underline.order);
-        self.monochrome_sprites
-            .sort_by_key(|sprite| (sprite.order, sprite.tile.tile_id));
+        // Saturn's patch: sort compact keys/indices rather than repeatedly moving the
+        // large glyph instances. Keep stable tie ordering and the already-sorted fast path.
+        if !self.monochrome_sprites
+            .is_sorted_by_key(|sprite| (sprite.order, sprite.tile.tile_id))
+        {
+            self.monochrome_sprites
+                .sort_by_cached_key(|sprite| (sprite.order, sprite.tile.tile_id));
+        }
         self.subpixel_sprites
             .sort_by_key(|sprite| (sprite.order, sprite.tile.tile_id));
         self.polychrome_sprites
