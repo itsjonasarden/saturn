@@ -10,7 +10,7 @@
 //!   `SATURN_COMPARE=main` reviews everything that differs from `main`.
 //! - `SATURN_MORE_REPOS=a:b` adds more repos to the window, as ⌘O would (`SATURN_SHOW_REPO=a`
 //!   clicks that repo's tab after 3 seconds); `SATURN_FAKE_AGENTS=1`
-//!   gives the panes made-up agents and pull requests (`SATURN_FAKE_STATES=working,needs-you,your-turn`
+//!   gives the panes made-up agents and pull requests (`SATURN_FAKE_AGENTS_AFTER=3` after 3 seconds) (`SATURN_FAKE_STATES=working,needs-you,your-turn`
 //!   sets their states in order); `SATURN_HISTORY=1` opens the History tab, `SATURN_IMPACT=1` the Impact tab (focused on `SATURN_IMPACT_FOCUS`), `SATURN_SCHEMA=1`
 //!   the database diagram, `SATURN_LINEAGE=1` the dbt lineage graph; `SATURN_LSP_PROBE=line:col` asks the open file's language server about
 //!   that place (0-based) and prints its answers; `SATURN_PROBLEMS=1` lists the
@@ -97,6 +97,26 @@ fn show_repo(window: &mut Window, cx: &mut Context<Workspace>) {
     .detach();
 }
 
+fn report_perf() {
+    let (frames, spent) = saturn_terminal::element::stats::take();
+    eprintln!("perf: {frames} terminal frames, {:.1} ms laying them out", spent.as_secs_f64() * 1000.);
+}
+
+/// The made-up agents, at once or (`SATURN_FAKE_AGENTS_AFTER`) once the shells have started, so a
+/// perf run measures the panes' states apart from their start. The window stays in the background,
+/// as in every automated run.
+fn start_fake_agents(window: &mut Window, cx: &mut Context<Workspace>) {
+    if let Some(seconds) = var::<u64>("SATURN_FAKE_AGENTS_AFTER") {
+        cx.spawn_in(window, async move |workspace, cx| {
+            cx.background_executor().timer(Duration::from_secs(seconds)).await;
+            let _ = workspace.update_in(cx, |workspace, _, cx| workspace.fake_agents(cx));
+        })
+        .detach();
+    } else if std::env::var_os("SATURN_FAKE_AGENTS").is_some() {
+        cx.defer_in(window, |workspace, _, cx| workspace.fake_agents(cx));
+    }
+}
+
 pub fn start(workspace: &Workspace, window: &mut Window, cx: &mut Context<Workspace>) {
     if let Ok(command) = std::env::var("SATURN_COMMAND") {
         let tabs: Vec<TabId> = (1..=panes().unwrap_or(0) as u64).map(TabId).collect();
@@ -113,8 +133,7 @@ pub fn start(workspace: &Workspace, window: &mut Window, cx: &mut Context<Worksp
         cx.spawn(async move |_, cx| {
             loop {
                 cx.background_executor().timer(Duration::from_secs(1)).await;
-                let (frames, spent) = saturn_terminal::element::stats::take();
-                eprintln!("perf: {frames} terminal frames, {:.1} ms laying them out", spent.as_secs_f64() * 1000.0);
+                report_perf();
             }
         })
         .detach();
@@ -141,9 +160,7 @@ pub fn start(workspace: &Workspace, window: &mut Window, cx: &mut Context<Worksp
     if std::env::var_os("SATURN_FAKE_TICKETS").is_some() {
         cx.defer_in(window, Workspace::fake_tickets);
     }
-    if std::env::var_os("SATURN_FAKE_AGENTS").is_some() {
-        cx.defer_in(window, |workspace, _, cx| workspace.fake_agents(cx));
-    }
+    start_fake_agents(window, cx);
     review_from_env(window, cx);
     if std::env::var_os("SATURN_SAVE").is_some() {
         // After SATURN_OPEN_FILE has opened its file.
