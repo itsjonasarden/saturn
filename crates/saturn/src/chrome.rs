@@ -284,13 +284,17 @@ pub fn dot_grid() -> impl IntoElement {
         |_, _, _| (),
         |bounds: Bounds<Pixels>, (), window: &mut Window, _: &mut App| {
             const PITCH: f32 = 18.;
-            let dot = theme::overlay(0.16);
             let width = f32::from(bounds.size.width);
             let height = f32::from(bounds.size.height);
             let mut y = PITCH / 2.;
             while y < height {
                 let mut x = PITCH / 2.;
                 while x < width {
+                    // Strongest in the middle, fading out toward the edges, so the field reads as
+                    // light falling on the card rather than a pattern stamped on it.
+                    let across = ((x / width - 0.5) * 2.).hypot((y / height - 0.5) * 2.);
+                    let strength = (1. - across / std::f32::consts::SQRT_2).clamp(0., 1.).powf(1.5);
+                    let dot = theme::overlay(0.22 * strength);
                     let origin = point(bounds.origin.x + px(x - 1.), bounds.origin.y + px(y - 1.));
                     window.paint_quad(fill(Bounds::new(origin, size(px(2.), px(2.))), dot).corner_radii(px(1.)));
                     x += PITCH;
@@ -371,10 +375,7 @@ pub fn sidebar_header(name: &str, detail: &str, action: impl IntoElement) -> imp
 
 /// What the grid shows with no terminal open: the dot grid, a headline in two weights, one
 /// sentence and the action.
-pub fn empty_grid(
-    project_name: &str,
-    new_terminal: impl Fn(&gpui_kit::ClickEvent, &mut Window, &mut App) + 'static,
-) -> AnyElement {
+pub fn empty_grid(new_terminal: impl Fn(&gpui_kit::ClickEvent, &mut Window, &mut App) + 'static) -> AnyElement {
     card()
         .child(
             div().relative().flex_1().min_h_0().child(dot_grid()).child(
@@ -390,12 +391,6 @@ pub fn empty_grid(
                                 .flex_col()
                                 .items_center()
                                 .gap(len(space::SPACE_3))
-                                .child(
-                                    div()
-                                        .text_size(px(11.))
-                                        .text_color(theme::color(color::INK_FAINT))
-                                        .child(project_name.to_owned()),
-                                )
                                 .child(headline("No terminals", "yet", 44.))
                                 .child(
                                     div()
@@ -404,7 +399,7 @@ pub fn empty_grid(
                                         .child("Open a shell in the project folder, then start your agent in it."),
                                 ),
                         )
-                        .child(button("empty-new", "New terminal", Some("⌘N"), true).on_click(new_terminal)),
+                        .child(button("empty-new", "New terminal", Some("⌘T"), true).on_click(new_terminal)),
                 ),
             ),
         )

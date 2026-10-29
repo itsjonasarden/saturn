@@ -4,7 +4,8 @@
 | ------------ | ---------------------------------------------------- |
 | ⌘P           | Go to a file, by name or path                        |
 | ⌘⇧P          | Command palette: every command by name               |
-| ⌘N           | New terminal, in a pane beside the focused one       |
+| ⌘T           | New terminal, in a pane beside the focused one       |
+| ⌘N / ⌥⌘N     | New file / new folder, beside what the tree selects  |
 | ⌘D / ⌘⇧D     | Split right / down                                   |
 | ⌘W           | Close the terminal                                   |
 | ⌘1 … ⌘9      | Focus pane 1 to 9                                    |

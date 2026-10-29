@@ -4269,7 +4269,8 @@ impl Workspace {
             .items_center()
             .gap(len(space::SPACE_2))
             .h(len(TITLEBAR_HEIGHT))
-            .pr(len(space::SPACE_1))
+            // No padding of its own on the right: the window's gutter alone, so New agent's edge
+            // lines up with the cards' below it.
             .child(empty("titlebar-lights").flex_none().w(len(TRAFFIC_LIGHTS_WIDTH)))
             .child(self.render_panel_toggles(cx))
             .child(self.render_repo_tabs(cx))
@@ -4289,11 +4290,8 @@ impl Workspace {
         // is open.
         let part = |id: &'static str| div().id(id).flex().items_center().h(height).cursor_pointer();
         let open = self.open_menu == Some(OpenMenu::NewAgent);
-        // The arrow's half is as wide around its icon as the label's gap to the divider, so the
-        // divider sits between two even halves.
         let more = part("new-agent-more")
-            .pl(len(space::SPACE_2))
-            .pr(len(6.))
+            .px(len(space::SPACE_2))
             .rounded_r(len(radius::RADIUS_MD))
             .when(open, |part| part.bg(gpui_kit::white().opacity(0.1)))
             .child(chrome::icon("chevron-down", 14., theme::color(color::INK_ON_ACCENT)))
@@ -4308,8 +4306,7 @@ impl Workspace {
             .font_weight(FontWeight::MEDIUM)
             .child(
                 part("new-agent")
-                    .pl(len(space::SPACE_4))
-                    .pr(len(space::SPACE_3))
+                    .px(len(space::SPACE_4))
                     .rounded_l(len(radius::RADIUS_MD))
                     .child("New agent")
                     .tooltip(chrome::tip_for("New agent, in a worktree of its own", OpenTicketPicker))
@@ -4449,14 +4446,10 @@ impl Workspace {
         let panels = self.panels.on_screen(self.layout.maximized.is_some());
         let editor_maximized = self.editor.read(cx).maximized();
         let half_gap = len(space::SPACE_2 / 2.);
-        let name = self.project.file_name().map_or_else(|| "/".to_owned(), |name| name.to_string_lossy().into_owned());
         let grid = if self.layout.is_empty() {
-            chrome::empty_grid(
-                &name,
-                cx.listener(|this, _, window, cx| {
-                    this.open_terminal(Placement::New, window, cx);
-                }),
-            )
+            chrome::empty_grid(cx.listener(|this, _, window, cx| {
+                this.open_terminal(Placement::New, window, cx);
+            }))
         } else {
             self.render_grid(cx)
         };

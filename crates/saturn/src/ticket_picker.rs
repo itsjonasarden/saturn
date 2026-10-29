@@ -7,7 +7,7 @@ use gpui_kit::component::WindowExt as _;
 use gpui_kit::component::input::{Input, InputState};
 use gpui_kit::{
     App, AppContext as _, Entity, FontWeight, InteractiveElement as _, IntoElement, ParentElement as _,
-    StatefulInteractiveElement as _, Styled as _, WeakEntity, Window, div, px, rgb,
+    StatefulInteractiveElement as _, Styled as _, WeakEntity, Window, div, prelude::FluentBuilder as _, px, rgb,
 };
 use saturn_core::clickup::{self, Ticket};
 use saturn_core::git;
@@ -35,9 +35,7 @@ pub fn open(workspace: WeakEntity<Workspace>, connected: bool, window: &mut Wind
         let query = search.read(cx).value().to_string();
         let rows = picks(&workspace, &query, cx);
         let state = workspace.read(cx).clickup();
-        let note = if query.trim().is_empty() && !state.connected() {
-            Some("Or name the work and press Return: Saturn makes a worktree for it and starts the agent there. Connect ClickUp in Settings (⌘,) to start from your tickets too.".to_owned())
-        } else if let Some(problem) = state.problem.clone().filter(|_| state.connected()) {
+        let note = if let Some(problem) = state.problem.clone().filter(|_| state.connected()) {
             Some(problem)
         } else if state.loading && rows.is_empty() {
             Some("Reading your tickets…".to_owned())
@@ -66,13 +64,15 @@ pub fn open(workspace: WeakEntity<Workspace>, connected: bool, window: &mut Wind
             .entrance(gpui_kit::component::dialog::DialogEntrance::None)
             .bg(crate::chrome::dialog_surface())
             .w(px(600.))
-            .child(Input::new(&search))
-            .child(kind_row(cx))
+            // Room around the field, so its focus ring isn't cut by the dialog's edge.
+            .child(div().m(px(-3.)).p(px(3.)).child(Input::new(&search)))
+            .children(kind_row(cx))
             .children(also_in_row(&workspace, cx))
             .children(note.map(|note| {
                 div().py(len(space::SPACE_4)).text_size(px(14.)).text_color(theme::color(color::INK_MUTED)).child(note)
             }))
             .child(list(&workspace, &rows, cx))
+            .child(footer(&query, state.connected(), cx))
     });
 }
 
@@ -146,28 +146,39 @@ fn start(workspace: &Entity<Workspace>, pick: Option<&Pick>, window: &mut Window
     window.close_dialog(cx);
 }
 
-/// The agent the pane runs (Claude Code | Codex, with both on the Mac), remembered for every later
-/// start, and what Return does with nothing typed.
-fn kind_row(cx: &App) -> impl IntoElement {
+/// The agent the pane runs (Claude Code | Codex), remembered for every later start; nothing with
+/// only one on the Mac.
+fn kind_row(cx: &App) -> Option<impl IntoElement + use<>> {
+    let track = crate::agent_choice::switch("new-agent-agent", cx)?;
+    Some(
+        div()
+            .flex()
+            .items_center()
+            .gap(len(space::SPACE_2))
+            .pt(len(space::SPACE_3))
+            .child(div().text_size(px(13.)).text_color(theme::color(color::INK_MUTED)).child("Agent"))
+            .child(track),
+    )
+}
+
+/// One quiet line at the foot: what Return does now, and, without ClickUp, where tickets come from.
+fn footer(query: &str, connected: bool, cx: &App) -> impl IntoElement {
+    let agent = crate::agent_choice::current(cx).name();
+    let does = if query.trim().is_empty() {
+        format!("↩ starts {agent} here, with no task")
+    } else {
+        "↩ starts the first row".to_owned()
+    };
     div()
         .flex()
         .items_center()
-        .gap(len(space::SPACE_2))
-        .pt(len(space::SPACE_2))
-        .children(crate::agent_choice::switch("new-agent-agent", cx).map(|track| {
-            div()
-                .flex()
-                .items_center()
-                .gap(len(space::SPACE_2))
-                .child(div().text_size(px(13.)).text_color(theme::color(color::INK_MUTED)).child("Agent"))
-                .child(track)
-        }))
-        .child(
-            div()
-                .text_size(px(12.))
-                .text_color(theme::color(color::INK_FAINT))
-                .child("Return with nothing typed starts it here, with no task"),
-        )
+        .justify_between()
+        .gap(len(space::SPACE_4))
+        .pt(len(space::SPACE_3))
+        .text_size(px(12.))
+        .text_color(theme::color(color::INK_FAINT))
+        .child(div().min_w_0().truncate().child(does))
+        .when(!connected, |footer| footer.child(div().flex_none().child("Tickets: connect ClickUp in Settings")))
 }
 
 fn list(workspace: &Entity<Workspace>, picks: &[Pick], cx: &App) -> impl IntoElement {

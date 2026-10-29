@@ -258,7 +258,7 @@ impl FilesView {
             items.extend([
                 None,
                 Some(("pencil", "Rename", Box::new(RenameEntry) as Box<dyn Action>)),
-                Some(("trash-2", "Move to Trash", Box::new(TrashEntry) as Box<dyn Action>)),
+                Some(("trash", "Move to Trash", Box::new(TrashEntry) as Box<dyn Action>)),
             ]);
         }
         let files = cx.weak_entity();

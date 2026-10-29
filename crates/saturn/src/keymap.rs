@@ -6,6 +6,7 @@ use std::collections::BTreeMap;
 
 use gpui_kit::{Action, App, KeyBinding, Keystroke, SharedString, Unbind};
 
+use crate::files_view::{NewFile, NewFolder};
 use crate::workspace::{
     CloseTab, CommandPalette, EvenOutPanes, FocusDown, FocusLeft, FocusPane1, FocusPane2, FocusPane3, FocusPane4,
     FocusPane5, FocusPane6, FocusPane7, FocusPane8, FocusPane9, FocusRight, FocusUp, GoToFile, NewTab, NextAttention,
@@ -33,7 +34,8 @@ macro_rules! shortcut {
 
 /// Every shortcut, in the order Settings lists them. Copy, paste and quit stay macOS's own.
 pub const SHORTCUTS: &[Shortcut] = &[
-    shortcut!("new-tab", "New terminal", "Terminals", ["cmd-n"], NewTab),
+    // ⌘T as terminals open a tab; ⌘N makes a file, as editors do.
+    shortcut!("new-tab", "New terminal", "Terminals", ["cmd-t"], NewTab),
     shortcut!("new-agent", "New agent, in a worktree of its own", "Terminals", ["cmd-shift-n"], OpenTicketPicker),
     shortcut!("split-right", "Split right", "Terminals", ["cmd-d"], SplitRight),
     shortcut!("split-down", "Split down", "Terminals", ["cmd-shift-d"], SplitDown),
@@ -59,6 +61,8 @@ pub const SHORTCUTS: &[Shortcut] = &[
     shortcut!("go-to-file", "Go to file", "Files and views", ["cmd-p"], GoToFile),
     shortcut!("command-palette", "Command palette", "Files and views", ["cmd-shift-p"], CommandPalette),
     shortcut!("save", "Save the file", "Files and views", ["cmd-s"], SaveFile),
+    shortcut!("new-file", "New file", "Files and views", ["cmd-n"], NewFile),
+    shortcut!("new-folder", "New folder", "Files and views", ["cmd-alt-n"], NewFolder),
     shortcut!("open-project", "Add a repo", "Files and views", ["cmd-o"], OpenProject),
     shortcut!("toggle-sidebar", "Show or hide the sidebar", "Files and views", ["cmd-b"], ToggleSidebar),
     shortcut!("toggle-editor", "Show or hide the editor", "Files and views", ["cmd-j"], ToggleEditor),
@@ -177,7 +181,7 @@ mod tests {
         assert_eq!(keys_of(bigger, &chosen), ["cmd-shift-="]);
         chosen.insert("text-bigger".to_owned(), String::new());
         assert_eq!(keys_of(bigger, &chosen), Vec::<String>::new());
-        assert_eq!(taken_by("cmd-n", "x", &chosen).map(|shortcut| shortcut.id), Some("new-tab"));
+        assert_eq!(taken_by("cmd-n", "x", &chosen).map(|shortcut| shortcut.id), Some("new-file"));
     }
 
     #[test]
