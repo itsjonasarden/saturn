@@ -64,8 +64,9 @@ pub fn open(workspace: WeakEntity<Workspace>, connected: bool, window: &mut Wind
             .entrance(gpui_kit::component::dialog::DialogEntrance::None)
             .bg(crate::chrome::dialog_surface())
             .w(px(600.))
-            // Room around the field, so its focus ring isn't cut by the dialog's edge.
-            .child(div().m(px(-3.)).p(px(3.)).child(Input::new(&search)))
+            // Room around the field inside the dialog, which clips at its edge, so the focus ring is
+            // whole.
+            .child(div().px(px(3.)).child(Input::new(&search)))
             .children(kind_row(cx))
             .children(also_in_row(&workspace, cx))
             .children(note.map(|note| {

@@ -69,6 +69,8 @@ struct Row {
     wide: bool,
     /// One line, the detail only for search (a shortcut, whose detail is its group's heading).
     compact: bool,
+    /// The heading it sits under in its section (an agent's name), if any.
+    group: Option<SharedString>,
 }
 
 impl Row {
@@ -85,7 +87,13 @@ impl Row {
             control: control.into_any_element(),
             wide: false,
             compact: false,
+            group: None,
         }
+    }
+
+    fn under(mut self, group: &'static str) -> Self {
+        self.group = Some(group.into());
+        self
     }
 
     fn compact(mut self) -> Self {
@@ -292,8 +300,11 @@ impl SettingsView {
         let step = |id: &'static str, label: &'static str, by: i16, tip: &'static str| {
             let workspace = self.workspace.clone();
             let possible = TEXT_SIZES.contains(&size.saturating_add_signed(by));
+            // Square, so − and + are the same size whatever their glyphs' widths.
             chrome::button(id, label, None, false)
-                .px(len(space::SPACE_3))
+                .w(len(chrome::CONTROL_HEIGHT))
+                .px_0()
+                .justify_center()
                 .tooltip(chrome::tip(tip))
                 .when(!possible, |button| button.opacity(0.4))
                 .on_click(move |_, _, cx| {
@@ -404,43 +415,39 @@ impl SettingsView {
         ]
     }
 
-    /// What Saturn found of each agent, and which one new panes start when there are two.
-    fn found_agents(cx: &mut Context<Self>) -> Vec<Row> {
-        let found = cx.try_global::<crate::agent_choice::Agents>().and_then(|agents| agents.found.clone());
-        let mut rows: Vec<Row> = Agent::ALL
-            .into_iter()
-            .map(|agent| {
-                let state = found.as_ref().and_then(|found| found.iter().find(|found| found.agent == agent).copied());
-                let (detail, status) = match state {
-                    None => ("Looking for it…".to_owned(), "…"),
-                    Some(found) if found.ready() => {
-                        (format!("Installed and logged in: Saturn can start it ({}).", agent.program()), "Ready")
-                    }
-                    Some(found) if found.installed => (
-                        format!("Installed, not logged in. Run {} in a terminal to log in.", agent.program()),
-                        "Not logged in",
-                    ),
-                    Some(_) => {
-                        (format!("Not on this Mac. Install it to run {} agents here.", agent.name()), "Not installed")
-                    }
-                };
-                Row::new(
-                    Section::Agents,
-                    agent.name(),
-                    detail,
-                    div().text_size(px(13.)).text_color(theme::color(color::INK_MUTED)).child(status),
-                )
-            })
-            .collect();
-        if let Some(switch) = crate::agent_choice::switch("settings-agent", cx) {
-            rows.push(Row::new(
+    /// Which agent new panes start, when there are two to pick from.
+    fn new_agents_start(cx: &mut Context<Self>) -> Option<Row> {
+        crate::agent_choice::switch("settings-agent", cx).map(|switch| {
+            Row::new(
                 Section::Agents,
                 "New agents start",
                 "New agent, Best of N and routines start this one, and remember what you pick there.",
                 switch,
-            ));
-        }
-        rows
+            )
+        })
+    }
+
+    /// What Saturn found of `agent` on this Mac, the first line under its heading.
+    fn found(agent: Agent, cx: &mut Context<Self>) -> Row {
+        let found = cx.try_global::<crate::agent_choice::Agents>().and_then(|agents| agents.found.clone());
+        let state = found.as_ref().and_then(|found| found.iter().find(|found| found.agent == agent).copied());
+        let (detail, status) = match state {
+            None => ("Looking for it…".to_owned(), "…"),
+            Some(found) if found.ready() => {
+                (format!("Installed and logged in: Saturn can start it ({}).", agent.program()), "Ready")
+            }
+            Some(found) if found.installed => {
+                (format!("Installed, not logged in. Run {} in a terminal to log in.", agent.program()), "Not logged in")
+            }
+            Some(_) => (format!("Not on this Mac. Install it to run {} agents here.", agent.name()), "Not installed"),
+        };
+        Row::new(
+            Section::Agents,
+            "On this Mac",
+            detail,
+            div().text_size(px(13.)).text_color(theme::color(color::INK_MUTED)).child(status),
+        )
+        .under(agent.name())
     }
 
     /// What starts Codex and its status line, when Codex is on this Mac.
@@ -497,8 +504,8 @@ impl SettingsView {
             ),
             Row::new(
                 Section::Agents,
-                "Name tabs after Claude's session",
-                "A tab shows the session's name, from /rename or set automatically. Off: the tab shows its folder, or a name you gave it by double-clicking.",
+                "Name panes after Claude's session",
+                "A pane shows the session's name, from /rename or set automatically. Off: it shows its folder, or a name you gave it by double-clicking its title.",
                 self.switch("name-tabs", settings.name_tabs_after_sessions, |settings, on| {
                     settings.name_tabs_after_sessions = on;
                 }),
@@ -723,9 +730,12 @@ impl SettingsView {
         rows.extend(self.appearance(&settings));
         rows.extend(self.editor(&settings));
         rows.extend(self.terminal(&settings));
-        rows.extend(Self::found_agents(cx));
-        rows.extend(self.claude(&settings, cx));
-        rows.extend(self.codex(&settings, cx));
+        // Agents: which one new panes start, then each agent under its own name.
+        rows.extend(Self::new_agents_start(cx));
+        rows.push(Self::found(Agent::Claude, cx));
+        rows.extend(self.claude(&settings, cx).into_iter().map(|row| row.under(Agent::Claude.name())));
+        rows.push(Self::found(Agent::Codex, cx));
+        rows.extend(self.codex(&settings, cx).into_iter().map(|row| row.under(Agent::Codex.name())));
         rows.extend(SHORTCUTS.iter().map(|shortcut| self.shortcut_row(shortcut, &settings, cx)));
         rows.extend(self.clickup(cx));
         rows
@@ -851,9 +861,10 @@ impl SettingsView {
         let mut group: Option<SharedString> = None;
         let mut index = 0;
         for row in rows.into_iter().filter(|row| row.section == self.section) {
-            if row.compact && group.as_ref() != Some(&row.detail) {
-                content = content.child(heading(&row.detail, false));
-                group = Some(row.detail.clone());
+            let under = if row.compact { Some(row.detail.clone()) } else { row.group.clone() };
+            if let Some(under) = under.filter(|under| group.as_ref() != Some(under)) {
+                content = content.child(heading(&under, false));
+                group = Some(under);
                 index = 0;
             }
             content = content.child(Self::render_row(row, index));
@@ -869,7 +880,17 @@ impl Render for SettingsView {
         let searching = !query.is_empty();
         let rows = self.rows(cx);
         let content =
-            div().id("settings-content").flex_1().min_w_0().min_h_0().overflow_y_scroll().pr(len(space::SPACE_2));
+            // It clips at its edges: a few points of room on the left, taken back by the margin, keep
+            // a focused field's ring whole.
+            div()
+                .id("settings-content")
+                .flex_1()
+                .min_w_0()
+                .min_h_0()
+                .overflow_y_scroll()
+                .ml(px(-4.))
+                .pl(px(4.))
+                .pr(len(space::SPACE_2));
         let content =
             if searching { Self::render_found(content, rows, &query) } else { self.render_section(content, rows) };
         let search = div()
