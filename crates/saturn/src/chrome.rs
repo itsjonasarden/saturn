@@ -111,7 +111,7 @@ pub fn track() -> gpui_kit::Div {
 
 /// What sits right on the window's glass (the title bar's tracks and buttons): on the panes' own
 /// surface, so it reads over any desktop. The edge is a shadow, not a border, so it adds no size.
-pub fn on_glass(content: impl IntoElement) -> gpui_kit::Div {
+pub fn on_glass(content: gpui_kit::Div) -> gpui_kit::Div {
     let dark = saturn_design::appearance() == saturn_design::Appearance::Dark;
     let ring = shadow(0., 0., 0., 1., theme::overlay(if dark { 0.07 } else { 0.08 }), false);
     let lift = if dark {
@@ -123,9 +123,11 @@ pub fn on_glass(content: impl IntoElement) -> gpui_kit::Div {
         .flex()
         .flex_none()
         .rounded(len(radius::RADIUS_MD))
-        .bg(theme::color(color::SURFACE).opacity(if dark { 0.8 } else { 0.83 }))
+        // The panes' own surface, solid, so the title bar reads as the same material as the cards
+        // and not lighter: the track inside adds no tint of its own on top.
+        .bg(theme::color(color::SURFACE))
         .shadow(vec![ring, lift])
-        .child(content)
+        .child(content.bg(gpui_kit::transparent_black()))
 }
 
 /// The selected look of every tab and track item: raised, in light mode a white pill with a

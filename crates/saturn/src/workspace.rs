@@ -221,7 +221,9 @@ const TITLEBAR_HEIGHT: f32 = 40.0;
 /// thin strip. Their tracks are this plus the track's padding, and macOS's buttons sit on the same
 /// middle line (see `traffic_light_position` in main.rs).
 const TITLEBAR_CONTROL: f32 = 24.0;
-const TRAFFIC_LIGHTS_WIDTH: f32 = 76.0;
+/// The room macOS's buttons take, from the window's gutter: the toolbar starts 12px after the
+/// green one, as the buttons are 14px from the window's edge.
+const TRAFFIC_LIGHTS_WIDTH: f32 = 66.0;
 const TAB_HEIGHT: f32 = chrome::CONTROL_HEIGHT;
 /// A tab's narrowest: its status, the start of its name and its ✕.
 const TAB_MIN_WIDTH: f32 = 64.0;
@@ -4174,7 +4176,7 @@ impl Workspace {
     }
 
     /// The panel toggles (raised while the panel is open) and Settings, in the title bar.
-    fn render_panel_toggles(&self, cx: &mut Context<Self>) -> impl IntoElement {
+    fn render_panel_toggles(&self, cx: &mut Context<Self>) -> gpui_kit::Div {
         // Lit only while their panel is on screen: a maximised pane covers them all.
         let panels = self.panels.on_screen(self.layout.maximized.is_some());
         let toggle = |id: &'static str, icon: &str, on: bool| {
@@ -4184,33 +4186,31 @@ impl Workspace {
                 theme::color(if on { color::INK } else { color::INK_MUTED }),
             ))
         };
-        chrome::on_glass(
-            chrome::track()
-                .child(
-                    toggle("toggle-sidebar", "panel-left", panels.sidebar)
-                        .tooltip(chrome::tip_for("Show or hide the sidebar", ToggleSidebar))
-                        .on_click(cx.listener(|this, _, _, cx| this.toggle_sidebar(cx))),
+        chrome::track()
+            .child(
+                toggle("toggle-sidebar", "panel-left", panels.sidebar)
+                    .tooltip(chrome::tip_for("Show or hide the sidebar", ToggleSidebar))
+                    .on_click(cx.listener(|this, _, _, cx| this.toggle_sidebar(cx))),
+            )
+            .child(
+                toggle("toggle-editor", "panel-top", panels.editor)
+                    .tooltip(chrome::tip_for("Show or hide the editor", ToggleEditor))
+                    .on_click(cx.listener(|this, _, _, cx| this.toggle_editor(cx))),
+            )
+            // Only with ClickUp connected: without it there's nothing to show.
+            .when(self.clickup.connected(), |track| {
+                track.child(
+                    toggle("toggle-tickets", "panel-right", panels.tickets)
+                        .tooltip(chrome::tip_for("Show or hide your tickets", ToggleTickets))
+                        .on_click(cx.listener(|this, _, window, cx| this.toggle_tickets(window, cx))),
                 )
-                .child(
-                    toggle("toggle-editor", "panel-top", panels.editor)
-                        .tooltip(chrome::tip_for("Show or hide the editor", ToggleEditor))
-                        .on_click(cx.listener(|this, _, _, cx| this.toggle_editor(cx))),
-                )
-                // Only with ClickUp connected: without it there's nothing to show.
-                .when(self.clickup.connected(), |track| {
-                    track.child(
-                        toggle("toggle-tickets", "panel-right", panels.tickets)
-                            .tooltip(chrome::tip_for("Show or hide your tickets", ToggleTickets))
-                            .on_click(cx.listener(|this, _, window, cx| this.toggle_tickets(window, cx))),
-                    )
-                })
-                .child(chrome::track_separator())
-                .child(
-                    toggle("open-settings", "settings", false)
-                        .tooltip(chrome::tip_for("Settings", OpenSettings))
-                        .on_click(cx.listener(|this, _, window, cx| this.open_settings(window, cx))),
-                ),
-        )
+            })
+            .child(chrome::track_separator())
+            .child(
+                toggle("open-settings", "settings", false)
+                    .tooltip(chrome::tip_for("Settings", OpenSettings))
+                    .on_click(cx.listener(|this, _, window, cx| this.open_settings(window, cx))),
+            )
     }
 
     fn render_titlebar(&self, cx: &mut Context<Self>) -> impl IntoElement {
@@ -4272,8 +4272,11 @@ impl Workspace {
             // No padding of its own on the right: the window's gutter alone, so New agent's edge
             // lines up with the cards' below it.
             .child(empty("titlebar-lights").flex_none().w(len(TRAFFIC_LIGHTS_WIDTH)))
-            .child(self.render_panel_toggles(cx))
-            .child(self.render_repo_tabs(cx))
+            // One toolbar: the panels and Settings, then the repos.
+            .child(chrome::on_glass({
+                let toggles = self.render_panel_toggles(cx).child(chrome::track_separator());
+                self.render_repo_tabs(toggles, cx)
+            }))
             .child(empty("titlebar-middle").flex_1())
             .children(activity)
             .child(self.render_new_agent(cx))
@@ -4367,11 +4370,11 @@ impl Workspace {
         .into_any_element()
     }
 
-    /// The window's repos, in the title bar: the selected one raised, ✕ on hover to take one out
-    /// (its panes stay). The ＋ after them adds one.
-    fn render_repo_tabs(&self, cx: &mut Context<Self>) -> AnyElement {
+    /// The window's repos, after the panel toggles in the title bar's one toolbar: the selected
+    /// one raised, ✕ on hover to take one out (its panes join the one showing). The ＋ after them
+    /// adds one.
+    fn render_repo_tabs(&self, mut track: gpui_kit::Div, cx: &mut Context<Self>) -> gpui_kit::Div {
         let removable = self.projects.len() > 1;
-        let mut track = chrome::track();
         for (index, project) in self.projects.iter().enumerate() {
             let selected = *project == self.page;
             // A repo out of sight whose agents wait for you says so, as a browser tab's title does.
@@ -4429,15 +4432,14 @@ impl Workspace {
         }
         // Adding a repo belongs with the repos, set apart so it doesn't read as one. Square: a
         // track item is otherwise at least a full control wide.
-        let track = track.child(chrome::track_separator()).child(
+        track.child(chrome::track_separator()).child(
             chrome::track_item("add-repo", false)
                 .size(len(TITLEBAR_CONTROL))
                 .min_w(len(TITLEBAR_CONTROL))
                 .child(chrome::icon("plus", 13., theme::color(color::INK_MUTED)))
                 .tooltip(chrome::tip_for("Add repo", OpenProject))
                 .on_click(cx.listener(|_, _, window, cx| Self::open_project(window, cx))),
-        );
-        chrome::on_glass(track).into_any_element()
+        )
     }
 
     /// Sidebar | (editor / grid) | tickets, with draggable dividers. The panels stay in the same

@@ -257,8 +257,8 @@ fn open_main_window(project: Option<std::path::PathBuf>, cx: &mut App) {
         titlebar: Some(TitlebarOptions {
             title: Some("Saturn".into()),
             appears_transparent: true,
-            // Centred in the 48px title bar.
-            traffic_light_position: Some(point(px(18.), px(13.))),
+            // Centred in the title bar, as far in from the side as from the top.
+            traffic_light_position: Some(point(px(14.), px(13.))),
         }),
         window_bounds: Some(WindowBounds::Windowed(Bounds::centered(None, size(px(1600.), px(1000.)), cx))),
         // The glass is the window itself: macOS blurs the desktop behind the translucent ground.
