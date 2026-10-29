@@ -1,9 +1,7 @@
 //! New agent (⌘⇧N): name the work and Saturn starts an agent on it in a worktree of its own; with
 //! ClickUp connected, the same field searches your open tickets, grouped by status, and picking one
-//! starts an agent on it the way the project's ticket settings say. Claude Code | Codex | Terminal
-//! says what the pane runs, and Return with nothing typed starts that here, with no task.
-
-use std::sync::atomic::{AtomicBool, Ordering};
+//! starts an agent on it the way the project's ticket settings say. Return with nothing typed
+//! starts the agent here, with no task.
 
 use gpui_kit::component::WindowExt as _;
 use gpui_kit::component::input::{Input, InputState};
@@ -18,9 +16,6 @@ use saturn_design::{color, radius, space};
 use crate::theme::{self, len};
 use crate::workspace::Workspace;
 
-/// Terminal is picked in the open dialog: its panes get a shell and no agent.
-static TERMINAL: AtomicBool = AtomicBool::new(false);
-
 /// Opens the dialog. `connected` says whether ClickUp is, given by the caller: the workspace opens
 /// this from inside its own update, where reading it would abort.
 pub fn open(workspace: WeakEntity<Workspace>, connected: bool, window: &mut Window, cx: &mut App) {
@@ -31,7 +26,6 @@ pub fn open(workspace: WeakEntity<Workspace>, connected: bool, window: &mut Wind
     search.update(cx, |search, cx| search.focus(window, cx));
     // Later: the button and the shortcut that open this run inside the workspace's own update, and
     // updating it again from there aborts.
-    TERMINAL.store(false, Ordering::Relaxed);
     let refresh = workspace.clone();
     cx.defer(move |cx| {
         let _ = refresh.update(cx, Workspace::refresh_tickets);
@@ -53,7 +47,7 @@ pub fn open(workspace: WeakEntity<Workspace>, connected: bool, window: &mut Wind
             None
         };
         // Return is the dialog's OK: it starts the top row, so typing a name and pressing it is all
-        // it takes; with nothing typed, the agent or terminal picked starts on its own.
+        // it takes; with nothing typed, the agent starts on its own.
         let confirm = (workspace.downgrade(), search.clone());
         dialog
             .on_ok(move |_, window, cx| {
@@ -141,10 +135,9 @@ fn picks(workspace: &Entity<Workspace>, query: &str, cx: &App) -> Vec<Pick> {
     picks
 }
 
-/// Starts `pick` with the agent picked (or a shell, with Terminal); with no pick, the agent or
-/// terminal on its own, here.
+/// Starts `pick` with the agent picked; with no pick, the agent on its own, here.
 fn start(workspace: &Entity<Workspace>, pick: Option<&Pick>, window: &mut Window, cx: &mut App) {
-    let agent = (!TERMINAL.load(Ordering::Relaxed)).then(|| crate::agent_choice::current(cx));
+    let agent = Some(crate::agent_choice::current(cx));
     workspace.update(cx, |workspace, cx| match pick {
         Some(Pick::Ticket(ticket)) => workspace.start_ticket(ticket, agent, window, cx),
         Some(Pick::Name(name)) => workspace.start_named(name, agent, window, cx),
@@ -153,36 +146,22 @@ fn start(workspace: &Entity<Workspace>, pick: Option<&Pick>, window: &mut Window
     window.close_dialog(cx);
 }
 
-/// Claude Code | Codex | Terminal: what the new pane runs. An agent picked here is remembered for
-/// every later start; Terminal holds while the dialog is open.
+/// The agent the pane runs (Claude Code | Codex, with both on the Mac), remembered for every later
+/// start, and what Return does with nothing typed.
 fn kind_row(cx: &App) -> impl IntoElement {
-    let terminal = TERMINAL.load(Ordering::Relaxed);
-    let current = crate::agent_choice::current(cx);
-    let item = |index: usize, picked: bool, name: &'static str| {
-        crate::chrome::track_item(("new-agent-kind", index), picked)
-            .px(len(space::SPACE_3))
-            .text_size(px(12.))
-            .child(name)
-    };
-    let mut track = crate::chrome::track();
-    for (index, agent) in crate::agent_choice::ready(cx).into_iter().enumerate() {
-        track = track.child(item(index, !terminal && agent == current, agent.name()).on_click(move |_, window, _| {
-            TERMINAL.store(false, Ordering::Relaxed);
-            crate::agent_choice::remember(agent);
-            window.refresh();
-        }));
-    }
-    track = track.child(item(usize::MAX, terminal, "Terminal").on_click(|_, window, _| {
-        TERMINAL.store(true, Ordering::Relaxed);
-        window.refresh();
-    }));
     div()
         .flex()
         .items_center()
         .gap(len(space::SPACE_2))
         .pt(len(space::SPACE_2))
-        .child(div().text_size(px(13.)).text_color(theme::color(color::INK_MUTED)).child("Start"))
-        .child(track)
+        .children(crate::agent_choice::switch("new-agent-agent", cx).map(|track| {
+            div()
+                .flex()
+                .items_center()
+                .gap(len(space::SPACE_2))
+                .child(div().text_size(px(13.)).text_color(theme::color(color::INK_MUTED)).child("Agent"))
+                .child(track)
+        }))
         .child(
             div()
                 .text_size(px(12.))
@@ -192,7 +171,15 @@ fn kind_row(cx: &App) -> impl IntoElement {
 }
 
 fn list(workspace: &Entity<Workspace>, picks: &[Pick], cx: &App) -> impl IntoElement {
-    let mut rows = div().id("tickets").flex().flex_col().max_h(px(440.)).overflow_y_scroll().mt(len(space::SPACE_2));
+    // The rows' text lines up with the labels above; their hover reaches out past it.
+    let mut rows = div()
+        .id("tickets")
+        .flex()
+        .flex_col()
+        .max_h(px(440.))
+        .overflow_y_scroll()
+        .mt(len(space::SPACE_2))
+        .mx(len(-space::SPACE_3));
     let tickets: Vec<Ticket> = picks
         .iter()
         .filter_map(|pick| if let Pick::Ticket(ticket) = pick { Some((**ticket).clone()) } else { None })

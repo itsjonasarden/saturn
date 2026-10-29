@@ -14,13 +14,13 @@ Saturn runs [Claude Code](https://claude.com/claude-code) and
 Each pane shows whether its agent is working, waiting for you, done or failed.
 
 - A pane that needs you rings **orange**, one that's done rings **green**, until you type or click
-  in it.
+  in it. The blue ring marks the pane your keyboard is in, and only while it's there.
 - The title bar counts them, and ⌘⇧A jumps to the next one that needs you. Click a count for what
   each waits for: a permission with the command or file it's for, a question, a finished turn with
   the start of its last words, a failure. Allow or deny a permission right there (Saturn presses the
   agent's own key in the pane), or go to the pane.
-- **New agent** (⌘⇧N): pick Claude Code, Codex or Terminal and press Return to start it right
-  away, in a new pane with no task. Or name the work (`fix-login`) and Saturn makes a worktree for it on a branch of
+- **New agent** (⌘⇧N): press Return to start your agent right away, in a new pane with no task
+  (Open a terminal, under the arrow beside New agent, opens a plain one). Or name the work (`fix-login`) and Saturn makes a worktree for it on a branch of
   that name, sets it up with the [worktree recipe](worktree-recipe.md), and starts your agent there.
   With both agents on your Mac, a Claude Code | Codex switch picks which, and remembers it.
 - **Send to several agents** (the arrow beside New agent): one message, typed into every pane you
@@ -67,7 +67,8 @@ Each pane shows whether its agent is working, waiting for you, done or failed.
 ## Terminals
 
 - Every terminal is a pane of its own, with its session's name at the top; there are no tabs
-  inside panes. New terminal (⌘N), Split right (⌘D) and Split down (⌘⇧D) are in each pane's ⋯. Drag a
+  inside panes. Each pane's ⋯ opens a new terminal or agent and holds what applies to the pane, with
+  ✕ beside it to close it; ⌘D and ⌘⇧D split right and down. Drag a
   pane by its name onto another's edge to move it there, or onto its middle to swap the two.
   Maximise a pane over everything from its ⋯, or ⌘⇧↩. Panes share the space
   evenly whenever one opens or closes; drag a divider to change that, or double-click it to even
@@ -104,6 +105,8 @@ Each pane shows whether its agent is working, waiting for you, done or failed.
 
 - ⌘P finds any file by a few letters of its name or path; ⌘⇧P finds any command.
 - A file tree with an icon for each kind of file and git badges; what git ignores is shown faint.
+  Right-click to make a file or folder there, rename one, or move it to the Trash (New file and
+  New folder are in the repo's ⋯ too); drag a file or folder onto another folder to move it.
 - Syntax highlighting for about 60 languages, saved with your project's own formatter (Prettier,
   Biome, oxfmt or rustfmt).
 - Files an agent changes reload by themselves; if you have unsaved edits, Saturn asks first.

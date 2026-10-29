@@ -290,6 +290,9 @@ pub struct Workspace {
     names: HashMap<TabId, String>,
     /// Tabs that changed into a state asking for the user while they looked elsewhere.
     unseen: HashSet<TabId>,
+    /// The pane whose terminal has the keyboard, as of the last frame: the blue ring goes there,
+    /// not where the keyboard was last, so reading a file leaves no pane looking focused.
+    keyboard_in: Option<TabId>,
     renaming: Option<(TabId, Entity<InputState>)>,
     next_tab: u64,
     focus: FocusHandle,
@@ -430,6 +433,8 @@ enum OpenMenu {
 fn new_agent_menu() -> Vec<menu::Item> {
     vec![
         Some(("square-plus", "New agent", Box::new(OpenTicketPicker))),
+        Some(("square-terminal", "Open a terminal", Box::new(NewTab))),
+        None,
         Some(("git-fork", "Best of N: one task, several agents", Box::new(BestOfN))),
         Some(("send", "Send to several agents", Box::new(SendToSeveral))),
         None,
@@ -439,13 +444,13 @@ fn new_agent_menu() -> Vec<menu::Item> {
 }
 
 /// What applies to one pane: its app, its checks, its pull request, what its agent is told.
-/// `maximized`: the pane is maximised, so its line restores it.
-fn pane_menu(maximized: bool) -> Vec<menu::Item> {
+/// `maximized`: the pane is maximised, so its line restores it; `pull_request`: it works on one,
+/// so its description can be edited.
+fn pane_menu(maximized: bool, pull_request: bool) -> Vec<menu::Item> {
     let maximize = if maximized { ("minimize-2", "Restore the pane") } else { ("maximize-2", "Maximise the pane") };
-    vec![
+    let mut items: Vec<menu::Item> = vec![
         Some(("square-terminal", "New terminal", Box::new(NewTab))),
-        Some(("columns-2", "Split right", Box::new(SplitRight))),
-        Some(("rows-2", "Split down", Box::new(SplitDown))),
+        Some(("square-plus", "New agent", Box::new(OpenTicketPicker))),
         Some((maximize.0, maximize.1, Box::new(ToggleMaximize))),
         None,
         Some(("play", "Start the app", Box::new(StartApp))),
@@ -453,17 +458,27 @@ fn pane_menu(maximized: bool) -> Vec<menu::Item> {
         Some(("camera", "Pictures of the app", Box::new(ShowPictures))),
         Some(("list-checks", "Run a check", Box::new(RunCheck))),
         None,
-        Some(("git-pull-request", "Edit the pull request's description", Box::new(EditPrBody))),
+    ];
+    // Only a pane working on a pull request has a description to edit.
+    if pull_request {
+        items.push(Some(("git-pull-request", "Edit the pull request's description", Box::new(EditPrBody))));
+    }
+    let rest: Vec<menu::Item> = vec![
         Some(("wrench", "Set up this worktree", Box::new(SetUpWorktree))),
         None,
         Some(("book-open", "What the agent is told", Box::new(ShowContext))),
         Some(("sprout", "Teach the repo: keep a correction", Box::new(TeachRepo))),
-    ]
+    ];
+    items.extend(rest);
+    items
 }
 
 /// What applies to the repo the sidebar shows: its worktrees and its history.
 fn repo_menu() -> Vec<menu::Item> {
     vec![
+        Some(("file-plus", "New file", Box::new(crate::files_view::NewFile))),
+        Some(("folder-plus", "New folder", Box::new(crate::files_view::NewFolder))),
+        None,
         Some(("folder-git", "Worktrees", Box::new(ShowWorktrees))),
         Some(("git-compare", "Compare attempts", Box::new(CompareAttempts))),
         Some(("file-code", "Create worktree recipe", Box::new(CreateRecipe))),
@@ -1131,6 +1146,7 @@ impl Workspace {
             terminals: HashMap::new(),
             names: HashMap::new(),
             unseen: HashSet::new(),
+            keyboard_in: None,
             renaming: None,
             next_tab: 0,
             focus: cx.focus_handle(),
@@ -2295,8 +2311,8 @@ impl Workspace {
 
     /// The agents waiting for you, for the list: what each waits for, where it works.
     pub fn waiting_rows(&self, cx: &gpui_kit::App) -> Vec<crate::queue_view::Row> {
-        self.layout
-            .tabs()
+        self.all_tabs()
+            .into_iter()
             .filter_map(|tab| {
                 let view = self.terminals.get(&tab)?.read(cx);
                 if !view.state.asks_for_you() {
@@ -2316,8 +2332,8 @@ impl Workspace {
     /// Every pane, for Send to several agents: where it works, and what a message would do there.
     pub fn broadcast_panes(&self, cx: &gpui_kit::App) -> Vec<crate::broadcast_view::Pane> {
         use crate::broadcast_view::{Pane, Reach};
-        self.layout
-            .tabs()
+        self.all_tabs()
+            .into_iter()
             .filter_map(|tab| {
                 let view = self.terminals.get(&tab)?.read(cx);
                 let program = view.foreground_pid().and_then(process_name)?;
@@ -2396,6 +2412,7 @@ impl Workspace {
         if let Some(page) = page {
             self.switch_to(page, window, cx);
         }
+        self.unseen.remove(&tab);
         self.update_layout(window, cx, |layout| layout.activate_tab(tab));
     }
 
@@ -2579,6 +2596,19 @@ impl Workspace {
     /// The pull request a tab works on.
     fn pull_request_of(&self, tab: TabId) -> Option<&PullRequest> {
         self.pull_requests.get(&tab)
+    }
+
+    /// A new file or folder in the sidebar's tree, beside what's selected there.
+    fn ask_new(&mut self, is_dir: bool, window: &mut Window, cx: &mut Context<Self>) {
+        if let Some(views) = self.roots.get(&self.root) {
+            views.files.update(cx, |files, cx| files.ask_new(None, is_dir, window, cx));
+        }
+    }
+
+    /// The menu of a pane, as it stands: maximised or not, with a pull request or not.
+    fn menu_for_pane(&self, cell: CellId) -> Vec<menu::Item> {
+        let tab = self.layout.cell(cell).map(|cell| cell.active);
+        pane_menu(self.layout.maximized == Some(cell), tab.and_then(|tab| self.pull_request_of(tab)).is_some())
     }
 
     /// The ticket a tab works on: a ticket whose key is the tab's name, its Claude session's name
@@ -3167,8 +3197,12 @@ impl Workspace {
         self.terminals.get(&tab)
     }
 
-    fn is_looking_at(&self, tab: TabId, window: &Window) -> bool {
-        window.is_window_active() && self.layout.focused_tab() == Some(tab)
+    /// Whether the keyboard is in `tab`'s terminal, in the window in front: the pane in front of a
+    /// repo out of sight, or one left while you read a file, isn't looked at.
+    fn is_looking_at(&self, tab: TabId, window: &Window, cx: &gpui_kit::App) -> bool {
+        window.is_window_active()
+            && self.layout.focused_tab() == Some(tab)
+            && self.terminals.get(&tab).is_some_and(|view| view.focus_handle(cx).contains_focused(window, cx))
     }
 
     fn terminal_event(&mut self, tab: TabId, event: &TerminalViewEvent, window: &mut Window, cx: &mut Context<Self>) {
@@ -3179,7 +3213,7 @@ impl Workspace {
                 if asks && !window.is_window_active() && self.settings.notifications {
                     self.notify_about(tab, cx);
                 }
-                if asks && !self.is_looking_at(tab, window) {
+                if asks && !self.is_looking_at(tab, window, cx) {
                     self.unseen.insert(tab);
                 } else if !asks {
                     self.unseen.remove(&tab);
@@ -3193,7 +3227,7 @@ impl Workspace {
                 cx.notify();
             }
             TerminalViewEvent::Bell => {
-                if !self.is_looking_at(tab, window) {
+                if !self.is_looking_at(tab, window, cx) {
                     self.unseen.insert(tab);
                 }
                 self.report_attention(window, cx);
@@ -3344,12 +3378,12 @@ impl Workspace {
         self.after_layout_change(window, cx);
     }
 
-    /// Focuses the terminal now in front and marks it seen.
+    /// Focuses the terminal now in front. It's marked seen once it's used (typed or clicked in),
+    /// or gone to on purpose: a repo switched to shows its panes as they were left, rings and all.
     fn after_layout_change(&mut self, window: &mut Window, cx: &mut Context<Self>) {
         self.sync_root(window, cx);
         self.save_session(cx);
         if let Some(front) = self.layout.focused_tab() {
-            self.unseen.remove(&front);
             if self.renaming.is_none()
                 && let Some(view) = self.terminals.get(&front)
             {
@@ -3505,39 +3539,18 @@ impl Workspace {
         let foreground = if selected { theme::color(color::INK) } else { theme::color(color::INK_MUTED) };
         let renaming = self.renaming.as_ref().filter(|(renaming, _)| *renaming == tab).map(|(_, input)| input.clone());
 
-        let close = div()
-            .id(("close", tab.0))
-            .flex()
-            .flex_none()
-            .items_center()
-            .justify_center()
-            .size(px(20.))
-            .rounded(len(radius::RADIUS_XS))
-            .when(!selected, |close| close.invisible().group_hover("tab", gpui_kit::Styled::visible))
-            .hover(|s| s.bg(theme::fill_control()))
-            .child(chrome::icon("x", 11., foreground))
-            .tooltip(chrome::tip_for("Close this terminal", CloseTab))
-            .on_mouse_down(MouseButton::Left, |_, _, cx| cx.stop_propagation())
-            .on_click(cx.listener(move |this, _, window, cx| this.close_tab(tab, window, cx)));
-
+        // The pane's title: its state and its name as plain text, the whole name while there's
+        // room. It's what a pane is dragged by, and a double click renames it.
         div()
             .id(("tab", tab.0))
-            .group("tab")
             .flex()
-            // A tab gives up its name before its ✕, so even a narrow pane can be closed.
-            .flex_shrink(1.)
-            .min_w(px(TAB_MIN_WIDTH))
+            .flex_1()
+            .min_w_0()
             .items_center()
             .gap(len(6.))
             .h(len(TAB_HEIGHT))
-            .pl(len(space::SPACE_3))
-            .pr(len(space::SPACE_1))
-            .max_w(px(220.))
-            .rounded(len(radius::RADIUS_SM))
-            // Selected the way every tab is (chrome::raised); a hidden tab that needs you, ringed.
-            .map(|tab| chrome::raised(tab, selected))
+            .pl(len(space::SPACE_2))
             .when(calling, |tab| tab.shadow(theme::layers(&shadow::GLOW_NEEDS_YOU.get()[..1])))
-            .when(!selected, |tab| tab.hover(|s| s.bg(theme::fill_hover())))
             .text_color(foreground)
             .text_size(px(13.))
             .font_weight(FontWeight::MEDIUM)
@@ -3546,7 +3559,6 @@ impl Workspace {
                 Some(input) => tab_element.child(div().w(px(140.)).child(Input::new(&input).appearance(false))),
                 None => tab_element.child(div().min_w_0().truncate().child(name.clone())),
             })
-            .child(close)
             .on_mouse_down(
                 MouseButton::Left,
                 cx.listener(move |this, _, window, cx| {
@@ -3878,7 +3890,13 @@ impl Workspace {
                         .on_click(cx.listener(move |this, _, _, cx| this.toggle_menu(OpenMenu::Pane(cell_id), cx))),
                     cx,
                 ),
-            );
+            )
+            .child({
+                let tab = cell.active;
+                chrome::icon_button(("close-pane", cell_id.key()), "x", true)
+                    .tooltip(chrome::tip_for("Close this terminal", CloseTab))
+                    .on_click(cx.listener(move |this, _, window, cx| this.close_tab(tab, window, cx)))
+            });
         div().flex().flex_shrink(1.).min_w_0().items_center().gap(len(space::SPACE_1)).child(chips).child(buttons)
     }
 
@@ -3957,7 +3975,7 @@ impl Workspace {
         cx.notify();
         let items = match which {
             OpenMenu::NewAgent => new_agent_menu(),
-            OpenMenu::Pane(cell) => pane_menu(self.layout.maximized == Some(cell)),
+            OpenMenu::Pane(cell) => self.menu_for_pane(cell),
             OpenMenu::Repo => repo_menu(),
         };
         if let Some(action) = pick.and_then(|index| items.into_iter().flatten().nth(index)).map(|(_, _, action)| action)
@@ -3971,7 +3989,7 @@ impl Workspace {
         let menu = (self.open_menu == Some(which)).then(|| {
             let items = match which {
                 OpenMenu::NewAgent => new_agent_menu(),
-                OpenMenu::Pane(cell) => pane_menu(self.layout.maximized == Some(cell)),
+                OpenMenu::Pane(cell) => self.menu_for_pane(cell),
                 OpenMenu::Repo => repo_menu(),
             };
             let workspace = cx.weak_entity();
@@ -3986,7 +4004,7 @@ impl Workspace {
                     cx.notify();
                 });
             };
-            menu::render("menu", items, pick, dismiss)
+            menu::render("menu", items, pick, dismiss, cx)
         });
         div().relative().flex_none().child(button).children(menu)
     }
@@ -4001,7 +4019,7 @@ impl Workspace {
             Some(shadow::GLOW_NEEDS_YOU)
         } else if !unseen_states.is_empty() {
             Some(shadow::GLOW_YOUR_TURN)
-        } else if focused {
+        } else if focused && self.keyboard_in == Some(cell.active) {
             Some(shadow::GLOW_FOCUS)
         } else {
             None
@@ -4029,14 +4047,8 @@ impl Workspace {
                             .id(("tab-strip", cell_id.key()))
                             .flex()
                             .flex_1()
-                            // Room for one tab, whatever the buttons beside it want.
+                            // Room for a few letters of the name, whatever the buttons beside it want.
                             .min_w(px(TAB_MIN_WIDTH))
-                            .gap(px(2.))
-                            // Scrolling clips to the strip, which would cut the raised tab's shadow:
-                            // the strip reaches a few pixels past its tabs on every side instead.
-                            .m(px(-4.))
-                            .p(px(4.))
-                            .overflow_x_scroll()
                             .children((0..cell.tabs.len()).map(|index| self.render_tab(cell, index, cx)))
                             .on_drop(cx.listener(move |this, dragged: &DraggedTab, window, cx| {
                                 this.drop_tab(dragged.tab, cell_id, window, cx);
@@ -4266,7 +4278,7 @@ impl Workspace {
             .child(self.render_new_agent(cx))
     }
 
-    /// New terminals come from each pane's ＋ (and ⌘N), repos from the ＋ after them. Starting an
+    /// New terminals come from each pane's ⋯ (and ⌘N), repos from the ＋ after them. Starting an
     /// agent on new work, named or from a ticket, is the one primary action; its shortcut is in its
     /// tooltip, to keep the bar short. Its arrow holds the other ways to start agents: several at
     /// once, again, on a schedule.
@@ -4277,8 +4289,11 @@ impl Workspace {
         // is open.
         let part = |id: &'static str| div().id(id).flex().items_center().h(height).cursor_pointer();
         let open = self.open_menu == Some(OpenMenu::NewAgent);
+        // The arrow's half is as wide around its icon as the label's gap to the divider, so the
+        // divider sits between two even halves.
         let more = part("new-agent-more")
-            .px(len(space::SPACE_2))
+            .pl(len(space::SPACE_2))
+            .pr(len(6.))
             .rounded_r(len(radius::RADIUS_MD))
             .when(open, |part| part.bg(gpui_kit::white().opacity(0.1)))
             .child(chrome::icon("chevron-down", 14., theme::color(color::INK_ON_ACCENT)))
@@ -4293,7 +4308,8 @@ impl Workspace {
             .font_weight(FontWeight::MEDIUM)
             .child(
                 part("new-agent")
-                    .px(len(space::SPACE_4))
+                    .pl(len(space::SPACE_4))
+                    .pr(len(space::SPACE_3))
                     .rounded_l(len(radius::RADIUS_MD))
                     .child("New agent")
                     .tooltip(chrome::tip_for("New agent, in a worktree of its own", OpenTicketPicker))
@@ -4569,6 +4585,8 @@ impl Workspace {
             .on_action(cx.listener(|this, _: &StartApp, window, cx| this.start_app(window, cx)))
             .on_action(cx.listener(|this, _: &CreateRecipe, window, cx| this.create_recipe(window, cx)))
             .on_action(cx.listener(|this, _: &ShowWorktrees, window, cx| this.show_worktrees(window, cx)))
+            .on_action(cx.listener(|this, _: &crate::files_view::NewFile, window, cx| this.ask_new(false, window, cx)))
+            .on_action(cx.listener(|this, _: &crate::files_view::NewFolder, window, cx| this.ask_new(true, window, cx)))
             .on_action(cx.listener(|this, _: &EditPrBody, window, cx| this.edit_pr_body(window, cx)))
             .on_action(cx.listener(|this, _: &ShowPictures, window, cx| this.show_pictures(window, cx)))
             .on_action(cx.listener(|this, _: &ShowPreview, window, cx| this.show_preview(window, cx)))
@@ -4632,6 +4650,7 @@ impl Workspace {
 impl Render for Workspace {
     fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         self.report_attention(window, cx);
+        self.keyboard_in = self.layout.focused_tab().filter(|tab| self.is_looking_at(*tab, window, cx));
         // With nothing holding the keyboard (Saturn just came forward, a dialog just closed),
         // shortcuts would reach nothing: the workspace takes it.
         if window.focused(cx).is_none() {
