@@ -21,7 +21,43 @@ pub fn render(
     items: Vec<Item>,
     pick: impl Fn(Box<dyn Action>, &mut gpui_kit::Window, &mut gpui_kit::App) + 'static,
     dismiss: impl Fn(&mut gpui_kit::Window, &mut gpui_kit::App) + 'static,
+    cx: &gpui_kit::App,
 ) -> AnyElement {
+    let list = lines(id, items, pick, dismiss, cx);
+    // A point at the button's bottom right, from which the menu hangs, drawn above everything.
+    div()
+        .absolute()
+        .top_full()
+        .right_0()
+        .child(
+            deferred(anchored().anchor(Anchor::TopRight).snap_to_window_with_margin(px(8.)).child(list.mt(px(4.))))
+                .with_priority(1),
+        )
+        .into_any_element()
+}
+
+/// The menu's lines at `position` in the window, where a right click opened it.
+pub fn render_at(
+    id: &'static str,
+    items: Vec<Item>,
+    position: gpui_kit::Point<gpui_kit::Pixels>,
+    pick: impl Fn(Box<dyn Action>, &mut gpui_kit::Window, &mut gpui_kit::App) + 'static,
+    dismiss: impl Fn(&mut gpui_kit::Window, &mut gpui_kit::App) + 'static,
+    cx: &gpui_kit::App,
+) -> AnyElement {
+    let list = lines(id, items, pick, dismiss, cx);
+    deferred(anchored().position(position).snap_to_window_with_margin(px(8.)).child(list))
+        .with_priority(1)
+        .into_any_element()
+}
+
+fn lines(
+    id: &'static str,
+    items: Vec<Item>,
+    pick: impl Fn(Box<dyn Action>, &mut gpui_kit::Window, &mut gpui_kit::App) + 'static,
+    dismiss: impl Fn(&mut gpui_kit::Window, &mut gpui_kit::App) + 'static,
+    cx: &gpui_kit::App,
+) -> gpui_kit::Stateful<gpui_kit::Div> {
     let pick = std::rc::Rc::new(pick);
     let mut list = chrome::floating(div())
         .id(id)
@@ -53,18 +89,27 @@ pub fn render(
                 .font_weight(FontWeight::NORMAL)
                 .text_color(theme::color(color::INK))
                 .child(chrome::icon(icon, 14., theme::color(color::INK_MUTED)))
-                .child(label)
+                .child(div().flex_1().child(label))
+                // Its shortcut, as macOS menus show it, so the keys are learned by using the menu.
+                .children(shortcut(action.as_ref(), cx).map(|keys| {
+                    div()
+                        .pl(len(space::SPACE_4))
+                        .text_size(px(12.))
+                        .text_color(theme::color(color::INK_FAINT))
+                        .child(keys)
+                }))
                 .on_click(move |_, window, cx| pick(action.boxed_clone(), window, cx)),
         );
     }
-    // A point at the button's bottom right, from which the menu hangs, drawn above everything.
-    div()
-        .absolute()
-        .top_full()
-        .right_0()
-        .child(
-            deferred(anchored().anchor(Anchor::TopRight).snap_to_window_with_margin(px(8.)).child(list.mt(px(4.))))
-                .with_priority(1),
-        )
-        .into_any_element()
+    list
+}
+
+/// The keys that do `action` now (the person's own, when they changed them), written as macOS
+/// writes them (⌘N).
+fn shortcut(action: &dyn Action, cx: &gpui_kit::App) -> Option<String> {
+    let keymap = cx.key_bindings();
+    let keymap = keymap.borrow();
+    let binding = keymap.bindings_for_action(action).last()?;
+    let keystroke = binding.keystrokes().first()?;
+    Some(gpui_kit::component::kbd::Kbd::format(gpui_kit::AsKeystroke::as_keystroke(keystroke)))
 }

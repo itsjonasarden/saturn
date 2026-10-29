@@ -58,6 +58,7 @@ use gpui_kit::{
 };
 
 use crate::app_view::AppView;
+use crate::files_view as saturn_files;
 use crate::workspace::{
     BestOfN, CloseTab, CommandPalette, CompareAttempts, CompareWith, Copy, CreateRecipe, EditPrBody, EvenOutPanes,
     GoToFile, NewTab, NextAttention, NextTab, OpenProject, OpenSettings, OpenTicketPicker, Paste, PreviousTab,
@@ -105,6 +106,9 @@ pub fn set_menus(cx: &mut App) {
             MenuItem::action("Quit Saturn", Quit),
         ]),
         Menu::new("File").items([
+            MenuItem::action("New File…", saturn_files::NewFile),
+            MenuItem::action("New Folder…", saturn_files::NewFolder),
+            MenuItem::separator(),
             MenuItem::action("Go to File…", GoToFile),
             MenuItem::action("Open Project…", OpenProject),
             MenuItem::action("Save", SaveFile),

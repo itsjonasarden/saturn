@@ -125,6 +125,8 @@ objc2-foundation = { version = "0.3", default-features = false, features = [
   "NSString",
   "NSBundle",
   "NSError",
+  "NSFileManager",
+  "NSURL",
 ] }
 objc2-user-notifications = { version = "0.3", default-features = false, features = [
   "std",

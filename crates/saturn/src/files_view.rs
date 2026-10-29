@@ -1,17 +1,21 @@
 //! The file tree in the sidebar's well: a virtualized list of the open folders' entries, with git
-//! badges, kept current by a file watcher.
+//! badges, kept current by a file watcher. A right click on an entry makes a file or folder beside
+//! it, renames it or moves it to the Trash; dragging one onto a folder moves it there.
 
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 
+use gpui_kit::component::WindowExt as _;
+use gpui_kit::component::input::{Input, InputState};
 use gpui_kit::{
-    AnyElement, AppContext as _, Context, EventEmitter, InteractiveElement as _, IntoElement, ParentElement as _,
-    Render, StatefulInteractiveElement as _, Styled as _, Window, div, prelude::FluentBuilder as _, px, uniform_list,
+    Action, AnyElement, App, AppContext as _, Context, EventEmitter, InteractiveElement as _, IntoElement, MouseButton,
+    MouseDownEvent, ParentElement as _, Pixels, Point, PromptLevel, Render, StatefulInteractiveElement as _,
+    Styled as _, Window, actions, div, prelude::FluentBuilder as _, px, uniform_list,
 };
 use notify::Watcher as _;
 use saturn_core::file_icon::{FileIcon, file_icon};
-use saturn_core::files::{FileTree, Ignored, Row};
+use saturn_core::files::{self, FileTree, Ignored, Row};
 use saturn_core::git::{self, FileState};
 use saturn_design::{color, radius, space};
 
@@ -24,6 +28,8 @@ const INDENT: f32 = 14.0;
 /// File changes are gathered this long before the tree reads them, so a `git checkout` touching a
 /// thousand files refreshes once.
 const SETTLE: Duration = Duration::from_millis(150);
+
+actions!(files, [NewFile, NewFolder, RenameEntry, TrashEntry]);
 
 pub enum FilesEvent {
     Open(PathBuf),
@@ -39,6 +45,8 @@ pub struct FilesView {
     changes: HashMap<PathBuf, FileState>,
     selected: Option<PathBuf>,
     ignored: Ignored,
+    /// The menu a right click opened: on which entry (`None`: the folder's empty space), and where.
+    menu: Option<(Option<Row>, Point<Pixels>)>,
     /// Kept alive for as long as the view watches its root.
     _watcher: Option<notify::RecommendedWatcher>,
 }
@@ -73,7 +81,8 @@ impl FilesView {
         })
         .detach();
         let ignored = Ignored::new(root);
-        let mut view = Self { tree, rows, changes: HashMap::new(), selected: None, ignored, _watcher: watcher };
+        let mut view =
+            Self { tree, rows, changes: HashMap::new(), selected: None, ignored, menu: None, _watcher: watcher };
         view.refresh_git(cx);
         view
     }
@@ -124,6 +133,146 @@ impl FilesView {
             cx.emit(FilesEvent::Open(row.path.clone()));
         }
         cx.notify();
+    }
+
+    /// The folder something new goes in: the entry's own, when it's a folder, else the one it's in;
+    /// with no entry, the selected one's, else the root.
+    fn folder_for(&self, entry: Option<&Row>) -> PathBuf {
+        let root = self.tree.root().to_owned();
+        let at = entry.map(|row| (row.path.clone(), row.is_dir)).or_else(|| {
+            self.selected.clone().map(|path| {
+                let is_dir = path.is_dir();
+                (path, is_dir)
+            })
+        });
+        match at {
+            Some((path, true)) => path,
+            Some((path, false)) => path.parent().map_or(root, Path::to_owned),
+            None => root,
+        }
+    }
+
+    /// Asks for the name of a new file (or folder) in `folder`, makes it, and opens a new file.
+    pub fn ask_new(&mut self, folder: Option<PathBuf>, is_dir: bool, window: &mut Window, cx: &mut Context<Self>) {
+        let folder = folder.unwrap_or_else(|| self.folder_for(None));
+        let shown = folder.strip_prefix(self.tree.root()).unwrap_or(&folder).display().to_string();
+        let place = if shown.is_empty() { "the repo's top".to_owned() } else { shown };
+        let (title, button) = if is_dir { ("New folder", "Create folder") } else { ("New file", "Create file") };
+        let files = cx.weak_entity();
+        ask_name(title, format!("In {place}"), String::new(), button, window, cx, move |name, cx| {
+            let path = files::new_entry(&folder, &name)?;
+            let files = files.clone();
+            cx.spawn(async move |cx| {
+                let made = path.clone();
+                let done = cx
+                    .background_spawn(async move {
+                        if is_dir {
+                            std::fs::create_dir_all(&made)
+                        } else {
+                            made.parent()
+                                .map_or(Ok(()), std::fs::create_dir_all)
+                                .and_then(|()| std::fs::write(&made, ""))
+                        }
+                    })
+                    .await;
+                if done.is_ok() && !is_dir {
+                    let _ = files.update(cx, |_, cx| cx.emit(FilesEvent::Open(path)));
+                }
+            })
+            .detach();
+            Ok(())
+        });
+    }
+
+    fn ask_rename(from: PathBuf, window: &mut Window, cx: &mut Context<Self>) {
+        let name = from.file_name().map(|name| name.to_string_lossy().into_owned()).unwrap_or_default();
+        ask_name("Rename", name.clone(), name, "Rename", window, cx, move |name, cx| {
+            let to = files::renamed(&from, &name)?;
+            let from = from.clone();
+            cx.background_spawn(async move {
+                let _ = std::fs::rename(from, to);
+            })
+            .detach();
+            Ok(())
+        });
+    }
+
+    /// Moves `path` to the Trash once asked, so it can come back from there.
+    fn ask_trash(path: PathBuf, window: &mut Window, cx: &mut Context<Self>) {
+        let name = path.file_name().map(|name| name.to_string_lossy().into_owned()).unwrap_or_default();
+        let message = format!("Move “{name}” to the Trash?");
+        let detail =
+            if path.is_dir() { "The folder and everything in it go." } else { "You can put it back from the Trash." };
+        let answer = window.prompt(PromptLevel::Warning, &message, Some(detail), &["Move to Trash", "Cancel"], cx);
+        cx.spawn(async move |_, cx| {
+            if answer.await == Ok(0) {
+                cx.background_spawn(async move { trash(&path) }).await;
+            }
+        })
+        .detach();
+    }
+
+    /// Moves `from` into `folder`, when it may go there.
+    fn move_into(from: &Path, folder: &Path, cx: &mut Context<Self>) {
+        let Ok(to) = files::moved_into(from, folder) else { return };
+        let from = from.to_owned();
+        cx.background_spawn(async move {
+            let _ = std::fs::rename(from, to);
+        })
+        .detach();
+    }
+
+    fn open_menu(&mut self, entry: Option<Row>, event: &MouseDownEvent, cx: &mut Context<Self>) {
+        if let Some(row) = &entry {
+            self.selected = Some(row.path.clone());
+        }
+        self.menu = Some((entry, event.position));
+        cx.notify();
+    }
+
+    fn pick(&mut self, action: &dyn Action, window: &mut Window, cx: &mut Context<Self>) {
+        let Some((entry, _)) = self.menu.take() else { return };
+        let folder = Some(self.folder_for(entry.as_ref()));
+        let any = action.as_any();
+        if any.is::<NewFile>() {
+            self.ask_new(folder, false, window, cx);
+        } else if any.is::<NewFolder>() {
+            self.ask_new(folder, true, window, cx);
+        } else if let Some(row) = entry {
+            if any.is::<RenameEntry>() {
+                Self::ask_rename(row.path, window, cx);
+            } else if any.is::<TrashEntry>() {
+                Self::ask_trash(row.path, window, cx);
+            }
+        }
+        cx.notify();
+    }
+
+    fn render_menu(&self, cx: &mut Context<Self>) -> Option<AnyElement> {
+        let (entry, position) = self.menu.as_ref()?;
+        let mut items: Vec<crate::menu::Item> = vec![
+            Some(("file-plus", "New file", Box::new(NewFile))),
+            Some(("folder-plus", "New folder", Box::new(NewFolder))),
+        ];
+        if entry.is_some() {
+            items.extend([
+                None,
+                Some(("pencil", "Rename", Box::new(RenameEntry) as Box<dyn Action>)),
+                Some(("trash-2", "Move to Trash", Box::new(TrashEntry) as Box<dyn Action>)),
+            ]);
+        }
+        let files = cx.weak_entity();
+        let pick = move |action: Box<dyn Action>, window: &mut Window, cx: &mut App| {
+            let _ = files.update(cx, |this, cx| this.pick(action.as_ref(), window, cx));
+        };
+        let files = cx.weak_entity();
+        let dismiss = move |_: &mut Window, cx: &mut App| {
+            let _ = files.update(cx, |this, cx| {
+                this.menu = None;
+                cx.notify();
+            });
+        };
+        Some(crate::menu::render_at("file-menu", items, *position, pick, dismiss, cx))
     }
 
     fn render_row(&self, index: usize, cx: &mut Context<Self>) -> AnyElement {
@@ -180,6 +329,26 @@ impl FilesView {
             .when(changed_inside, |row| {
                 row.child(div().flex_none().size(px(5.)).rounded_full().bg(theme::color(color::AMBER_TEXT)))
             })
+            .on_mouse_down(MouseButton::Right, {
+                let row = row.clone();
+                cx.listener(move |this, event: &MouseDownEvent, _, cx| {
+                    cx.stop_propagation();
+                    this.open_menu(Some(row.clone()), event, cx);
+                })
+            })
+            .on_drag(DraggedEntry { path: row.path.clone(), name: row.name.clone() }, |dragged, _, _, cx| {
+                cx.new(|_| dragged.clone())
+            })
+            // A folder takes what's dropped on it; a file, the folder it's in.
+            .drag_over::<DraggedEntry>(|style, _, _, _| style.bg(theme::fill_pressed()))
+            .on_drop({
+                let folder = if row.is_dir {
+                    row.path.clone()
+                } else {
+                    row.path.parent().map(Path::to_owned).unwrap_or_default()
+                };
+                cx.listener(move |_, dragged: &DraggedEntry, _, cx| Self::move_into(&dragged.path, &folder, cx))
+            })
             .on_click(cx.listener(move |this, _, _, cx| this.click(&row, cx)))
             .into_any_element()
     }
@@ -226,16 +395,116 @@ fn badge_color(state: FileState) -> saturn_design::Token {
     }
 }
 
+/// A file or folder being dragged to another folder.
+#[derive(Clone)]
+struct DraggedEntry {
+    path: PathBuf,
+    name: String,
+}
+
+impl Render for DraggedEntry {
+    fn render(&mut self, _: &mut Window, _: &mut Context<Self>) -> impl IntoElement {
+        chrome::floating(div())
+            .px(len(space::SPACE_3))
+            .py(len(space::SPACE_1))
+            .rounded(len(radius::RADIUS_SM))
+            .text_size(px(13.))
+            .text_color(theme::color(color::INK))
+            .child(self.name.clone())
+    }
+}
+
+/// Asks for a name in a dialog: `done` gets it, and the dialog stays open with what's wrong when
+/// it says no.
+fn ask_name(
+    title: &'static str,
+    note: String,
+    initial: String,
+    button: &'static str,
+    window: &mut Window,
+    cx: &mut App,
+    done: impl Fn(String, &mut App) -> Result<(), String> + 'static,
+) {
+    let input = cx.new(|cx| InputState::new(window, cx).default_value(initial));
+    input.update(cx, |input, cx| input.focus(window, cx));
+    let problem: std::rc::Rc<std::cell::RefCell<Option<String>>> = std::rc::Rc::default();
+    let done = std::rc::Rc::new(done);
+    window.open_dialog(cx, move |dialog, _, _| {
+        let submit = {
+            let (input, problem, done) = (input.clone(), problem.clone(), done.clone());
+            move |window: &mut Window, cx: &mut App| {
+                let name = input.read(cx).value().to_string();
+                match done(name, cx) {
+                    Ok(()) => window.close_dialog(cx),
+                    Err(why) => {
+                        *problem.borrow_mut() = Some(why);
+                        window.refresh();
+                    }
+                }
+            }
+        };
+        let on_ok = submit.clone();
+        let wrong = problem.borrow().clone();
+        dialog
+            .title(title)
+            .entrance(gpui_kit::component::dialog::DialogEntrance::None)
+            .bg(chrome::dialog_surface())
+            .w(px(420.))
+            .on_ok(move |_, window, cx| {
+                on_ok(window, cx);
+                false
+            })
+            .child(
+                div()
+                    .pb(len(space::SPACE_2))
+                    .text_size(px(13.))
+                    .text_color(theme::color(color::INK_MUTED))
+                    .child(note.clone()),
+            )
+            .child(Input::new(&input))
+            .children(wrong.map(|why| {
+                div().pt(len(space::SPACE_2)).text_size(px(13.)).text_color(theme::color(color::RED)).child(why)
+            }))
+            .child(
+                div().flex().justify_end().pt(len(space::SPACE_4)).child(
+                    chrome::button(("ask-name", 0usize), button, None, true)
+                        .on_click(move |_, window, cx| submit(window, cx)),
+                ),
+            )
+    });
+}
+
+/// Moves `path` to the Trash, as Finder does.
+fn trash(path: &Path) {
+    use objc2_foundation::{NSFileManager, NSString, NSURL};
+    let url = NSURL::fileURLWithPath(&NSString::from_str(&path.to_string_lossy()));
+    let _ = NSFileManager::defaultManager().trashItemAtURL_resultingItemURL_error(&url, None);
+}
+
 impl Render for FilesView {
     fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
-        uniform_list(
-            "file-tree",
-            self.rows.len(),
-            cx.processor(|this, range: std::ops::Range<usize>, _, cx| {
-                range.map(|index| this.render_row(index, cx)).collect::<Vec<_>>()
-            }),
-        )
-        .size_full()
-        .p(len(space::SPACE_1))
+        let root = self.tree.root().to_owned();
+        div()
+            .id("file-tree-area")
+            .size_full()
+            // A right click below the entries makes something at the top, and a drop there moves
+            // what's dragged to the top.
+            .on_mouse_down(
+                MouseButton::Right,
+                cx.listener(|this, event: &MouseDownEvent, _, cx| this.open_menu(None, event, cx)),
+            )
+            .on_drop(cx.listener(move |_, dragged: &DraggedEntry, _, cx| Self::move_into(&dragged.path, &root, cx)))
+            .child(
+                uniform_list(
+                    "file-tree",
+                    self.rows.len(),
+                    cx.processor(|this, range: std::ops::Range<usize>, _, cx| {
+                        range.map(|index| this.render_row(index, cx)).collect::<Vec<_>>()
+                    }),
+                )
+                .size_full()
+                .p(len(space::SPACE_1)),
+            )
+            .children(self.render_menu(cx))
     }
 }

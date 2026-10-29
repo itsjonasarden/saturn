@@ -158,6 +158,56 @@ fn kept_by_git(root: &Path, dir: &Path) -> HashSet<PathBuf> {
         .collect()
 }
 
+/// Where a new file or folder named `name` goes in `folder`: a name, or a short path under it
+/// (`src/new.ts`), never outside it and never onto something already there.
+pub fn new_entry(folder: &Path, name: &str) -> Result<PathBuf, String> {
+    let name = name.trim();
+    let relative = Path::new(name);
+    let plain = relative.components().all(|part| matches!(part, std::path::Component::Normal(_)));
+    if name.is_empty() || !plain {
+        return Err("Type a name, like notes.md or src/notes.md".to_owned());
+    }
+    let path = folder.join(relative);
+    if path.exists() {
+        return Err(format!("{name} is already there"));
+    }
+    Ok(path)
+}
+
+/// `from` renamed to `name`, in the same folder.
+pub fn renamed(from: &Path, name: &str) -> Result<PathBuf, String> {
+    let name = name.trim();
+    if name.is_empty() || name.contains('/') || name == "." || name == ".." {
+        return Err("Type a name, without a /".to_owned());
+    }
+    let folder = from.parent().ok_or_else(|| "It has no folder to be renamed in".to_owned())?;
+    let path = folder.join(name);
+    if path == from {
+        return Err("That's its name already".to_owned());
+    }
+    if path.exists() {
+        return Err(format!("{name} is already there"));
+    }
+    Ok(path)
+}
+
+/// Where `from` lands when it's moved into `folder`; an error when it can't go there: into itself,
+/// where it already is, or onto something of the same name.
+pub fn moved_into(from: &Path, folder: &Path) -> Result<PathBuf, String> {
+    let name = from.file_name().ok_or_else(|| "It has no name to move".to_owned())?;
+    if folder.starts_with(from) {
+        return Err("A folder can't go inside itself".to_owned());
+    }
+    if from.parent() == Some(folder) {
+        return Err("It's there already".to_owned());
+    }
+    let path = folder.join(name);
+    if path.exists() {
+        return Err(format!("{} is already there", name.to_string_lossy()));
+    }
+    Ok(path)
+}
+
 #[cfg(test)]
 mod tests {
     use std::fs;
@@ -250,5 +300,43 @@ mod tests {
         assert_eq!(tree.rows().len(), 6);
         tree.invalidate(Some(&[dir.path().to_owned()]));
         assert_eq!(tree.rows().len(), 7);
+    }
+
+    #[test]
+    fn a_new_entry_stays_inside_its_folder_and_off_what_is_there() {
+        let dir = tempfile::tempdir().expect("a temporary folder");
+        std::fs::write(dir.path().join("taken.md"), "").expect("a file");
+        assert_eq!(new_entry(dir.path(), " notes.md "), Ok(dir.path().join("notes.md")));
+        assert_eq!(new_entry(dir.path(), "src/notes.md"), Ok(dir.path().join("src/notes.md")));
+        assert!(new_entry(dir.path(), "taken.md").is_err());
+        for bad in ["", "  ", "../out.md", "/etc/hosts", "./here.md"] {
+            assert!(new_entry(dir.path(), bad).is_err(), "{bad}");
+        }
+    }
+
+    #[test]
+    fn renames_in_place_only() {
+        let dir = tempfile::tempdir().expect("a temporary folder");
+        let from = dir.path().join("old.md");
+        std::fs::write(&from, "").expect("a file");
+        std::fs::write(dir.path().join("taken.md"), "").expect("a file");
+        assert_eq!(renamed(&from, "new.md"), Ok(dir.path().join("new.md")));
+        assert!(renamed(&from, "old.md").is_err());
+        assert!(renamed(&from, "taken.md").is_err());
+        assert!(renamed(&from, "sub/new.md").is_err());
+    }
+
+    #[test]
+    fn moves_into_another_folder_but_never_into_itself() {
+        let dir = tempfile::tempdir().expect("a temporary folder");
+        let folder = dir.path().join("docs");
+        let inner = folder.join("guides");
+        std::fs::create_dir_all(&inner).expect("folders");
+        let file = dir.path().join("readme.md");
+        std::fs::write(&file, "").expect("a file");
+        assert_eq!(moved_into(&file, &folder), Ok(folder.join("readme.md")));
+        assert!(moved_into(&file, dir.path()).is_err());
+        assert!(moved_into(&folder, &inner).is_err());
+        assert!(moved_into(&folder, &folder).is_err());
     }
 }
