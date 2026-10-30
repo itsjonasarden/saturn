@@ -124,7 +124,7 @@ impl StatusBar {
             .h(px(20.))
             .px(len(space::SPACE_2))
             // 4px inside the bar's card (radius 10).
-            .rounded(len(radius::RADIUS_SM))
+            .rounded(theme::corner(radius::RADIUS_SM))
     }
 
     /// The repos' Docker Compose services with ports: shared by every terminal, so they sit here

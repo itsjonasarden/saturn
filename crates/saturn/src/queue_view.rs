@@ -91,7 +91,7 @@ fn render_row(workspace: &WeakEntity<Workspace>, row: Row) -> impl IntoElement {
         .gap(len(space::SPACE_3))
         .px(len(space::SPACE_3))
         .py(len(space::SPACE_2))
-        .rounded(len(radius::RADIUS_SM))
+        .rounded(theme::corner(radius::RADIUS_SM))
         .bg(theme::fill_control())
         .child(div().flex_none().size(px(8.)).rounded_full().bg(crate::workspace::state_color(row.state)))
         .child(
@@ -113,11 +113,7 @@ fn render_row(workspace: &WeakEntity<Workspace>, row: Row) -> impl IntoElement {
                 )
                 .children(detail.map(|detail| {
                     div()
-                        .font_family(if asks_permission {
-                            saturn_design::font::MONO
-                        } else {
-                            saturn_design::font::SANS
-                        })
+                        .font_family(if asks_permission { saturn_design::font::MONO } else { saturn_design::sans() })
                         .text_size(px(12.))
                         .text_color(theme::color(color::INK))
                         .truncate()

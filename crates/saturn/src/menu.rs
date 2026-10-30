@@ -65,7 +65,7 @@ fn lines(
         .flex_col()
         .min_w(px(240.))
         .p(len(space::SPACE_1))
-        .rounded(len(radius::RADIUS_MD))
+        .rounded(theme::corner(radius::RADIUS_MD))
         .occlude()
         .on_mouse_down_out(move |_, window, cx| dismiss(window, cx));
     for (index, item) in items.into_iter().enumerate() {
@@ -82,7 +82,7 @@ fn lines(
                 .gap(len(space::SPACE_3))
                 .h(len(chrome::CONTROL_HEIGHT))
                 .px(len(space::SPACE_2))
-                .rounded(len(radius::RADIUS_SM))
+                .rounded(theme::corner(radius::RADIUS_SM))
                 .cursor_pointer()
                 .hover(|s| s.bg(theme::fill_hover()))
                 .text_size(px(13.))

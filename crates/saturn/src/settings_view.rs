@@ -13,7 +13,7 @@ use saturn_design::{color, radius, space};
 
 use crate::chrome;
 use crate::keymap::{self, SHORTCUTS, Shortcut};
-use crate::settings::{AgentCommands, AppearanceSetting, Settings, TEXT_SIZES};
+use crate::settings::{AgentCommands, AppearanceSetting, Settings, TEXT_SIZES, ThemeSetting};
 use crate::theme::{self, len};
 use saturn_core::agents::Agent;
 
@@ -315,6 +315,17 @@ impl SettingsView {
             Row::new(
                 Section::Appearance,
                 "Theme",
+                "Saturn's own look, or Cyberdeck: square panels with cut corners on a near-black ground, in a narrower face.",
+                self.choice(
+                    "theme",
+                    &[("Saturn", ThemeSetting::Saturn), ("Cyberdeck", ThemeSetting::Cyberdeck)],
+                    settings.theme,
+                    |settings, value| settings.theme = value,
+                ),
+            ),
+            Row::new(
+                Section::Appearance,
+                "Appearance",
                 "Light or dark, or whichever macOS is in.",
                 self.choice(
                     "appearance",
@@ -540,7 +551,7 @@ impl SettingsView {
             .min_w(px(88.))
             .justify_center()
             .px(len(space::SPACE_3))
-            .rounded(len(radius::RADIUS_SM))
+            .rounded(theme::corner(radius::RADIUS_SM))
             .cursor_pointer()
             .text_size(px(13.))
             .map(|button| {
@@ -787,7 +798,7 @@ impl SettingsView {
                     .child(chrome::icon(
                         section.icon(),
                         14.,
-                        theme::color(if selected { color::INK } else { color::INK_MUTED }),
+                        theme::color(if selected { chrome::item_ink(selected) } else { color::INK_MUTED }),
                     ))
                     .child(section.name())
                     .on_click(cx.listener(move |this, _, window, cx| {
@@ -899,7 +910,7 @@ impl Render for SettingsView {
             .gap(len(space::SPACE_2))
             .h(len(chrome::CONTROL_HEIGHT))
             .px(len(space::SPACE_2))
-            .rounded(len(radius::RADIUS_SM))
+            .rounded(theme::corner(radius::RADIUS_SM))
             .bg(theme::fill_control())
             .child(chrome::icon("search", 13., theme::color(color::INK_FAINT)))
             .child(div().flex_1().child(Input::new(&self.search).appearance(false)));

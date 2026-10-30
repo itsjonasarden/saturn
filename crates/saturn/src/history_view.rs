@@ -165,7 +165,7 @@ fn ref_chip(name: &str) -> impl IntoElement {
         .h(px(18.))
         .flex()
         .items_center()
-        .rounded(len(radius::RADIUS_XS))
+        .rounded(theme::corner(radius::RADIUS_XS))
         .border_1()
         .border_color(if head { theme::color(color::BLUE).opacity(0.5) } else { theme::separator() })
         .bg(if head { theme::color(color::BLUE_VIVID).opacity(0.14) } else { theme::fill_hover() })

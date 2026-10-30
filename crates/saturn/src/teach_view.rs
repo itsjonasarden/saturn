@@ -121,7 +121,7 @@ impl Render for TeachView {
                     .gap(len(space::SPACE_2))
                     .px(len(space::SPACE_2))
                     .py(len(space::SPACE_1))
-                    .rounded(len(radius::RADIUS_SM))
+                    .rounded(theme::corner(radius::RADIUS_SM))
                     .cursor_pointer()
                     .hover(|s| s.bg(theme::fill_hover()))
                     .child(

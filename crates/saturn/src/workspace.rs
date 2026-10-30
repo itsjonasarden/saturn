@@ -249,14 +249,14 @@ impl Render for DraggedTab {
             .h(len(TAB_HEIGHT))
             .flex()
             .items_center()
-            .rounded(len(radius::RADIUS_SM))
+            .rounded(theme::corner(radius::RADIUS_SM))
             .bg(theme::fill_pressed())
             .border_1()
             .border_color(theme::color(color::BLUE))
             .text_size(px(13.))
             .font_weight(FontWeight::MEDIUM)
             .text_color(theme::color(color::INK))
-            .font_family(saturn_design::font::SANS)
+            .font_family(saturn_design::sans())
             .child(self.name.clone())
     }
 }
@@ -672,7 +672,7 @@ fn ticket_chip(cell: CellId, ticket: &Ticket) -> impl IntoElement {
         .gap(len(space::SPACE_2))
         .h(len(TAB_HEIGHT))
         .px(len(space::SPACE_3))
-        .rounded(len(radius::RADIUS_SM))
+        .rounded(theme::corner(radius::RADIUS_SM))
         .cursor_pointer()
         .text_size(px(12.))
         .font_weight(FontWeight::MEDIUM)
@@ -717,7 +717,7 @@ fn pull_request_chip(cell: CellId, pr: &PullRequest) -> impl IntoElement {
         .gap(len(space::SPACE_1))
         .h(len(TAB_HEIGHT))
         .px(len(space::SPACE_2))
-        .rounded(len(radius::RADIUS_SM))
+        .rounded(theme::corner(radius::RADIUS_SM))
         .cursor_pointer()
         .text_size(px(12.))
         .font_weight(FontWeight::MEDIUM)
@@ -748,7 +748,7 @@ fn preview_chip(cell: CellId, pr: &PullRequest) -> Option<impl IntoElement> {
             .gap(len(space::SPACE_1))
             .h(len(TAB_HEIGHT))
             .px(len(space::SPACE_2))
-            .rounded(len(radius::RADIUS_SM))
+            .rounded(theme::corner(radius::RADIUS_SM))
             .text_size(px(12.))
             .font_weight(FontWeight::MEDIUM)
             .text_color(theme::color(if preview.ready { color::INK_MUTED } else { color::INK_FAINT }))
@@ -781,7 +781,7 @@ fn link_chip(
         .gap(len(space::SPACE_1))
         .h(len(chrome::CONTROL_HEIGHT))
         .px(len(space::SPACE_2))
-        .rounded(len(radius::RADIUS_SM))
+        .rounded(theme::corner(radius::RADIUS_SM))
         .text_size(px(12.))
         .font_weight(FontWeight::MEDIUM)
         .text_color(theme::color(color::INK_MUTED))
@@ -803,7 +803,7 @@ fn attempt_chip(cell: CellId, number: usize) -> impl IntoElement {
         .gap(len(space::SPACE_1))
         .h(len(chrome::CONTROL_HEIGHT))
         .px(len(space::SPACE_2))
-        .rounded(len(radius::RADIUS_SM))
+        .rounded(theme::corner(radius::RADIUS_SM))
         .text_size(px(12.))
         .font_weight(FontWeight::MEDIUM)
         .text_color(theme::color(color::INK_MUTED))
@@ -832,7 +832,7 @@ fn team_chip(cell: CellId, tab: TabId, team: &Team, cx: &mut Context<Workspace>)
         .gap(len(space::SPACE_1))
         .h(len(chrome::CONTROL_HEIGHT))
         .px(len(space::SPACE_2))
-        .rounded(len(radius::RADIUS_SM))
+        .rounded(theme::corner(radius::RADIUS_SM))
         .text_size(px(12.))
         .font_weight(FontWeight::MEDIUM)
         .text_color(theme::color(color::INK_MUTED))
@@ -892,7 +892,7 @@ fn server_chip(cell: CellId, server: &Server) -> impl IntoElement {
         .gap(len(space::SPACE_1))
         .h(len(TAB_HEIGHT))
         .px(len(space::SPACE_2))
-        .rounded(len(radius::RADIUS_SM))
+        .rounded(theme::corner(radius::RADIUS_SM))
         .cursor_pointer()
         .text_size(px(12.))
         .font_weight(FontWeight::MEDIUM)
@@ -936,7 +936,7 @@ fn drop_side(bounds: Bounds<Pixels>, at: Point<Pixels>) -> Option<Direction> {
 fn drop_preview(side: Option<Direction>) -> impl IntoElement {
     let preview = div()
         .absolute()
-        .rounded(len(radius::RADIUS_SM))
+        .rounded(theme::corner(radius::RADIUS_SM))
         .bg(theme::color(color::BLUE_VIVID).opacity(0.14))
         .border_2()
         .border_color(theme::color(color::BLUE).opacity(0.7));
@@ -1077,7 +1077,7 @@ impl Workspace {
         // Following the system: redraw when macOS switches between light and dark.
         cx.observe_window_appearance(window, |this, _, cx| {
             if this.settings.appearance == AppearanceSetting::System {
-                theme::apply(AppearanceSetting::System, cx);
+                theme::apply(&this.settings, cx);
             }
         })
         .detach();
@@ -2918,7 +2918,7 @@ impl Workspace {
     }
 
     pub fn change_settings(&mut self, change: impl FnOnce(&mut Settings), cx: &mut Context<Self>) {
-        let (appearance, menu_bar) = (self.settings.appearance, self.settings.menu_bar);
+        let (appearance, look, menu_bar) = (self.settings.appearance, self.settings.theme, self.settings.menu_bar);
         let codex_status_line = self.settings.codex_status_line;
         change(&mut self.settings);
         settings::save(&self.settings);
@@ -2926,8 +2926,8 @@ impl Workspace {
         if self.settings.codex_status_line != codex_status_line {
             cx.background_spawn(async { crate::agent_choice::install_codex_profile() }).detach();
         }
-        if self.settings.appearance != appearance {
-            theme::apply(self.settings.appearance, cx);
+        if self.settings.appearance != appearance || self.settings.theme != look {
+            theme::apply(&self.settings, cx);
             theme::set_text_size(self.settings.text_size, cx);
         }
         if self.settings.menu_bar != menu_bar {
@@ -3705,7 +3705,7 @@ impl Workspace {
                     .gap(len(space::SPACE_1))
                     .h(len(TAB_HEIGHT))
                     .px(len(space::SPACE_2))
-                    .rounded(len(radius::RADIUS_SM))
+                    .rounded(theme::corner(radius::RADIUS_SM))
                     .cursor_pointer()
                     .text_size(px(12.))
                     .font_weight(FontWeight::MEDIUM)
@@ -3775,7 +3775,7 @@ impl Workspace {
                 .gap(len(space::SPACE_1))
                 .h(len(TAB_HEIGHT))
                 .px(len(space::SPACE_2))
-                .rounded(len(radius::RADIUS_SM))
+                .rounded(theme::corner(radius::RADIUS_SM))
                 .cursor_pointer()
                 .text_size(px(12.))
                 .font_weight(FontWeight::MEDIUM)
@@ -4029,7 +4029,7 @@ impl Workspace {
         let terminal = self.terminals.get(&cell.active).cloned();
         let cell_id: CellId = cell.id;
         // A panel like every other: the tabs in its strip, the terminal in its well.
-        let mut pane = chrome::panel()
+        let pane = chrome::lit_panel(glow)
             .on_mouse_down(
                 MouseButton::Left,
                 cx.listener(move |this, _, window, cx| {
@@ -4077,9 +4077,6 @@ impl Workspace {
                             .map(|(_, side)| drop_preview(side)),
                     ),
             );
-        if let Some(glow) = glow {
-            pane = pane.border_color(gpui_kit::transparent_black()).shadow(theme::shadows(glow));
-        }
         // The ring is lit and still: nothing redraws a pane while it waits for you.
         pane.into_any_element()
     }
@@ -4183,7 +4180,7 @@ impl Workspace {
             chrome::track_item(id, on).size(len(TITLEBAR_CONTROL)).child(chrome::icon(
                 icon,
                 15.,
-                theme::color(if on { color::INK } else { color::INK_MUTED }),
+                theme::color(if on { chrome::item_ink(on) } else { color::INK_MUTED }),
             ))
         };
         chrome::track()
@@ -4295,7 +4292,7 @@ impl Workspace {
         let open = self.open_menu == Some(OpenMenu::NewAgent);
         let more = part("new-agent-more")
             .px(len(space::SPACE_2))
-            .rounded_r(len(radius::RADIUS_MD))
+            .rounded_r(theme::corner(radius::RADIUS_MD))
             .when(open, |part| part.bg(gpui_kit::white().opacity(0.1)))
             .child(chrome::icon("chevron-down", 14., theme::color(color::INK_ON_ACCENT)))
             .tooltip(chrome::tip("More ways to start agents: Best of N, routines, past sessions"))
@@ -4304,13 +4301,13 @@ impl Workspace {
             .flex()
             .items_center()
             .h(height)
-            .rounded(len(radius::RADIUS_MD))
+            .rounded(theme::corner(radius::RADIUS_MD))
             .text_size(px(13.))
             .font_weight(FontWeight::MEDIUM)
             .child(
                 part("new-agent")
                     .px(len(space::SPACE_4))
-                    .rounded_l(len(radius::RADIUS_MD))
+                    .rounded_l(theme::corner(radius::RADIUS_MD))
                     .child("New agent")
                     .tooltip(chrome::tip_for("New agent, in a worktree of its own", OpenTicketPicker))
                     .on_click(cx.listener(|this, _, window, cx| {
@@ -4393,7 +4390,7 @@ impl Workspace {
                     .relative()
                     .group(group.clone())
                     .px(len(space::SPACE_3))
-                    .text_color(theme::color(if selected { color::INK } else { color::INK_MUTED }))
+                    .text_color(theme::color(if selected { chrome::item_ink(selected) } else { color::INK_MUTED }))
                     .when_some(waiting, |item, state| item.child(status_dot(state)))
                     .child(name)
                     // On hover only, floating over the tab's end, so a hidden ✕ takes no room.
@@ -4408,7 +4405,7 @@ impl Workspace {
                                 .items_center()
                                 .justify_center()
                                 .size(px(18.))
-                                .rounded(len(radius::RADIUS_XS))
+                                .rounded(theme::corner(radius::RADIUS_XS))
                                 .bg(theme::color(color::SURFACE))
                                 .shadow(vec![gpui_kit::BoxShadow {
                                     color: theme::overlay(0.12),
@@ -4664,7 +4661,7 @@ impl Render for Workspace {
             // No fill: the title bar and the gaps are the window's glass (theme::overlay). The
             // status bar's card sets the space below.
             .text_color(theme::color(color::INK))
-            .font_family(saturn_design::font::SANS)
+            .font_family(saturn_design::sans())
             .track_focus(&self.focus)
             .key_context("Workspace")
             .map(|element| Self::palette_actions(element, cx))

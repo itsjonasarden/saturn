@@ -53,7 +53,7 @@ impl Render for TeamView {
                 div()
                     .px(len(space::SPACE_2))
                     .py(px(2.))
-                    .rounded(len(radius::RADIUS_XS))
+                    .rounded(theme::corner(radius::RADIUS_XS))
                     .bg(theme::fill_control())
                     .text_size(px(12.))
                     .font_weight(FontWeight::MEDIUM)

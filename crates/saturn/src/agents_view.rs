@@ -8,7 +8,7 @@ use gpui_kit::{
 use saturn_core::agent_state::AgentState;
 use saturn_design::{radius, space};
 
-use crate::theme::len;
+use crate::theme::{self, len};
 
 /// The gradient's bright and deep ends for a state. The card always carries white text, so these
 /// are the same in light and dark mode.
@@ -31,18 +31,20 @@ pub fn surface(id: impl Into<ElementId>, state: AgentState) -> gpui_kit::Statefu
         .flex_col()
         .gap(len(space::SPACE_1))
         .p(len(space::SPACE_3))
-        .rounded(len(radius::RADIUS_SM))
+        .rounded(theme::corner(radius::RADIUS_SM))
         .overflow_hidden()
         .bg(linear_gradient(155., linear_color_stop(rgb(deep), 0.), linear_color_stop(rgb(end), 1.))
             .color_space(ColorSpace::Oklab))
         // The light pooling in from the lower left, as in the design system's gradient card. Rounded
         // like the card: GPUI clips children to a rectangle, not to rounded corners.
         .child(
-            div().absolute().top_0().left_0().size_full().rounded(len(radius::RADIUS_SM)).bg(linear_gradient(
-                30.,
-                linear_color_stop(Hsla::from(rgb(bright)).opacity(0.7), 0.),
-                linear_color_stop(Hsla::from(rgb(bright)).opacity(0.), 0.85),
-            )
-            .color_space(ColorSpace::Oklab)),
+            div().absolute().top_0().left_0().size_full().rounded(theme::corner(radius::RADIUS_SM)).bg(
+                linear_gradient(
+                    30.,
+                    linear_color_stop(Hsla::from(rgb(bright)).opacity(0.7), 0.),
+                    linear_color_stop(Hsla::from(rgb(bright)).opacity(0.), 0.85),
+                )
+                .color_space(ColorSpace::Oklab),
+            ),
         )
 }

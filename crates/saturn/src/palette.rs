@@ -175,7 +175,7 @@ impl Palette {
             .gap(len(space::SPACE_3))
             .h(px(32.))
             .px(len(space::SPACE_3))
-            .rounded(len(radius::RADIUS_SM))
+            .rounded(theme::corner(radius::RADIUS_SM))
             .cursor_pointer()
             .text_size(px(14.))
             .when(selected, |line| line.bg(theme::fill_pressed()))
@@ -233,7 +233,7 @@ impl Render for Palette {
                     .gap(len(space::SPACE_2))
                     .h(px(36.))
                     .px(len(space::SPACE_3))
-                    .rounded(len(radius::RADIUS_SM))
+                    .rounded(theme::corner(radius::RADIUS_SM))
                     .bg(theme::fill_control())
                     .child(chrome::icon("search", 14., theme::color(color::INK_FAINT)))
                     .child(div().flex_1().child(Input::new(&self.search).appearance(false))),

@@ -96,6 +96,6 @@ code, see [Develop](docs/develop.md).
 
 ## Licence
 
-[MIT](LICENSE). Saturn bundles [Urbanist](https://github.com/coreyhu/Urbanist) and
-[JetBrains Mono](https://www.jetbrains.com/lp/mono/) (SIL Open Font Licence), a few
+[MIT](LICENSE). Saturn bundles [Urbanist](https://github.com/coreyhu/Urbanist),
+[Rajdhani](https://github.com/itfoundry/rajdhani) and [JetBrains Mono](https://www.jetbrains.com/lp/mono/) (SIL Open Font Licence), a few
 [Lucide](https://lucide.dev) icons (ISC), and [Sparkle](https://sparkle-project.org) (MIT) for updates.

@@ -4,8 +4,9 @@
 //! (<https://claude.ai/artifact/RC4SBXYReNJprpjxDNapf3>). Change a value in `design/tokens.json`, never
 //! here.
 //!
-//! Colours and shadows come in a dark and a light version; [`set_appearance`] picks which one
-//! [`Token::get`] and [`Shadows::get`] return, for the whole app at once.
+//! Colours and shadows come in a dark and a light version, for each of two themes: Saturn's own
+//! and Cyberdeck. [`set_appearance`] and [`set_theme`] pick which one [`Token::get`] and
+//! [`Shadows::get`] return, for the whole app at once.
 
 use std::sync::atomic::{AtomicBool, Ordering};
 
@@ -34,7 +35,42 @@ pub enum Appearance {
     Light,
 }
 
+/// The look the whole app is drawn in: Saturn's own (glass, rounded cards, Urbanist), or Cyberdeck
+/// (an opaque near-black ground, square panels with cut corners, Rajdhani).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Theme {
+    Saturn,
+    Cyberdeck,
+}
+
 static LIGHT: AtomicBool = AtomicBool::new(false);
+static CYBERDECK: AtomicBool = AtomicBool::new(false);
+
+/// Which theme every token is drawn in.
+pub fn theme() -> Theme {
+    if CYBERDECK.load(Ordering::Relaxed) { Theme::Cyberdeck } else { Theme::Saturn }
+}
+
+pub fn set_theme(theme: Theme) {
+    CYBERDECK.store(theme == Theme::Cyberdeck, Ordering::Relaxed);
+}
+
+/// The interface's font family in the current theme; code stays in [`font::MONO`] in both.
+pub fn sans() -> &'static str {
+    match theme() {
+        Theme::Saturn => font::SANS,
+        Theme::Cyberdeck => font::SANS_CYBERDECK,
+    }
+}
+
+/// A corner's radius in the current theme: Cyberdeck's corners are square (and some are cut, which
+/// the app draws itself).
+pub fn corner(radius: f32) -> f32 {
+    match theme() {
+        Theme::Saturn => radius,
+        Theme::Cyberdeck => 0.0,
+    }
+}
 
 /// Which version of every token the app draws with.
 pub fn appearance() -> Appearance {
@@ -45,36 +81,49 @@ pub fn set_appearance(appearance: Appearance) {
     LIGHT.store(appearance == Appearance::Light, Ordering::Relaxed);
 }
 
-/// A colour token: its value in each theme.
+/// A colour token: its value in each theme and appearance.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Token {
     pub dark: Color,
     pub light: Color,
+    pub cyberdeck_dark: Color,
+    pub cyberdeck_light: Color,
 }
 
 impl Token {
-    /// The value in the current appearance.
+    /// The value in the current theme and appearance.
     pub fn get(self) -> Color {
-        match appearance() {
-            Appearance::Dark => self.dark,
-            Appearance::Light => self.light,
+        self.at(appearance())
+    }
+
+    /// The value in the current theme, in `appearance`.
+    pub fn at(self, appearance: Appearance) -> Color {
+        match (theme(), appearance) {
+            (Theme::Saturn, Appearance::Dark) => self.dark,
+            (Theme::Saturn, Appearance::Light) => self.light,
+            (Theme::Cyberdeck, Appearance::Dark) => self.cyberdeck_dark,
+            (Theme::Cyberdeck, Appearance::Light) => self.cyberdeck_light,
         }
     }
 }
 
-/// A shadow token: its layers in each theme.
+/// A shadow token: its layers in each theme and appearance.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Shadows {
     pub dark: &'static [Shadow],
     pub light: &'static [Shadow],
+    pub cyberdeck_dark: &'static [Shadow],
+    pub cyberdeck_light: &'static [Shadow],
 }
 
 impl Shadows {
-    /// The layers in the current appearance.
+    /// The layers in the current theme and appearance.
     pub fn get(self) -> &'static [Shadow] {
-        match appearance() {
-            Appearance::Dark => self.dark,
-            Appearance::Light => self.light,
+        match (theme(), appearance()) {
+            (Theme::Saturn, Appearance::Dark) => self.dark,
+            (Theme::Saturn, Appearance::Light) => self.light,
+            (Theme::Cyberdeck, Appearance::Dark) => self.cyberdeck_dark,
+            (Theme::Cyberdeck, Appearance::Light) => self.cyberdeck_light,
         }
     }
 }
@@ -141,5 +190,17 @@ mod tests {
     fn fonts_are_the_first_family_of_each_stack() {
         assert_eq!(font::SANS, "Urbanist");
         assert_eq!(font::MONO, "JetBrains Mono");
+        assert_eq!(font::SANS_CYBERDECK, "Rajdhani");
+    }
+
+    #[test]
+    fn cyberdeck_is_monochrome_and_borrows_the_signals() {
+        // Its own neutrals, with no blue in them.
+        assert_ne!(color::SURFACE.cyberdeck_dark, color::SURFACE.dark);
+        let rgb = color::SURFACE.cyberdeck_dark.rgb;
+        assert!((rgb >> 16) & 0xff <= (rgb & 0xff) + 1 && (rgb & 0xff) <= ((rgb >> 16) & 0xff) + 1);
+        // The signals mean the same in both themes.
+        assert_eq!(color::ORANGE.cyberdeck_dark, color::ORANGE.dark);
+        assert_eq!(color::BLUE_VIVID.cyberdeck_light, color::BLUE_VIVID.light);
     }
 }

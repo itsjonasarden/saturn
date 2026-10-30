@@ -312,7 +312,7 @@ impl ReviewComments {
                 .my(len(space::SPACE_1))
                 .mx(len(space::SPACE_3))
                 .p(len(space::SPACE_2))
-                .rounded(len(radius::RADIUS_SM))
+                .rounded(theme::corner(radius::RADIUS_SM))
                 .bg(theme::color(color::SURFACE))
                 .border_1()
                 .border_color(theme::separator())

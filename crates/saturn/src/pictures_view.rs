@@ -145,7 +145,7 @@ impl PicturesView {
                 .min_w_0()
                 .flex()
                 .justify_center()
-                .rounded(len(radius::RADIUS_SM))
+                .rounded(theme::corner(radius::RADIUS_SM))
                 .overflow_hidden()
                 .bg(theme::fill_control());
             // Each at its viewport's shape, 320 high, so a phone's tall page isn't cut to a strip.

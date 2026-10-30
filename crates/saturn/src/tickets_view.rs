@@ -59,7 +59,7 @@ impl TicketsView {
             .items_center()
             .h(px(24.))
             .px(len(space::SPACE_2))
-            .rounded(len(radius::RADIUS_SM))
+            .rounded(theme::corner(radius::RADIUS_SM))
             .cursor_pointer()
             .text_size(px(12.))
             .map(|chip| {
@@ -193,7 +193,7 @@ impl TicketsView {
             .gap(len(space::SPACE_2))
             .px(len(space::SPACE_2))
             .py(len(space::SPACE_2))
-            .rounded(len(radius::RADIUS_SM))
+            .rounded(theme::corner(radius::RADIUS_SM))
             .cursor_pointer()
             .hover(|s| s.bg(theme::fill_hover()))
             .child(div().pt(px(5.)).child(status_dot(ticket)))
@@ -216,7 +216,7 @@ impl TicketsView {
                             .when(running, |line| {
                                 line.child(
                                     div()
-                                        .font_family(saturn_design::font::SANS)
+                                        .font_family(saturn_design::sans())
                                         .text_color(theme::color(color::BLUE))
                                         .child("● agent running"),
                                 )
@@ -373,7 +373,7 @@ impl Render for TicketsView {
                         .gap(len(space::SPACE_2))
                         .h(len(chrome::CONTROL_HEIGHT))
                         .px(len(space::SPACE_2))
-                        .rounded(len(radius::RADIUS_SM))
+                        .rounded(theme::corner(radius::RADIUS_SM))
                         .bg(theme::fill_control())
                         .child(chrome::icon("search", 13., theme::color(color::INK_FAINT)))
                         .child(div().flex_1().child(Input::new(&self.search).appearance(false))),

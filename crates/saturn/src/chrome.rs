@@ -6,8 +6,8 @@
 use gpui_kit::component::tooltip::Tooltip;
 use gpui_kit::{
     Action, AnyElement, AnyView, App, Bounds, ColorSpace, ElementId, FontWeight, InteractiveElement as _, IntoElement,
-    ParentElement as _, Pixels, SharedString, StatefulInteractiveElement as _, Styled as _, Window, canvas, div, fill,
-    linear_color_stop, linear_gradient, point, prelude::FluentBuilder as _, px, size, svg,
+    ParentElement as _, PathBuilder, Pixels, SharedString, StatefulInteractiveElement as _, Styled as _, Window,
+    canvas, div, fill, linear_color_stop, linear_gradient, point, prelude::FluentBuilder as _, px, size, svg,
 };
 use saturn_design::{color, radius, space};
 
@@ -36,6 +36,79 @@ pub fn icon(name: &str, size: f32, color: gpui_kit::Hsla) -> impl IntoElement {
     svg().path(SharedString::from(format!("icons/{name}.svg"))).size(px(size)).flex_none().text_color(color)
 }
 
+/// Whether the Cyberdeck theme is on: square panels with cut corners instead of glass and cards.
+pub fn cyberdeck() -> bool {
+    saturn_design::theme() == saturn_design::Theme::Cyberdeck
+}
+
+/// How far along each edge Cyberdeck cuts a panel's corner, and a selection's.
+const PANEL_CUT: f32 = 12.;
+const SELECTION_CUT: f32 = 8.;
+
+/// The corner Cyberdeck cuts: panels lose the top right, selections and buttons the bottom right.
+#[derive(Clone, Copy)]
+enum Cut {
+    TopRight,
+    BottomRight,
+}
+
+/// `bounds` as a path with one corner cut `cut` pixels along each edge.
+fn cut_path(bounds: Bounds<Pixels>, cut: f32, corner: Cut) -> Option<gpui_kit::Path<Pixels>> {
+    let (left, top) = (bounds.origin.x, bounds.origin.y);
+    let (right, bottom) = (left + bounds.size.width, top + bounds.size.height);
+    let cut = px(cut);
+    let points = match corner {
+        Cut::TopRight => [
+            point(left, top),
+            point(right - cut, top),
+            point(right, top + cut),
+            point(right, bottom),
+            point(left, bottom),
+        ],
+        Cut::BottomRight => [
+            point(left, top),
+            point(right, top),
+            point(right, bottom - cut),
+            point(right - cut, bottom),
+            point(left, bottom),
+        ],
+    };
+    let mut path = PathBuilder::fill();
+    path.move_to(points[0]);
+    for to in &points[1..] {
+        path.line_to(*to);
+    }
+    path.close();
+    path.build().ok()
+}
+
+/// A Cyberdeck surface, painted under an element's children: `fill` with one corner cut, inside a
+/// `width` edge of `edge`. Drawn, not styled, since GPUI's boxes only round their corners.
+fn cut_surface(edge: gpui_kit::Hsla, fill: gpui_kit::Hsla, width: f32, cut: f32, corner: Cut) -> impl IntoElement {
+    canvas(
+        |_, _, _| (),
+        move |bounds: Bounds<Pixels>, (), window: &mut Window, _: &mut App| {
+            if width > 0.
+                && let Some(path) = cut_path(bounds, cut, corner)
+            {
+                window.paint_path(path, edge);
+            }
+            let inner = Bounds {
+                origin: point(bounds.origin.x + px(width), bounds.origin.y + px(width)),
+                size: size(bounds.size.width - px(width * 2.), bounds.size.height - px(width * 2.)),
+            };
+            // The diagonal moves in by less than the straight edges, so the edge is as thick there.
+            if let Some(path) = cut_path(inner, (cut - width * 0.41).max(0.), corner) {
+                window.paint_path(path, fill);
+            }
+        },
+    )
+    .absolute()
+    .top_0()
+    .left_0()
+    .size_full()
+}
+
 /// The fill of the one primary action: vivid blue sinking toward deep blue, blended in `OKLab`.
 fn accent_fill() -> gpui_kit::Background {
     linear_gradient(
@@ -50,13 +123,35 @@ fn accent_fill() -> gpui_kit::Background {
 /// relative: in light mode a faint dark ring and a soft shadow lift it off the glass; in dark mode
 /// a faint light ring and a highlight along its top edge.
 pub fn panel() -> gpui_kit::Div {
+    lit_panel(None)
+}
+
+/// A panel with a status ring (`glow`): focused, your turn, or needs you. In Saturn's theme it
+/// glows around the card; in Cyberdeck the panel's own edge takes the ring's colour, cut corner and
+/// all.
+pub fn lit_panel(glow: Option<saturn_design::Shadows>) -> gpui_kit::Div {
     let dark = saturn_design::appearance() == saturn_design::Appearance::Dark;
+    if cyberdeck() {
+        let ring = glow.and_then(|glow| glow.get().first()).map(|layer| theme::layers(&[*layer])[0].color);
+        let edge = ring.unwrap_or_else(|| theme::overlay(if dark { 0.16 } else { 0.18 }));
+        return div()
+            .relative()
+            .flex()
+            .flex_col()
+            .size_full()
+            .min_w_0()
+            .min_h_0()
+            .px(len(space::SPACE_1))
+            .pt(len(space::SPACE_1))
+            .child(cut_surface(edge, theme::color(color::SURFACE), 1., PANEL_CUT, Cut::TopRight))
+            .overflow_hidden();
+    }
     let edge = if dark {
         vec![shadow(0., 1., 0., 0., gpui_kit::hsla(0., 0., 1., 0.05), true)]
     } else {
         vec![shadow(0., 1., 3., 0., gpui_kit::hsla(0., 0., 0., 0.1), false)]
     };
-    div()
+    let panel = div()
         .relative()
         .flex()
         .flex_col()
@@ -65,13 +160,17 @@ pub fn panel() -> gpui_kit::Div {
         .min_h_0()
         .px(len(space::SPACE_1))
         .pt(len(space::SPACE_1))
-        .rounded(len(radius::RADIUS_MD))
+        .rounded(theme::corner(radius::RADIUS_MD))
         // Mostly opaque: the glass shows through, never enough to fight the text.
         .bg(theme::color(color::SURFACE).opacity(if dark { 0.8 } else { 0.83 }))
         .border_1()
         .border_color(theme::overlay(if dark { 0.07 } else { 0.08 }))
         .shadow(edge)
-        .overflow_hidden()
+        .overflow_hidden();
+    match glow {
+        Some(glow) => panel.border_color(gpui_kit::transparent_black()).shadow(theme::shadows(glow)),
+        None => panel,
+    }
 }
 
 /// A card with no strip: just content, edge to edge (a list, an empty state).
@@ -105,7 +204,7 @@ pub fn track() -> gpui_kit::Div {
         .items_center()
         .gap(px(2.))
         .p(len(space::SPACE_1))
-        .rounded(len(radius::RADIUS_MD))
+        .rounded(theme::corner(radius::RADIUS_MD))
         .bg(theme::overlay(if saturn_design::appearance() == saturn_design::Appearance::Dark { 0.07 } else { 0.05 }))
 }
 
@@ -122,7 +221,7 @@ pub fn on_glass(content: gpui_kit::Div) -> gpui_kit::Div {
     div()
         .flex()
         .flex_none()
-        .rounded(len(radius::RADIUS_MD))
+        .rounded(theme::corner(radius::RADIUS_MD))
         // The panes' own surface, solid, so the title bar reads as the same material as the cards
         // and not lighter: the track inside adds no tint of its own on top.
         .bg(theme::color(color::SURFACE))
@@ -137,7 +236,10 @@ pub fn on_glass(content: gpui_kit::Div) -> gpui_kit::Div {
 pub fn raised<E: gpui_kit::Styled>(item: E, pressed: bool) -> E {
     let dark = saturn_design::appearance() == saturn_design::Appearance::Dark;
     let item = item.border_1();
-    if pressed && dark {
+    if cyberdeck() {
+        // Cyberdeck's selection is drawn by `selection`, under the item's children.
+        item.border_color(gpui_kit::transparent_black())
+    } else if pressed && dark {
         item.bg(theme::overlay(0.14)).border_color(gpui_kit::transparent_black())
     } else if pressed {
         item.bg(gpui_kit::white()).border_color(theme::overlay(0.06)).shadow(vec![shadow(
@@ -175,18 +277,34 @@ pub fn track_item(id: impl Into<ElementId>, pressed: bool) -> gpui_kit::Stateful
         .gap(len(space::SPACE_2))
         .h(len(CONTROL_HEIGHT))
         .min_w(len(CONTROL_HEIGHT))
-        .rounded(len(radius::RADIUS_SM))
+        .rounded(theme::corner(radius::RADIUS_SM))
         .text_size(px(13.))
         .font_weight(FontWeight::MEDIUM)
         .cursor_pointer()
         .map(|item| raised(item, pressed))
+        .when(pressed && cyberdeck(), |item| item.relative().child(selection()))
         .map(|item| {
-            if pressed {
+            if pressed && cyberdeck() {
+                item.text_color(theme::color(color::INK_INVERSE))
+            } else if pressed {
                 item.text_color(theme::color(color::INK))
             } else {
                 item.text_color(theme::color(color::INK_MUTED)).hover(|s| s.bg(theme::fill_hover()))
             }
         })
+}
+
+/// Cyberdeck's selection, under a selected item's children: a solid block of ink with its bottom
+/// right corner cut. The item's text turns `ink-inverse` on it.
+pub fn selection() -> impl IntoElement {
+    let ink = theme::color(color::INK);
+    cut_surface(ink, ink, 0., SELECTION_CUT, Cut::BottomRight)
+}
+
+/// The ink of a track item's icon or text: on a Cyberdeck selection, which is a block of ink, the
+/// inverse.
+pub fn item_ink(pressed: bool) -> saturn_design::Token {
+    if pressed && cyberdeck() { color::INK_INVERSE } else { color::INK }
 }
 
 /// A thin divider between groups in a track.
@@ -203,7 +321,7 @@ pub fn icon_button(id: impl Into<ElementId>, name: &str, quiet: bool) -> gpui_ki
         .items_center()
         .justify_center()
         .size(len(CONTROL_HEIGHT))
-        .rounded(len(radius::RADIUS_SM))
+        .rounded(theme::corner(radius::RADIUS_SM))
         .cursor_pointer()
         .map(|button| {
             if quiet {
@@ -233,7 +351,7 @@ pub fn button(
         .gap(len(space::SPACE_3))
         .h(len(CONTROL_HEIGHT))
         .px(len(space::SPACE_4))
-        .rounded(len(radius::RADIUS_SM))
+        .rounded(theme::corner(radius::RADIUS_SM))
         .cursor_pointer()
         .text_size(px(13.))
         .font_weight(FontWeight::MEDIUM)
@@ -254,6 +372,14 @@ pub fn button(
 /// The surface of the one primary action: the accent fill with a soft blue bloom beneath it. A
 /// split button lays its parts on one surface, so the gradient and the bloom run across both.
 pub fn primary_surface<E: gpui_kit::Styled>(element: E) -> E {
+    if cyberdeck() {
+        // Flat and square, with a lighter bar down its left edge.
+        return element
+            .text_color(theme::color(color::INK_ON_ACCENT))
+            .bg(theme::color(color::BLUE_VIVID))
+            .border_l(px(3.))
+            .border_color(theme::color(color::BLUE));
+    }
     element.text_color(theme::color(color::INK_ON_ACCENT)).bg(accent_fill()).shadow(vec![gpui_kit::BoxShadow {
         color: theme::color(color::BLUE_VIVID).opacity(0.35),
         offset: point(px(0.), px(6.)),
@@ -346,7 +472,7 @@ pub fn sidebar_header(name: &str, detail: &str, action: impl IntoElement) -> imp
                 .items_center()
                 .justify_center()
                 .size(len(CONTROL_HEIGHT))
-                .rounded(len(radius::RADIUS_SM))
+                .rounded(theme::corner(radius::RADIUS_SM))
                 .bg(theme::fill_control())
                 .child(icon("folder", 14., theme::color(color::INK))),
         )

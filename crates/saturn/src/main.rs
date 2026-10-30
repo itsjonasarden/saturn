@@ -75,14 +75,18 @@ pub static LOGIN_PATH: std::sync::OnceLock<String> = std::sync::OnceLock::new();
 
 /// One static file per weight the design system uses: GPUI draws a variable font only at its default
 /// weight. Instanced from the variable fonts with fontTools (OFL 1.1; neither declares a Reserved
+/// Font Name). Rajdhani is Cyberdeck's interface font, as Google Fonts ships it (OFL 1.1, no Reserved
 /// Font Name).
-const FONTS: [&[u8]; 6] = [
+const FONTS: [&[u8]; 9] = [
     include_bytes!("../assets/fonts/Urbanist-Light.ttf"),
     include_bytes!("../assets/fonts/Urbanist-Regular.ttf"),
     include_bytes!("../assets/fonts/Urbanist-Medium.ttf"),
     include_bytes!("../assets/fonts/Urbanist-SemiBold.ttf"),
     include_bytes!("../assets/fonts/JetBrainsMono-Regular.ttf"),
     include_bytes!("../assets/fonts/JetBrainsMono-Bold.ttf"),
+    include_bytes!("../assets/fonts/Rajdhani-Medium.ttf"),
+    include_bytes!("../assets/fonts/Rajdhani-SemiBold.ttf"),
+    include_bytes!("../assets/fonts/Rajdhani-Bold.ttf"),
 ];
 
 fn bind_keys(cx: &mut App) {
@@ -211,7 +215,7 @@ fn main() {
     app.run(move |cx| {
         gpui_kit::init(cx);
         languages::register();
-        theme::apply(settings::load().appearance, cx);
+        theme::apply(&settings::load(), cx);
         theme::set_text_size(settings::load().text_size, cx);
         agent_choice::start(cx);
         usage::start(cx);

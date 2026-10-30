@@ -395,7 +395,7 @@ impl WorktreesView {
             .gap(len(space::SPACE_3))
             .px(len(space::SPACE_3))
             .py(len(space::SPACE_2))
-            .rounded(len(radius::RADIUS_SM))
+            .rounded(theme::corner(radius::RADIUS_SM))
             .child(
                 div()
                     .flex()

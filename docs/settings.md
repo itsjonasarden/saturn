@@ -6,7 +6,7 @@ panels (sidebar, editor, tickets) were showing, so Saturn opens with the same on
 
 - **General**: notifications when an agent needs you while Saturn is in the background; the menu bar
   icon with how many agents wait for you; sharing `.env` and Claude's local files with worktrees; checking for updates now.
-- **Appearance**: System, Light or Dark; the text size of terminals and files; the plan usage card.
+- **Appearance**: the theme, Saturn or Cyberdeck (square panels with cut corners on a near-black ground, in Rajdhani); System, Light or Dark; the text size of terminals and files; the plan usage card.
 - **Editor**: format on save (with the formatter your project already uses), wrapping long lines,
   line numbers, indent guides, visible whitespace, tab width.
 - **Terminal**: Option as Meta (Option+B jumps a word back in the shell) instead of typing the

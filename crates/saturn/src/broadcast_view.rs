@@ -151,7 +151,7 @@ impl BroadcastView {
             .gap(len(space::SPACE_3))
             .px(len(space::SPACE_2))
             .py(len(space::SPACE_1))
-            .rounded(len(radius::RADIUS_SM))
+            .rounded(theme::corner(radius::RADIUS_SM))
             .child(crate::changes_view::checkbox(
                 ("broadcast-check", index),
                 if picked { Staged::Yes } else { Staged::No },

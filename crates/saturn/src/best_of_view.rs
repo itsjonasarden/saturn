@@ -232,7 +232,7 @@ impl CompareView {
                     .gap(len(space::SPACE_2))
                     .px(len(space::SPACE_1))
                     .py(px(2.))
-                    .rounded(len(radius::RADIUS_XS))
+                    .rounded(theme::corner(radius::RADIUS_XS))
                     .cursor_pointer()
                     .hover(|s| s.bg(theme::fill_hover()))
                     .child(
@@ -293,7 +293,7 @@ impl CompareView {
             .h(px(420.))
             .gap(len(space::SPACE_2))
             .p(len(space::SPACE_3))
-            .rounded(len(radius::RADIUS_SM))
+            .rounded(theme::corner(radius::RADIUS_SM))
             .border_1()
             .border_color(theme::separator())
             .child(

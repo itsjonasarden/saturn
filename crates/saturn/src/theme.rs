@@ -3,7 +3,7 @@
 use gpui_kit::{BoxShadow, Hsla, Pixels, Rgba, point, px};
 use saturn_design::{Appearance, Color, Shadow, Shadows, Token};
 
-use crate::settings::AppearanceSetting;
+use crate::settings::{AppearanceSetting, Settings};
 
 pub fn color(token: Token) -> Hsla {
     rgba(token.get())
@@ -133,12 +133,12 @@ fn component_theme(appearance: Appearance) -> gpui_kit::component::ThemeConfig {
     serde_json::from_value(serde_json::json!({
         "name": "Saturn",
         "mode": if appearance == Appearance::Dark { "dark" } else { "light" },
-        "font.family": font::SANS,
+        "font.family": saturn_design::sans(),
         "font.size": 13,
         "mono_font.family": font::MONO,
         "mono_font.size": 13,
-        "radius": radius::RADIUS_SM as usize,
-        "radius.lg": radius::RADIUS_LG as usize,
+        "radius": saturn_design::corner(radius::RADIUS_SM) as usize,
+        "radius.lg": saturn_design::corner(radius::RADIUS_LG) as usize,
         "shadow": false,
         "colors": colors,
         "highlight": highlight,
@@ -146,13 +146,9 @@ fn component_theme(appearance: Appearance) -> gpui_kit::component::ThemeConfig {
     .expect("Saturn's theme config is valid")
 }
 
-/// `#rrggbb` for `appearance`, as the theme config takes colours as strings.
+/// `#rrggbb` for `appearance` in the current theme, as the theme config takes colours as strings.
 fn hex(token: Token, appearance: Appearance) -> String {
-    let color = match appearance {
-        Appearance::Dark => token.dark,
-        Appearance::Light => token.light,
-    };
-    format!("#{:06x}", color.rgb)
+    format!("#{:06x}", token.at(appearance).rgb)
 }
 
 /// The editor's colours: the terminal's palette, used the way most editors use it (One Dark's
@@ -206,11 +202,14 @@ fn syntax(appearance: Appearance) -> serde_json::Value {
     })
 }
 
-/// Draws the whole app as `setting` says: Saturn's tokens, the library's controls, and the window
-/// frame macOS draws (whose edge is pale in light mode and dark in dark mode).
-pub fn apply(setting: AppearanceSetting, cx: &mut gpui_kit::App) {
+/// Draws the whole app as `settings` say, in their theme and appearance: Saturn's tokens, the
+/// library's controls, and the window frame macOS draws (whose edge is pale in light mode and dark
+/// in dark mode).
+pub fn apply(settings: &Settings, cx: &mut gpui_kit::App) {
     use gpui_kit::component::{Theme, ThemeMode};
 
+    let setting = settings.appearance;
+    saturn_design::set_theme(settings.theme.design());
     // Following the system means no override, so macOS reports its own appearance again.
     cx.set_window_appearance(match setting {
         AppearanceSetting::System => None,
@@ -246,4 +245,9 @@ fn system_appearance(appearance: gpui_kit::WindowAppearance) -> Appearance {
 
 pub fn len(value: f32) -> Pixels {
     px(value)
+}
+
+/// A corner's radius in the current theme: as given in Saturn's, square in Cyberdeck's.
+pub fn corner(radius: f32) -> Pixels {
+    px(saturn_design::corner(radius))
 }

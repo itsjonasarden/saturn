@@ -243,7 +243,7 @@ impl ChangesView {
             .child(
                 div()
                     .px(len(space::SPACE_2))
-                    .rounded(len(radius::RADIUS_XS))
+                    .rounded(theme::corner(radius::RADIUS_XS))
                     .bg(theme::fill_hover())
                     .font_family(saturn_design::font::MONO)
                     .text_size(px(11.))
@@ -290,7 +290,7 @@ impl ChangesView {
             .h(px(ROW_HEIGHT))
             .pl(len(space::SPACE_2))
             .pr(len(space::SPACE_3))
-            .rounded(len(radius::RADIUS_SM))
+            .rounded(theme::corner(radius::RADIUS_SM))
             .cursor_pointer()
             .text_size(px(13.))
             .when(selected, |row| row.bg(theme::fill_pressed()))

@@ -113,7 +113,7 @@ impl SessionsView {
             .gap(px(2.))
             .px(len(space::SPACE_2))
             .py(len(space::SPACE_1))
-            .rounded(len(radius::RADIUS_SM))
+            .rounded(theme::corner(radius::RADIUS_SM))
             .child(
                 div()
                     .flex()

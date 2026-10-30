@@ -53,3 +53,7 @@ Development tools need room for content, so controls are 28px tall, cards sit 6p
 Weights: 400 for running text, 500 for every control and name, 300 for big headlines with their point in 600 ("No terminals **yet**"). Nothing else is semibold.
 
 Urbanist for the interface and JetBrains Mono for terminals and code, bundled so Saturn never loads fonts from the network. GPUI draws a variable font only at its default weight, so `crates/saturn/assets/fonts` holds one static file per weight in use (Urbanist 300, 400, 500, 600; JetBrains Mono 400, 700), instanced from the variable fonts with fontTools. Both are OFL 1.1 with no Reserved Font Name.
+
+### Cyberdeck
+
+The second theme (Settings → Appearance → Theme). Its own true-grey neutrals on an opaque near-black ground (near-white in light mode), from the `cyberdeck-dark` and `cyberdeck-light` values in `design/tokens.json`; a token without one uses Saturn's, so the signal colours mean the same in both. Corners are square (`theme::corner`), panels have their top-right corner cut and a 1px edge that takes the status ring's colour, a selection is a block of ink with its bottom-right corner cut and inverse text (`chrome::item_ink`), and the primary action is flat blue with a lighter bar down its left edge. The interface font is Rajdhani (500, 600, 700, OFL 1.1, no Reserved Font Name); code stays in JetBrains Mono.

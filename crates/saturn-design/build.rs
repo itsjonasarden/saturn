@@ -8,8 +8,9 @@ use std::{env, fs};
 
 use serde_json::Value;
 
-/// The themes in design/tokens.json, in the order `Token` holds them.
-const THEMES: [&str; 2] = ["dark", "light"];
+/// The themes in design/tokens.json, in the order `Token` holds them: Saturn's own look in dark
+/// and light, then the Cyberdeck theme's.
+const THEMES: [&str; 4] = ["dark", "light", "cyberdeck-dark", "cyberdeck-light"];
 
 fn const_name(name: &str) -> String {
     name.replace(['-', '.'], "_").to_uppercase()
@@ -29,13 +30,17 @@ fn parse_color(value: &str) -> (u32, f32) {
     (rgb, parts.get(3).copied().unwrap_or(1.0))
 }
 
-/// A token's value in `theme`: a plain string is every theme's; a missing theme borrows `dark`'s.
+/// A token's value in `theme`: a plain string is every theme's. A missing Cyberdeck value borrows
+/// Saturn's in the same appearance, and a missing `light` borrows `dark`.
 fn themed<'a>(value: &'a Value, theme: &str) -> &'a str {
     match value {
         Value::String(text) => text,
-        Value::Object(themes) => {
-            themes.get(theme).or_else(|| themes.get("dark")).and_then(Value::as_str).expect("a theme value")
-        }
+        Value::Object(themes) => themes
+            .get(theme)
+            .or_else(|| themes.get(theme.trim_start_matches("cyberdeck-")))
+            .or_else(|| themes.get("dark"))
+            .and_then(Value::as_str)
+            .expect("a theme value"),
         _ => panic!("a token value is a string or a map of themes"),
     }
 }
@@ -104,12 +109,14 @@ fn main() {
     let mut out = String::from("// Generated from design/tokens.json by crates/saturn-design/build.rs.\n\n");
     out.push_str("pub mod color {\n    use super::{Color, Token};\n");
     for token in tokens["color"]["tokens"].as_array().expect("colour tokens") {
-        let [(dark, dark_alpha), (light, light_alpha)] =
-            THEMES.map(|theme| resolve_color(&colors, themed(&token["value"], theme), theme));
+        let [dark, light, cyberdeck_dark, cyberdeck_light] = THEMES.map(|theme| {
+            let (rgb, alpha) = resolve_color(&colors, themed(&token["value"], theme), theme);
+            format!("Color {{ rgb: 0x{rgb:06x}, alpha: {alpha:?} }}")
+        });
         let usage = token["usage"].as_str().unwrap_or_default().replace('`', "");
         writeln!(
             out,
-            "    /// {usage}\n    pub const {}: Token = Token {{ dark: Color {{ rgb: 0x{dark:06x}, alpha: {dark_alpha:?} }}, light: Color {{ rgb: 0x{light:06x}, alpha: {light_alpha:?} }} }};",
+            "    /// {usage}\n    pub const {}: Token = Token {{ dark: {dark}, light: {light}, cyberdeck_dark: {cyberdeck_dark}, cyberdeck_light: {cyberdeck_light} }};",
             const_name(token["name"].as_str().expect("name"))
         )
         .ok();
@@ -133,11 +140,12 @@ fn main() {
 
     out.push_str("pub mod shadow {\n    use super::{Color, Shadow, Shadows};\n");
     for token in tokens["shadow"]["tokens"].as_array().expect("shadow tokens") {
-        let [dark, light] = THEMES.map(|theme| shadow_layers(themed(&token["value"], theme)).join(", "));
+        let [dark, light, cyberdeck_dark, cyberdeck_light] =
+            THEMES.map(|theme| shadow_layers(themed(&token["value"], theme)).join(", "));
         let usage = token["usage"].as_str().unwrap_or_default().replace('`', "");
         writeln!(
             out,
-            "    /// {usage}\n    pub const {}: Shadows = Shadows {{ dark: &[{dark}], light: &[{light}] }};",
+            "    /// {usage}\n    pub const {}: Shadows = Shadows {{ dark: &[{dark}], light: &[{light}], cyberdeck_dark: &[{cyberdeck_dark}], cyberdeck_light: &[{cyberdeck_light}] }};",
             const_name(token["name"].as_str().expect("name"))
         )
         .ok();

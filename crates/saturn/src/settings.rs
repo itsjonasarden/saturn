@@ -26,6 +26,9 @@ pub struct Settings {
     /// Saturn's item in the menu bar, with how many agents are waiting for you.
     pub menu_bar: bool,
     pub appearance: AppearanceSetting,
+    /// Saturn's own look, or Cyberdeck.
+    #[serde(default)]
+    pub theme: ThemeSetting,
     /// The text size of terminals and files, in points (⌘+, ⌘−, ⌘0).
     pub text_size: u16,
     /// What starting an agent on a ticket does, per project folder.
@@ -204,6 +207,24 @@ impl AppearanceSetting {
     }
 }
 
+/// The look Saturn is drawn in, in either appearance.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum ThemeSetting {
+    #[default]
+    Saturn,
+    Cyberdeck,
+}
+
+impl ThemeSetting {
+    pub fn design(self) -> saturn_design::Theme {
+        match self {
+            Self::Saturn => saturn_design::Theme::Saturn,
+            Self::Cyberdeck => saturn_design::Theme::Cyberdeck,
+        }
+    }
+}
+
 /// The text size terminals and files start at, and go back to with ⌘0.
 pub const TEXT_SIZE: u16 = 13;
 
@@ -221,6 +242,7 @@ impl Default for Settings {
             notifications: true,
             menu_bar: true,
             appearance: AppearanceSetting::System,
+            theme: ThemeSetting::Saturn,
             text_size: TEXT_SIZE,
             projects: std::collections::HashMap::new(),
             keymap: std::collections::BTreeMap::new(),
