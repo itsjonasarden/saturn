@@ -185,27 +185,52 @@ fn unix_now() -> i64 {
     SystemTime::now().duration_since(UNIX_EPOCH).map_or(0, |since| i64::try_from(since.as_secs()).unwrap_or(0))
 }
 
-/// White at `alpha`: the gradient card always carries white text.
+/// White at `alpha`: the gradient card always carries white text. Cyberdeck's card is grey, so
+/// there it is the theme's ink.
 fn white(alpha: f32) -> Hsla {
+    if crate::chrome::cyberdeck() {
+        return crate::theme::color(saturn_design::color::INK).opacity(alpha);
+    }
     gpui_kit::hsla(0., 0., 1., alpha)
 }
 
+/// Cyberdeck's meter: a row of square dots, the used ones filled, orange from 80%.
+fn dots(percent: f64) -> gpui_kit::Div {
+    const DOTS: u8 = 25;
+    #[expect(clippy::cast_possible_truncation, clippy::cast_sign_loss, reason = "a share of 25 dots")]
+    let lit = ((percent / 100.).clamp(0., 1.) * f64::from(DOTS)).round() as u8;
+    let fill =
+        crate::theme::color(if percent >= 80. { saturn_design::color::ORANGE } else { saturn_design::color::INK });
+    div().flex().gap(px(2.)).children((0..DOTS).map(|index| {
+        let dot = div().flex_1().h(px(4.));
+        if index < lit { dot.bg(fill) } else { dot.bg(crate::theme::overlay(0.14)) }
+    }))
+}
+
 /// A hairline meter on the gradient, white with a soft glow; orange from 80%.
-fn meter(percent: f64) -> impl IntoElement {
+fn meter(percent: f64) -> gpui_kit::AnyElement {
+    if crate::chrome::cyberdeck() {
+        return dots(percent).into_any_element();
+    }
     #[expect(clippy::cast_possible_truncation, reason = "a share between 0 and 1")]
     let width = (percent / 100.).clamp(0., 1.) as f32;
     let fill = if percent >= 80. { gpui_kit::Hsla::from(gpui_kit::rgb(0xff_b3_7a)) } else { white(1.) };
-    div().relative().h(px(2.)).w_full().rounded(px(1.)).bg(white(0.18)).child(
-        div().absolute().top_0().left_0().h_full().w(gpui_kit::relative(width)).rounded(px(1.)).bg(fill).shadow(vec![
-            gpui_kit::BoxShadow {
+    div()
+        .relative()
+        .h(px(2.))
+        .w_full()
+        .rounded(px(1.))
+        .bg(white(0.18))
+        .child(div().absolute().top_0().left_0().h_full().w(gpui_kit::relative(width)).rounded(px(1.)).bg(fill).shadow(
+            vec![gpui_kit::BoxShadow {
                 color: fill.opacity(0.6),
                 offset: gpui_kit::point(px(0.), px(0.)),
                 blur_radius: px(6.),
                 spread_radius: px(0.),
                 inset: false,
-            },
-        ]),
-    )
+            }],
+        ))
+        .into_any_element()
 }
 
 /// The plan's limits as a card at the foot of the sidebar, on the same gradient as an agent's.

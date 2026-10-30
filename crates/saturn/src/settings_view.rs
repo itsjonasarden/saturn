@@ -3,7 +3,6 @@
 
 use gpui_kit::component::WindowExt as _;
 use gpui_kit::component::input::{Input, InputEvent, InputState};
-use gpui_kit::component::switch::Switch;
 use gpui_kit::{
     AnyElement, App, AppContext as _, Context, ElementId, Entity, FontWeight, InteractiveElement as _, IntoElement,
     ParentElement as _, Render, SharedString, StatefulInteractiveElement as _, Styled as _, Subscription, WeakEntity,
@@ -237,7 +236,7 @@ impl SettingsView {
     /// An on/off switch for a setting.
     fn switch(&self, id: &'static str, on: bool, apply: fn(&mut Settings, bool)) -> impl IntoElement {
         let workspace = self.workspace.clone();
-        Switch::new(id).checked(on).on_click(move |on: &bool, _, cx| {
+        chrome::switch(id, on, move |on: &bool, _, cx| {
             let on = *on;
             let _ = workspace.update(cx, |workspace, cx| workspace.change_settings(|settings| apply(settings, on), cx));
         })
@@ -265,7 +264,7 @@ impl SettingsView {
 
     fn general(&self, settings: &Settings) -> Vec<Row> {
         let version =
-            format!("Saturn {}. It looks for a new version every hour and offers it.", env!("CARGO_PKG_VERSION"));
+            format!("Saturn {}. It looks for a new version once a day and offers it.", env!("CARGO_PKG_VERSION"));
         vec![
             Row::new(
                 Section::General,
@@ -502,7 +501,7 @@ impl SettingsView {
                 Section::Agents,
                 "Status line in Claude Code",
                 detail,
-                Switch::new("status-line").checked(self.status_line).on_click(cx.listener(|this, on: &bool, _, cx| {
+                chrome::switch("status-line", self.status_line, cx.listener(|this, on: &bool, _, cx| {
                     match crate::status_line::set_installed(*on) {
                         Ok(()) => {
                             this.status_line = *on;
@@ -694,7 +693,7 @@ impl SettingsView {
         };
         let worktree = {
             let workspace = self.workspace.clone();
-            Switch::new("ticket-worktree").checked(create_worktree).on_click(move |on: &bool, _, cx| {
+            chrome::switch("ticket-worktree", create_worktree, move |on: &bool, _, cx| {
                 let (on, project) = (*on, project.clone());
                 let _ = workspace.update(cx, |workspace, cx| {
                     workspace.change_settings(
@@ -769,10 +768,23 @@ impl SettingsView {
                         .child(row.detail),
                 )
             });
-        let line = div()
-            .id(("setting", index))
-            .py(len(if row.compact { space::SPACE_2 } else { space::SPACE_3 }))
-            .when(index > 0, |line| line.border_t_1().border_color(theme::separator()));
+        let padding = len(if row.compact { space::SPACE_2 } else { space::SPACE_3 });
+        let line = if chrome::cyberdeck() {
+            // Each setting its own slab, notched along the top, a few pixels from the next.
+            div()
+                .id(("setting", index))
+                .relative()
+                .pt(padding + px(3.))
+                .pb(padding)
+                .px(len(space::SPACE_4))
+                .when(index > 0, |line| line.mt(len(space::SPACE_1)))
+                .child(chrome::cut_surface(theme::overlay(0.), theme::overlay(0.04), 0., 9., chrome::Cut::Row))
+        } else {
+            div()
+                .id(("setting", index))
+                .py(padding)
+                .when(index > 0, |line| line.border_t_1().border_color(theme::separator()))
+        };
         if row.wide {
             line.flex().flex_col().gap(len(space::SPACE_2)).child(words).child(row.control).into_any_element()
         } else {

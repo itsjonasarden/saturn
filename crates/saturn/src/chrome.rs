@@ -46,10 +46,12 @@ const PANEL_CUT: f32 = 12.;
 const SELECTION_CUT: f32 = 8.;
 
 /// The corner Cyberdeck cuts: panels lose the top right, selections and buttons the bottom right.
+/// A row (a setting) has its bottom left cut and a raised notch along its top edge.
 #[derive(Clone, Copy)]
-enum Cut {
+pub enum Cut {
     TopRight,
     BottomRight,
+    Row,
 }
 
 /// `bounds` as a path with one corner cut `cut` pixels along each edge.
@@ -58,20 +60,36 @@ fn cut_path(bounds: Bounds<Pixels>, cut: f32, corner: Cut) -> Option<gpui_kit::P
     let (right, bottom) = (left + bounds.size.width, top + bounds.size.height);
     let cut = px(cut);
     let points = match corner {
-        Cut::TopRight => [
+        Cut::TopRight => vec![
             point(left, top),
             point(right - cut, top),
             point(right, top + cut),
             point(right, bottom),
             point(left, bottom),
         ],
-        Cut::BottomRight => [
+        Cut::BottomRight => vec![
             point(left, top),
             point(right, top),
             point(right, bottom - cut),
             point(right - cut, bottom),
             point(left, bottom),
         ],
+        Cut::Row => {
+            // The top edge sits 3px down, but for a raised stretch from 13px in to two thirds across.
+            let step = px(3.);
+            let notch_end = left + bounds.size.width * 0.68;
+            vec![
+                point(left, top + step),
+                point(left + px(10.), top + step),
+                point(left + px(13.), top),
+                point(notch_end, top),
+                point(notch_end + step, top + step),
+                point(right, top + step),
+                point(right, bottom),
+                point(left + cut, bottom),
+                point(left, bottom - cut),
+            ]
+        }
     };
     let mut path = PathBuilder::fill();
     path.move_to(points[0]);
@@ -84,7 +102,7 @@ fn cut_path(bounds: Bounds<Pixels>, cut: f32, corner: Cut) -> Option<gpui_kit::P
 
 /// A Cyberdeck surface, painted under an element's children: `fill` with one corner cut, inside a
 /// `width` edge of `edge`. Drawn, not styled, since GPUI's boxes only round their corners.
-fn cut_surface(edge: gpui_kit::Hsla, fill: gpui_kit::Hsla, width: f32, cut: f32, corner: Cut) -> impl IntoElement {
+pub fn cut_surface(edge: gpui_kit::Hsla, fill: gpui_kit::Hsla, width: f32, cut: f32, corner: Cut) -> impl IntoElement {
     canvas(
         |_, _, _| (),
         move |bounds: Bounds<Pixels>, (), window: &mut Window, _: &mut App| {
@@ -259,6 +277,11 @@ pub fn raised<E: gpui_kit::Styled>(item: E, pressed: bool) -> E {
 /// faint edge and a soft shadow, so it reads over whatever is under it.
 pub fn floating(element: gpui_kit::Div) -> gpui_kit::Div {
     let dark = saturn_design::appearance() == saturn_design::Appearance::Dark;
+    if cyberdeck() {
+        // Square, its bottom right corner cut, with a stronger edge than a panel's since it floats.
+        let edge = theme::overlay(if dark { 0.3 } else { 0.32 });
+        return element.relative().child(cut_surface(edge, theme::color(color::SURFACE), 1., 10., Cut::BottomRight));
+    }
     element
         .bg(theme::color(color::SURFACE))
         .border_1()
@@ -299,6 +322,26 @@ pub fn track_item(id: impl Into<ElementId>, pressed: bool) -> gpui_kit::Stateful
 pub fn selection() -> impl IntoElement {
     let ink = theme::color(color::INK);
     cut_surface(ink, ink, 0., SELECTION_CUT, Cut::BottomRight)
+}
+
+/// An on/off switch. In Cyberdeck it is two segments, Off and On, with the current one selected.
+pub fn switch(id: &'static str, on: bool, toggle: impl Fn(&bool, &mut Window, &mut App) + 'static) -> AnyElement {
+    if !cyberdeck() {
+        return gpui_kit::component::switch::Switch::new(id).checked(on).on_click(toggle).into_any_element();
+    }
+    let toggle = std::rc::Rc::new(toggle);
+    track()
+        .children([(false, "Off"), (true, "On")].map(|(value, label)| {
+            let toggle = toggle.clone();
+            track_item((id, usize::from(value)), on == value).px(len(space::SPACE_3)).child(label).on_click(
+                move |_, window, cx| {
+                    if value != on {
+                        toggle(&value, window, cx);
+                    }
+                },
+            )
+        }))
+        .into_any_element()
 }
 
 /// The ink of a track item's icon or text: on a Cyberdeck selection, which is a block of ink, the

@@ -4,7 +4,7 @@
 
 use gpui_kit::{
     Action, Anchor, AnyElement, FontWeight, InteractiveElement as _, IntoElement, ParentElement as _,
-    StatefulInteractiveElement as _, Styled as _, anchored, deferred, div, px,
+    StatefulInteractiveElement as _, Styled as _, anchored, deferred, div, prelude::FluentBuilder as _, px,
 };
 use saturn_design::{color, radius, space};
 
@@ -84,7 +84,17 @@ fn lines(
                 .px(len(space::SPACE_2))
                 .rounded(theme::corner(radius::RADIUS_SM))
                 .cursor_pointer()
-                .hover(|s| s.bg(theme::fill_hover()))
+                .map(|line| {
+                    if chrome::cyberdeck() {
+                        // A choice list: a rule down the left, lit in ink beside the line under the
+                        // pointer.
+                        line.border_l_2()
+                            .border_color(theme::overlay(0.14))
+                            .hover(|s| s.bg(theme::fill_hover()).border_color(theme::color(color::INK)))
+                    } else {
+                        line.hover(|s| s.bg(theme::fill_hover()))
+                    }
+                })
                 .text_size(px(13.))
                 .font_weight(FontWeight::NORMAL)
                 .text_color(theme::color(color::INK))
