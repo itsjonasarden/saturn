@@ -161,6 +161,16 @@ pub fn panel() -> gpui_kit::Div {
 /// glows around the card; in Cyberdeck the panel's own edge takes the ring's colour, cut corner and
 /// all.
 pub fn lit_panel(glow: Option<saturn_design::Shadows>) -> gpui_kit::Div {
+    lit_panel_cut(glow, Cut::TopRight)
+}
+
+/// A card with Cyberdeck's cut on `corner`: the bottom right for the status bar, along the window's
+/// foot, as the cards above are cut at their top.
+pub fn card_cut(corner: Cut) -> gpui_kit::Div {
+    lit_panel_cut(None, corner).p_0()
+}
+
+fn lit_panel_cut(glow: Option<saturn_design::Shadows>, corner: Cut) -> gpui_kit::Div {
     let dark = saturn_design::appearance() == saturn_design::Appearance::Dark;
     if cyberdeck() {
         let ring = glow.and_then(|glow| glow.get().first()).map(|layer| theme::layers(&[*layer])[0].color);
@@ -174,7 +184,7 @@ pub fn lit_panel(glow: Option<saturn_design::Shadows>) -> gpui_kit::Div {
             .min_h_0()
             .px(len(space::SPACE_1))
             .pt(len(space::SPACE_1))
-            .child(cut_surface(edge, theme::color(color::SURFACE), 1., PANEL_CUT, Cut::TopRight))
+            .child(cut_surface(edge, theme::color(color::SURFACE), 1., PANEL_CUT, corner))
             .overflow_hidden();
     }
     let edge = if dark {

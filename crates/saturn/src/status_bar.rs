@@ -257,7 +257,7 @@ impl Render for StatusBar {
                 .child(name)
                 .tooltip(chrome::tip(tip))
         });
-        chrome::card()
+        chrome::card_cut(chrome::Cut::BottomRight)
             .flex_row()
             .flex_none()
             .items_center()
