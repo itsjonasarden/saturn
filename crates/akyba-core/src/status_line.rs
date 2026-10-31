@@ -140,6 +140,21 @@ pub fn installed(claude_settings: &Value) -> bool {
     })
 }
 
+/// Points an installed status line (Akyba's, or Saturn's from before) at `command`. Says whether
+/// anything changed; a status line of someone else's is left alone.
+pub fn repoint(claude_settings: &mut Value, command: &str) -> bool {
+    if !installed(claude_settings) {
+        return false;
+    }
+    match claude_settings.pointer_mut("/statusLine/command") {
+        Some(current) if current.as_str() != Some(command) => {
+            *current = Value::String(command.to_owned());
+            true
+        }
+        _ => false,
+    }
+}
+
 /// Points Claude Code's settings at `command` for the status line, returning the one it replaces
 /// (`Null` when there was none).
 pub fn install(claude_settings: &mut Value, command: &str) -> Value {
@@ -185,6 +200,18 @@ pub fn share_of(file: &str, session: &str, now: i64) -> Option<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn saturns_status_line_is_pointed_at_akyba_and_no_one_elses_is_touched() {
+        let mut settings = json!({"statusLine": {"type": "command", "command": "'/Applications/Saturn.app/Contents/MacOS/saturn' status-line"}});
+        let akyba = "'/Applications/Akyba.app/Contents/MacOS/akyba' status-line";
+        assert!(repoint(&mut settings, akyba));
+        assert_eq!(settings["statusLine"]["command"], akyba);
+        assert!(!repoint(&mut settings, akyba), "already there");
+        let mut theirs = json!({"statusLine": {"type": "command", "command": "~/bin/my-line"}});
+        assert!(!repoint(&mut theirs, akyba));
+        assert_eq!(theirs["statusLine"]["command"], "~/bin/my-line");
+    }
 
     fn plain(text: &str) -> String {
         let mut out = String::new();

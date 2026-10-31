@@ -3,7 +3,7 @@
 //! runs Akyba, and its Codex profile, which Akyba writes anew under its own name, is cleared away.
 //! Nothing a person set up is lost; each step does nothing once done.
 
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 /// Everything above, before settings load. Only the app does it: a build run from the source tree
 /// (`pnpm dev`, a spike) must never point someone's Claude Code at itself.
@@ -25,8 +25,31 @@ fn move_settings_folder() {
         return;
     }
     let (Some(home), Some(akyba)) = (std::env::var_os("HOME"), crate::settings::data_dir()) else { return };
-    let saturn = PathBuf::from(home).join("Library/Application Support/Saturn");
+    move_folder(&PathBuf::from(home).join("Library/Application Support/Saturn"), &akyba);
+}
+
+/// `saturn` becomes `akyba`, unless there's nothing to move or Akyba has a folder of its own.
+fn move_folder(saturn: &Path, akyba: &Path) {
     if saturn.is_dir() && !akyba.exists() {
-        let _ = std::fs::rename(&saturn, &akyba);
+        let _ = std::fs::rename(saturn, akyba);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn saturns_folder_moves_once_and_never_over_akybas() {
+        let dir = tempfile::tempdir().expect("a temporary folder");
+        let (saturn, akyba) = (dir.path().join("Saturn"), dir.path().join("Akyba"));
+        std::fs::create_dir_all(&saturn).expect("make folders");
+        std::fs::write(saturn.join("settings.json"), "{}").expect("write");
+        move_folder(&saturn, &akyba);
+        assert!(akyba.join("settings.json").is_file() && !saturn.exists());
+        // Akyba's own folder is never replaced by an older Saturn one.
+        std::fs::create_dir_all(&saturn).expect("make folders");
+        move_folder(&saturn, &akyba);
+        assert!(saturn.exists());
     }
 }

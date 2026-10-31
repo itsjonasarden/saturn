@@ -137,12 +137,7 @@ fn write_claude_settings(file: &std::path::Path, settings: &Value) -> Result<(),
 pub fn point_here() {
     let (Some(file), Ok(command)) = (claude_settings_file(), own_command()) else { return };
     let mut settings = read_claude_settings();
-    if !status_line::installed(&settings) {
-        return;
+    if status_line::repoint(&mut settings, &command) {
+        let _ = write_claude_settings(&file, &settings);
     }
-    match settings.pointer_mut("/statusLine/command") {
-        Some(current) if current.as_str() != Some(command.as_str()) => *current = Value::String(command),
-        _ => return,
-    }
-    let _ = write_claude_settings(&file, &settings);
 }
