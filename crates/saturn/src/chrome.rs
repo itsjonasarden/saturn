@@ -11,7 +11,9 @@ use gpui_kit::{
 };
 use saturn_design::{Buttons, Choices, Corners, Look, Selection, Switch, Tabs, color, radius, space};
 
+use crate::theme::TypeScale as _;
 use crate::theme::{self, len};
+use saturn_design::text;
 
 /// A tooltip saying what a control does.
 pub fn tip(text: &'static str) -> impl Fn(&mut Window, &mut App) -> AnyView + 'static {
@@ -253,7 +255,7 @@ pub fn track() -> gpui_kit::Div {
         .flex()
         .flex_none()
         .items_center()
-        .gap(px(2.))
+        .gap(len(space::SPACE_0))
         .p(len(space::SPACE_1))
         .rounded(theme::corner(radius::RADIUS_MD))
         .bg(theme::overlay(if saturn_design::appearance() == saturn_design::Appearance::Dark { 0.07 } else { 0.05 }))
@@ -334,7 +336,7 @@ pub fn track_item(id: impl Into<ElementId>, pressed: bool) -> gpui_kit::Stateful
         .h(len(CONTROL_HEIGHT))
         .min_w(len(CONTROL_HEIGHT))
         .rounded(theme::corner(radius::RADIUS_SM))
-        .text_size(px(13.))
+        .text_scale(text::LABEL)
         .font_weight(FontWeight::MEDIUM)
         .cursor_pointer()
         .map(|item| raised(item, pressed))
@@ -385,7 +387,7 @@ pub fn tab(id: impl Into<ElementId>, selected: bool) -> gpui_kit::Stateful<gpui_
         .gap(len(space::SPACE_2))
         .h(len(CONTROL_HEIGHT))
         .min_w(len(CONTROL_HEIGHT))
-        .text_size(px(13.))
+        .text_scale(text::LABEL)
         .font_weight(FontWeight::MEDIUM)
         .cursor_pointer()
         .text_color(theme::color(if selected { color::INK } else { color::INK_MUTED }))
@@ -399,7 +401,11 @@ pub fn tab(id: impl Into<ElementId>, selected: bool) -> gpui_kit::Stateful<gpui_
 
 /// A row of tabs: a track in Saturn's theme, bare in Cyberdeck, where each tab carries its own bar.
 pub fn tab_row() -> gpui_kit::Div {
-    if look().tabs == Tabs::Underline { div().flex().flex_none().items_center().gap(px(2.)) } else { track() }
+    if look().tabs == Tabs::Underline {
+        div().flex().flex_none().items_center().gap(len(space::SPACE_0))
+    } else {
+        track()
+    }
 }
 
 /// A text field as tall as every control, so it lines up with the button beside it.
@@ -464,7 +470,7 @@ pub fn selector(
         .items_center()
         .w(px(CHOICE_WIDTH))
         .h(len(CONTROL_HEIGHT))
-        .text_size(px(13.))
+        .text_scale(text::LABEL)
         .font_weight(FontWeight::MEDIUM)
         .text_color(theme::color(color::INK))
         .child(cut_surface(theme::overlay(0.3), theme::overlay(0.03), 1., control_cut(), Cut::BottomRight))
@@ -539,7 +545,7 @@ pub fn switch(id: &'static str, on: bool, toggle: impl Fn(&bool, &mut Window, &m
         // same place.
         .w(px(CHOICE_WIDTH))
         .cursor_pointer()
-        .text_size(px(13.))
+        .text_scale(text::LABEL)
         .font_weight(FontWeight::MEDIUM)
         .text_color(theme::color(if on { color::INK } else { color::INK_MUTED }))
         .child(if on { "On" } else { "Off" })
@@ -638,7 +644,7 @@ pub fn button(
         .px(len(space::SPACE_4))
         .rounded(theme::corner(radius::RADIUS_SM))
         .cursor_pointer()
-        .text_size(px(13.))
+        .text_scale(text::LABEL)
         .font_weight(FontWeight::MEDIUM)
         .map(|button| {
             if primary {
@@ -790,7 +796,7 @@ pub fn sidebar_header(name: &str, detail: &str, action: impl IntoElement) -> imp
                 .min_w_0()
                 .child(
                     div()
-                        .text_size(px(15.))
+                        .text_scale(text::SUBTITLE)
                         .line_height(px(16.))
                         .font_weight(FontWeight::MEDIUM)
                         .text_color(theme::color(color::INK))
@@ -799,7 +805,7 @@ pub fn sidebar_header(name: &str, detail: &str, action: impl IntoElement) -> imp
                 )
                 .child(
                     div()
-                        .text_size(px(11.))
+                        .text_scale(text::MICRO)
                         .line_height(px(12.))
                         .text_color(theme::color(color::INK_FAINT))
                         .truncate()
@@ -827,10 +833,10 @@ pub fn empty_grid(new_terminal: impl Fn(&gpui_kit::ClickEvent, &mut Window, &mut
                                 .flex_col()
                                 .items_center()
                                 .gap(len(space::SPACE_3))
-                                .child(headline("No terminals", "yet", 44.))
+                                .child(headline("No terminals", "yet", text::DISPLAY.size))
                                 .child(
                                     div()
-                                        .text_size(px(14.))
+                                        .text_scale(text::BODY)
                                         .text_color(theme::color(color::INK_MUTED))
                                         .child("Open a shell in the project folder, then start your agent in it."),
                                 ),

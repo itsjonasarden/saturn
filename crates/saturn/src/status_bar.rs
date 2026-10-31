@@ -18,8 +18,10 @@ use saturn_design::{color, radius, space};
 use crate::chrome;
 use crate::editor_view::{EditorView, ServerState};
 use crate::problems_view;
+use crate::theme::TypeScale as _;
 use crate::theme::{self, len};
 use crate::workspace::{OpenSettings, ToggleEditor, ToggleSidebar, ToggleTickets, Workspace};
+use saturn_design::text;
 
 pub const HEIGHT: f32 = 28.;
 
@@ -265,7 +267,7 @@ impl Render for StatusBar {
             .mt(len(chrome::pane_gap()))
             .mb(len(chrome::pane_gap()))
             .px(len(space::SPACE_1))
-            .text_size(px(12.))
+            .text_scale(text::META)
             .text_color(theme::color(color::INK_MUTED))
             .children(self.render_toggles(cx))
             .child(Self::render_problems(status.errors, status.warnings, cx))

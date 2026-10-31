@@ -13,8 +13,10 @@ use saturn_core::clickup::{self, Ticket};
 use saturn_core::git;
 use saturn_design::{color, radius, space};
 
+use crate::theme::TypeScale as _;
 use crate::theme::{self, len};
 use crate::workspace::Workspace;
+use saturn_design::text;
 
 /// Opens the dialog. `connected` says whether ClickUp is, given by the caller: the workspace opens
 /// this from inside its own update, where reading it would abort.
@@ -66,11 +68,15 @@ pub fn open(workspace: WeakEntity<Workspace>, connected: bool, window: &mut Wind
             .w(px(600.))
             // Room around the field inside the dialog, which clips at its edge, so the focus ring is
             // whole.
-            .child(div().px(px(3.)).child(crate::chrome::input(&search)))
+            .child(div().px(px(3.)).child(crate::chrome::input(&search))) // off-scale: the focus ring, 3px outside the field
             .children(kind_row(cx))
             .children(also_in_row(&workspace, cx))
             .children(note.map(|note| {
-                div().py(len(space::SPACE_4)).text_size(px(14.)).text_color(theme::color(color::INK_MUTED)).child(note)
+                div()
+                    .py(len(space::SPACE_4))
+                    .text_scale(text::BODY)
+                    .text_color(theme::color(color::INK_MUTED))
+                    .child(note)
             }))
             .child(list(&workspace, &rows, cx))
             .child(footer(&query, state.connected(), cx))
@@ -92,7 +98,7 @@ fn also_in_row(workspace: &Entity<Workspace>, cx: &App) -> Option<impl IntoEleme
         track = track.child(
             crate::chrome::track_item(("also-in", index), picked.contains(&repo))
                 .px(len(space::SPACE_3))
-                .text_size(px(12.))
+                .text_scale(text::META)
                 .child(name)
                 .on_click(move |_, _, cx| {
                     let _ = weak.update(cx, |workspace, cx| workspace.toggle_also_in(&repo, cx));
@@ -105,11 +111,11 @@ fn also_in_row(workspace: &Entity<Workspace>, cx: &App) -> Option<impl IntoEleme
             .items_center()
             .gap(len(space::SPACE_2))
             .pt(len(space::SPACE_2))
-            .child(div().text_size(px(13.)).text_color(theme::color(color::INK_MUTED)).child("Also in"))
+            .child(div().text_scale(text::LABEL).text_color(theme::color(color::INK_MUTED)).child("Also in"))
             .child(track)
             .child(
                 div()
-                    .text_size(px(12.))
+                    .text_scale(text::META)
                     .text_color(theme::color(color::INK_FAINT))
                     .child("a worktree in each, on the same branch"),
             ),
@@ -157,7 +163,7 @@ fn kind_row(cx: &App) -> Option<impl IntoElement + use<>> {
             .items_center()
             .gap(len(space::SPACE_2))
             .pt(len(space::SPACE_3))
-            .child(div().text_size(px(13.)).text_color(theme::color(color::INK_MUTED)).child("Agent"))
+            .child(div().text_scale(text::LABEL).text_color(theme::color(color::INK_MUTED)).child("Agent"))
             .child(track),
     )
 }
@@ -176,7 +182,7 @@ fn footer(query: &str, connected: bool, cx: &App) -> impl IntoElement {
         .justify_between()
         .gap(len(space::SPACE_4))
         .pt(len(space::SPACE_3))
-        .text_size(px(12.))
+        .text_scale(text::META)
         .text_color(theme::color(color::INK_FAINT))
         .child(div().min_w_0().truncate().child(does))
         .when(!connected, |footer| footer.child(div().flex_none().child("Tickets: connect ClickUp in Settings")))
@@ -207,7 +213,7 @@ fn list(workspace: &Entity<Workspace>, picks: &[Pick], cx: &App) -> impl IntoEle
                 .pt(len(space::SPACE_3))
                 .pb(len(space::SPACE_1))
                 .px(len(space::SPACE_3))
-                .text_size(px(11.))
+                .text_scale(text::MICRO)
                 .font_weight(FontWeight::MEDIUM)
                 .text_color(theme::color(color::INK_FAINT))
                 .child(status.to_uppercase()),
@@ -248,7 +254,7 @@ fn name_row(workspace: &Entity<Workspace>, name: &str, cx: &App) -> impl IntoEle
             div()
                 .flex_1()
                 .min_w_0()
-                .text_size(px(14.))
+                .text_scale(text::BODY)
                 .text_color(theme::color(color::INK))
                 .truncate()
                 .child(format!("Start “{name}”")),
@@ -257,7 +263,7 @@ fn name_row(workspace: &Entity<Workspace>, name: &str, cx: &App) -> impl IntoEle
             div()
                 .flex_none()
                 .font_family(saturn_design::font::MONO)
-                .text_size(px(12.))
+                .text_scale(text::META)
                 .text_color(theme::color(color::INK_FAINT))
                 .child(format!("new worktree {folder}")),
         )
@@ -287,7 +293,7 @@ fn row(workspace: &Entity<Workspace>, ticket: &Ticket) -> impl IntoElement {
                 .flex_none()
                 .w(px(84.))
                 .font_family(saturn_design::font::MONO)
-                .text_size(px(12.))
+                .text_scale(text::META)
                 .text_color(theme::color(color::INK_MUTED))
                 .truncate()
                 .child(ticket.key().to_owned()),
@@ -296,16 +302,14 @@ fn row(workspace: &Entity<Workspace>, ticket: &Ticket) -> impl IntoElement {
             div()
                 .flex_1()
                 .min_w_0()
-                .text_size(px(14.))
+                .text_scale(text::BODY)
                 .text_color(theme::color(color::INK))
                 .truncate()
                 .child(ticket.title.clone()),
         )
-        .children(
-            ticket.list.clone().map(|list| {
-                div().flex_none().text_size(px(12.)).text_color(theme::color(color::INK_FAINT)).child(list)
-            }),
-        )
+        .children(ticket.list.clone().map(|list| {
+            div().flex_none().text_scale(text::META).text_color(theme::color(color::INK_FAINT)).child(list)
+        }))
         .on_click(move |_, window, cx| {
             if let Some(workspace) = workspace.upgrade() {
                 start(&workspace, Some(&Pick::Ticket(Box::new(picked.clone()))), window, cx);

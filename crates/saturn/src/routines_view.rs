@@ -18,8 +18,10 @@ use saturn_core::routines::{self, Book, Routine, Run, Schedule};
 use saturn_design::{color, space};
 
 use crate::chrome;
+use crate::theme::TypeScale as _;
 use crate::theme::{self, len};
 use crate::workspace::Workspace;
+use saturn_design::text;
 
 /// How often the schedule is looked at.
 const EVERY: Duration = Duration::from_secs(30);
@@ -222,16 +224,20 @@ impl RoutinesView {
                     .child(
                         div()
                             .truncate()
-                            .text_size(px(13.))
+                            .text_scale(text::LABEL)
                             .font_weight(FontWeight::MEDIUM)
                             .text_color(theme::color(if routine.on { color::INK } else { color::INK_FAINT }))
                             .child(routine.name.clone()),
                     )
                     .child(
-                        div().truncate().text_size(px(12.)).text_color(theme::color(color::INK_FAINT)).child(detail),
+                        div()
+                            .truncate()
+                            .text_scale(text::META)
+                            .text_color(theme::color(color::INK_FAINT))
+                            .child(detail),
                     ),
             )
-            .child(div().flex_none().text_size(px(12.)).text_color(theme::color(color::INK_MUTED)).child(next))
+            .child(div().flex_none().text_scale(text::META).text_color(theme::color(color::INK_MUTED)).child(next))
             .child(chrome::button(("routine-run", index), "Run now", None, false).on_click(cx.listener(
                 move |_, _, window, cx| {
                     let routine = picked.clone();
@@ -296,16 +302,22 @@ impl RoutinesView {
             .px(len(space::SPACE_2))
             .min_h(len(chrome::CONTROL_HEIGHT))
             .child(
-                div().flex_1().min_w_0().truncate().text_size(px(13.)).text_color(theme::color(color::INK)).child(name),
+                div()
+                    .flex_1()
+                    .min_w_0()
+                    .truncate()
+                    .text_scale(text::LABEL)
+                    .text_color(theme::color(color::INK))
+                    .child(name),
             )
             .child(
                 div()
                     .flex_none()
-                    .text_size(px(12.))
+                    .text_scale(text::META)
                     .text_color(theme::color(color::INK_FAINT))
                     .child(routines::local_label(run.due)),
             )
-            .child(div().flex_none().w(px(180.)).text_size(px(12.)).text_color(theme::color(tone)).child(what))
+            .child(div().flex_none().w(px(180.)).text_scale(text::META).text_color(theme::color(tone)).child(what))
             .child(div().flex_none().w(px(96.)).flex().justify_end().children(action))
     }
 
@@ -360,7 +372,7 @@ impl RoutinesView {
                             .flex_1()
                             .min_w_0()
                             .truncate()
-                            .text_size(px(12.))
+                            .text_scale(text::META)
                             .text_color(theme::color(color::INK_MUTED))
                             .child(
                                 self.said.clone().unwrap_or_else(|| format!("Runs in {}", folder_name(&self.folder))),
@@ -380,11 +392,12 @@ impl Render for RoutinesView {
             div()
                 .px(len(space::SPACE_2))
                 .py(len(space::SPACE_1))
-                .text_size(px(13.))
+                .text_scale(text::LABEL)
                 .text_color(theme::color(color::INK_MUTED))
                 .child(text.to_owned())
         };
-        let mut list = div().id("routines").flex().flex_col().gap(px(2.)).max_h(px(520.)).overflow_y_scroll();
+        let mut list =
+            div().id("routines").flex().flex_col().gap(len(space::SPACE_0)).max_h(px(520.)).overflow_y_scroll();
         let now = crate::worktrees_view::now();
         match self.book.clone() {
             None => list = list.child(quiet("Reading the routines…")),
@@ -414,7 +427,7 @@ fn heading(text: &str) -> impl IntoElement {
         .pt(len(space::SPACE_3))
         .pb(len(space::SPACE_1))
         .px(len(space::SPACE_2))
-        .text_size(px(11.))
+        .text_scale(text::MICRO)
         .font_weight(FontWeight::MEDIUM)
         .text_color(theme::color(color::INK_FAINT))
         .child(text.to_uppercase())

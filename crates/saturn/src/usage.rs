@@ -17,7 +17,9 @@ use saturn_core::agent_state::AgentState;
 use saturn_core::usage::{self, Limit};
 use saturn_design::space;
 
+use crate::theme::TypeScale as _;
 use crate::theme::len;
+use saturn_design::text;
 
 /// How often the usage is read while nothing happens.
 const EVERY: Duration = Duration::from_mins(5);
@@ -201,7 +203,7 @@ fn dots(percent: f64) -> gpui_kit::Div {
     let lit = ((percent / 100.).clamp(0., 1.) * f64::from(DOTS)).round() as u8;
     let fill =
         crate::theme::color(if percent >= 80. { saturn_design::color::ORANGE } else { saturn_design::color::INK });
-    div().flex().gap(px(2.)).children((0..DOTS).map(|index| {
+    div().flex().gap(len(space::SPACE_0)).children((0..DOTS).map(|index| {
         let dot = div().flex_1().h(px(4.));
         if index < lit { dot.bg(fill) } else { dot.bg(crate::theme::overlay(0.14)) }
     }))
@@ -219,9 +221,9 @@ fn meter(percent: f64) -> gpui_kit::AnyElement {
         .relative()
         .h(px(2.))
         .w_full()
-        .rounded(px(1.))
+        .rounded_full()
         .bg(white(0.18))
-        .child(div().absolute().top_0().left_0().h_full().w(gpui_kit::relative(width)).rounded(px(1.)).bg(fill).shadow(
+        .child(div().absolute().top_0().left_0().h_full().w(gpui_kit::relative(width)).rounded_full().bg(fill).shadow(
             vec![gpui_kit::BoxShadow {
                 color: fill.opacity(0.6),
                 offset: gpui_kit::point(px(0.), px(0.)),
@@ -253,7 +255,7 @@ pub fn render(cx: &App) -> Option<impl IntoElement> {
     let mut card = card;
     for (name, limits) in plans {
         let title =
-            div().relative().text_size(px(12.)).text_color(white(0.62)).child(if titled { name } else { "Usage" });
+            div().relative().text_scale(text::META).text_color(white(0.62)).child(if titled { name } else { "Usage" });
         card = card.child(title).child(limit_rows(&limits));
     }
     Some(card)
@@ -269,13 +271,13 @@ fn limit_rows(limits: &[Limit]) -> impl IntoElement {
             div()
                 .flex()
                 .flex_col()
-                .gap(px(6.))
+                .gap(len(space::SPACE_2))
                 .child(
                     div()
                         .flex()
                         .items_baseline()
                         .gap(len(space::SPACE_2))
-                        .text_size(px(13.))
+                        .text_scale(text::LABEL)
                         .text_color(white(1.))
                         .child(limit.label.clone())
                         .child(
@@ -283,7 +285,7 @@ fn limit_rows(limits: &[Limit]) -> impl IntoElement {
                                 .flex_1()
                                 .min_w_0()
                                 .truncate()
-                                .text_size(px(11.))
+                                .text_scale(text::MICRO)
                                 .text_color(white(0.5))
                                 .child(format!("resets {}", resets(limit))),
                         )

@@ -15,9 +15,11 @@ use saturn_core::clickup::{self, Due, Filter, Ticket};
 use saturn_design::{color, radius, space};
 
 use crate::chrome;
+use crate::theme::TypeScale as _;
 use crate::theme::{self, len};
 use crate::ticket_picker::status_dot;
 use crate::workspace::{OpenSettings, Workspace};
+use saturn_design::text;
 
 pub struct TicketsView {
     workspace: WeakEntity<Workspace>,
@@ -61,7 +63,7 @@ impl TicketsView {
             .px(len(space::SPACE_2))
             .rounded(theme::corner(radius::RADIUS_SM))
             .cursor_pointer()
-            .text_size(px(12.))
+            .text_scale(text::META)
             .map(|chip| {
                 if on {
                     chip.bg(theme::color(color::BLUE).opacity(0.16)).text_color(theme::color(color::BLUE))
@@ -113,7 +115,7 @@ impl TicketsView {
                     .gap(len(space::SPACE_1))
                     .child(
                         div()
-                            .text_size(px(11.))
+                            .text_scale(text::MICRO)
                             .font_weight(FontWeight::MEDIUM)
                             .text_color(theme::color(color::INK_FAINT))
                             .child(title.to_uppercase()),
@@ -171,7 +173,7 @@ impl TicketsView {
                 filters.child(
                     div()
                         .id("filter-clear")
-                        .text_size(px(12.))
+                        .text_scale(text::META)
                         .text_color(theme::color(color::BLUE))
                         .cursor_pointer()
                         .child("Clear filters")
@@ -196,20 +198,20 @@ impl TicketsView {
             .rounded(theme::corner(radius::RADIUS_SM))
             .cursor_pointer()
             .hover(|s| s.bg(theme::fill_hover()))
-            .child(div().pt(px(5.)).child(status_dot(ticket)))
+            .child(div().pt(px(5.)).child(status_dot(ticket))) // off-scale: the dot sits on the first line of the title
             .child(
                 div()
                     .flex_1()
                     .min_w_0()
                     .flex()
                     .flex_col()
-                    .gap(px(2.))
+                    .gap(len(space::SPACE_0))
                     .child(
                         div()
                             .flex()
                             .items_center()
                             .gap(len(space::SPACE_2))
-                            .text_size(px(11.))
+                            .text_scale(text::MICRO)
                             .font_family(saturn_design::font::MONO)
                             .text_color(theme::color(color::INK_MUTED))
                             .child(ticket.key().to_owned())
@@ -224,7 +226,7 @@ impl TicketsView {
                     )
                     .child(
                         div()
-                            .text_size(px(13.))
+                            .text_scale(text::LABEL)
                             .line_height(px(18.))
                             .text_color(theme::color(color::INK))
                             .child(ticket.title.clone()),
@@ -264,13 +266,13 @@ impl TicketsView {
                         .right(px(1.))
                         .min_w(px(14.))
                         .h(px(14.))
-                        .px(px(3.))
+                        .px(px(3.)) // off-scale: a count badge, 14px, round
                         .rounded_full()
                         .flex()
                         .items_center()
                         .justify_center()
                         .bg(theme::color(color::BLUE))
-                        .text_size(px(9.))
+                        .text_scale(text::BADGE)
                         .text_color(theme::color(color::INK_ON_ACCENT))
                         .child(count.to_string()),
                 )
@@ -297,7 +299,7 @@ impl TicketsView {
                     .pt(len(space::SPACE_3))
                     .pb(len(space::SPACE_1))
                     .px(len(space::SPACE_2))
-                    .text_size(px(11.))
+                    .text_scale(text::MICRO)
                     .font_weight(FontWeight::MEDIUM)
                     .text_color(theme::color(color::INK_FAINT))
                     .child(status.to_uppercase())
@@ -354,7 +356,7 @@ impl Render for TicketsView {
                     .gap(len(space::SPACE_2))
                     .h(len(chrome::CONTROL_HEIGHT))
                     .pl(len(space::SPACE_2))
-                    .child(div().flex_1().text_size(px(13.)).font_weight(FontWeight::MEDIUM).child("Tickets"))
+                    .child(div().flex_1().text_scale(text::LABEL).font_weight(FontWeight::MEDIUM).child("Tickets"))
                     .when(connected, |head| {
                         head.child(self.render_filter_button(filter.count(), cx)).child(
                             chrome::icon_button("tickets-refresh", "refresh-cw", true)
@@ -381,7 +383,7 @@ impl Render for TicketsView {
             })
             .when(connected && self.filtering, |panel| panel.child(self.render_filters(&all, &filter, cx)))
             .children(problem.map(|problem| {
-                div().px(len(space::SPACE_2)).text_size(px(12.)).text_color(theme::color(color::RED)).child(problem)
+                div().px(len(space::SPACE_2)).text_scale(text::META).text_color(theme::color(color::RED)).child(problem)
             }))
             .children(note.map(|note| {
                 div()
@@ -389,7 +391,7 @@ impl Render for TicketsView {
                     .flex_col()
                     .gap(len(space::SPACE_3))
                     .p(len(space::SPACE_2))
-                    .text_size(px(13.))
+                    .text_scale(text::LABEL)
                     .text_color(theme::color(color::INK_MUTED))
                     .child(note)
                     .when(!connected, |note| {

@@ -9,14 +9,16 @@ use std::time::Duration;
 use gpui_kit::component::input::{InputEvent, InputState};
 use gpui_kit::{
     AppContext as _, Context, Entity, InteractiveElement as _, IntoElement, ObjectFit, ParentElement as _, Render,
-    StatefulInteractiveElement as _, Styled as _, StyledImage as _, Subscription, Task, Window, div, img, px,
+    StatefulInteractiveElement as _, Styled as _, StyledImage as _, Subscription, Task, Window, div, img,
 };
 use saturn_core::pictures;
 use saturn_core::servers::Server;
 use saturn_design::{color, space};
 
 use crate::chrome;
+use crate::theme::TypeScale as _;
 use crate::theme::{self, len};
+use saturn_design::text;
 
 /// How often the page is drawn again while the tab is open.
 const EVERY: Duration = Duration::from_secs(8);
@@ -131,7 +133,7 @@ impl Render for PreviewView {
             servers = servers.child(
                 chrome::track_item(("preview-server", index), self.server == index)
                     .px(len(space::SPACE_3))
-                    .text_size(px(12.))
+                    .text_scale(text::META)
                     .child(format!("{} :{}", server.name, server.port))
                     .on_click(cx.listener(move |this, _, _, cx| {
                         this.server = index;
@@ -142,7 +144,7 @@ impl Render for PreviewView {
         let size = |id: &'static str, label: &'static str, mobile: bool, cx: &mut Context<Self>| {
             chrome::track_item(id, self.mobile == mobile)
                 .px(len(space::SPACE_3))
-                .text_size(px(12.))
+                .text_scale(text::META)
                 .child(label)
                 .on_click(cx.listener(move |this, _, _, cx| {
                     this.mobile = mobile;
@@ -152,7 +154,7 @@ impl Render for PreviewView {
         let url = self.url(cx);
         let body = if self.servers.is_empty() {
             div()
-                .text_size(px(13.))
+                .text_scale(text::LABEL)
                 .text_color(theme::color(color::INK_MUTED))
                 .child("The focused pane runs no server. Start the app (⌘⇧P), then open the preview again.")
                 .into_any_element()
@@ -160,7 +162,7 @@ impl Render for PreviewView {
             img(shot.clone()).size_full().object_fit(ObjectFit::Contain).into_any_element()
         } else {
             div()
-                .text_size(px(13.))
+                .text_scale(text::LABEL)
                 .text_color(theme::color(color::INK_MUTED))
                 .child(self.said.clone().unwrap_or_else(|| "Drawing the page…".to_owned()))
                 .into_any_element()

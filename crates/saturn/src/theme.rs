@@ -251,6 +251,16 @@ pub fn len(value: f32) -> Pixels {
     px(value)
 }
 
+/// The type scale on any element: `.text_scale(text::LABEL)` takes its size from the scale in
+/// design/tokens.json, so no view writes a size of its own.
+pub trait TypeScale: gpui_kit::Styled + Sized {
+    fn text_scale(self, style: saturn_design::TextStyle) -> Self {
+        self.text_size(px(style.size))
+    }
+}
+
+impl<T: gpui_kit::Styled> TypeScale for T {}
+
 /// A corner's radius in the current theme: as given in Saturn's, square in Cyberdeck's.
 pub fn corner(radius: f32) -> Pixels {
     px(saturn_design::corner(radius))

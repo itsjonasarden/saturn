@@ -50,9 +50,11 @@ use crate::review_comments::{SendToAgent, Touched};
 use crate::session::{self, SavedGrid, SavedPage, SavedTab};
 use crate::settings::{self, AppearanceSetting, Panels, Settings};
 use crate::status_bar::StatusBar;
+use crate::theme::TypeScale as _;
 use crate::theme::{self, len};
 use crate::tickets_view::TicketsView;
 use crate::{dock, github, menu_bar, notify, palette, settings_view, ticket_picker};
+use saturn_design::text;
 
 actions!(
     saturn,
@@ -265,7 +267,7 @@ impl Render for DraggedTab {
             .bg(theme::fill_pressed())
             .border_1()
             .border_color(theme::color(color::BLUE))
-            .text_size(px(13.))
+            .text_scale(text::LABEL)
             .font_weight(FontWeight::MEDIUM)
             .text_color(theme::color(color::INK))
             .font_family(saturn_design::look().sans)
@@ -686,7 +688,7 @@ fn ticket_chip(cell: CellId, ticket: &Ticket) -> impl IntoElement {
         .px(len(space::SPACE_3))
         .rounded(theme::corner(radius::RADIUS_SM))
         .cursor_pointer()
-        .text_size(px(12.))
+        .text_scale(text::META)
         .font_weight(FontWeight::MEDIUM)
         .text_color(theme::color(color::INK_MUTED))
         .hover(|s| s.bg(theme::fill_hover()))
@@ -731,7 +733,7 @@ fn pull_request_chip(cell: CellId, pr: &PullRequest) -> impl IntoElement {
         .px(len(space::SPACE_2))
         .rounded(theme::corner(radius::RADIUS_SM))
         .cursor_pointer()
-        .text_size(px(12.))
+        .text_scale(text::META)
         .font_weight(FontWeight::MEDIUM)
         .text_color(theme::color(color::INK_MUTED))
         .hover(|s| s.bg(theme::fill_hover()))
@@ -761,7 +763,7 @@ fn preview_chip(cell: CellId, pr: &PullRequest) -> Option<impl IntoElement> {
             .h(len(TAB_HEIGHT))
             .px(len(space::SPACE_2))
             .rounded(theme::corner(radius::RADIUS_SM))
-            .text_size(px(12.))
+            .text_scale(text::META)
             .font_weight(FontWeight::MEDIUM)
             .text_color(theme::color(if preview.ready { color::INK_MUTED } else { color::INK_FAINT }))
             .when(preview.url.is_some(), |chip| chip.cursor_pointer().hover(|s| s.bg(theme::fill_hover())))
@@ -794,7 +796,7 @@ fn link_chip(
         .h(len(chrome::CONTROL_HEIGHT))
         .px(len(space::SPACE_2))
         .rounded(theme::corner(radius::RADIUS_SM))
-        .text_size(px(12.))
+        .text_scale(text::META)
         .font_weight(FontWeight::MEDIUM)
         .text_color(theme::color(color::INK_MUTED))
         .cursor_pointer()
@@ -816,7 +818,7 @@ fn attempt_chip(cell: CellId, number: usize) -> impl IntoElement {
         .h(len(chrome::CONTROL_HEIGHT))
         .px(len(space::SPACE_2))
         .rounded(theme::corner(radius::RADIUS_SM))
-        .text_size(px(12.))
+        .text_scale(text::META)
         .font_weight(FontWeight::MEDIUM)
         .text_color(theme::color(color::INK_MUTED))
         .cursor_pointer()
@@ -845,7 +847,7 @@ fn team_chip(cell: CellId, tab: TabId, team: &Team, cx: &mut Context<Workspace>)
         .h(len(chrome::CONTROL_HEIGHT))
         .px(len(space::SPACE_2))
         .rounded(theme::corner(radius::RADIUS_SM))
-        .text_size(px(12.))
+        .text_scale(text::META)
         .font_weight(FontWeight::MEDIUM)
         .text_color(theme::color(color::INK_MUTED))
         .cursor_pointer()
@@ -884,7 +886,7 @@ fn overlap_chip(cell: CellId, others: &[(PathBuf, Vec<String>)]) -> impl IntoEle
         .gap(len(space::SPACE_1))
         .h(len(TAB_HEIGHT))
         .px(len(space::SPACE_2))
-        .text_size(px(12.))
+        .text_scale(text::META)
         .font_weight(FontWeight::MEDIUM)
         .text_color(theme::color(color::INK_MUTED))
         .child(chrome::icon("triangle-alert", 13., theme::color(color::AMBER_TEXT)))
@@ -906,7 +908,7 @@ fn server_chip(cell: CellId, server: &Server) -> impl IntoElement {
         .px(len(space::SPACE_2))
         .rounded(theme::corner(radius::RADIUS_SM))
         .cursor_pointer()
-        .text_size(px(12.))
+        .text_scale(text::META)
         .font_weight(FontWeight::MEDIUM)
         .text_color(theme::color(color::INK_MUTED))
         .hover(|s| s.bg(theme::fill_hover()))
@@ -3565,7 +3567,7 @@ impl Workspace {
             .pl(len(space::SPACE_2))
             .when(calling, |tab| tab.shadow(theme::layers(&shadow::GLOW_NEEDS_YOU.get()[..1])))
             .text_color(foreground)
-            .text_size(px(13.))
+            .text_scale(text::LABEL)
             .font_weight(FontWeight::MEDIUM)
             .child(status_dot(state))
             .map(|tab_element| match renaming {
@@ -3718,7 +3720,7 @@ impl Workspace {
                     .px(len(space::SPACE_2))
                     .rounded(theme::corner(radius::RADIUS_SM))
                     .cursor_pointer()
-                    .text_size(px(12.))
+                    .text_scale(text::META)
                     .font_weight(FontWeight::MEDIUM)
                     .text_color(theme::color(color::INK_MUTED))
                     .hover(|s| s.bg(theme::fill_hover()))
@@ -3788,7 +3790,7 @@ impl Workspace {
                 .px(len(space::SPACE_2))
                 .rounded(theme::corner(radius::RADIUS_SM))
                 .cursor_pointer()
-                .text_size(px(12.))
+                .text_scale(text::META)
                 .font_weight(FontWeight::MEDIUM)
                 .text_color(theme::color(color::INK_MUTED))
                 .hover(|s| s.bg(theme::fill_hover()))
@@ -3856,7 +3858,7 @@ impl Workspace {
                     div()
                         .max_w(px(260.))
                         .truncate()
-                        .text_size(px(12.))
+                        .text_scale(text::META)
                         .text_color(theme::color(color::INK_MUTED))
                         .child(said)
                 }))
@@ -4208,7 +4210,7 @@ impl Workspace {
                 .flex_none()
                 .items_center()
                 .gap(len(space::SPACE_1))
-                .text_size(px(13.))
+                .text_scale(text::LABEL)
                 .text_color(theme::color(color::INK_MUTED))
                 .when_some(worktree.clone(), |place, worktree| {
                     place.child(chrome::icon("folder-git", 13., faint)).child(worktree)
@@ -4325,7 +4327,7 @@ impl Workspace {
             .items_center()
             .h(height)
             .rounded(theme::corner(radius::RADIUS_MD))
-            .text_size(px(13.))
+            .text_scale(text::LABEL)
             .font_weight(FontWeight::MEDIUM)
             .child(
                 part("new-agent")

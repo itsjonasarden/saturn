@@ -30,7 +30,9 @@ use crate::problems_view::{self, ProblemsView};
 use crate::references_view::ReferencesView;
 use crate::review_comments::{ReviewComments, SendToAgent, Touched};
 use crate::schema_view::SchemaView;
+use crate::theme::TypeScale as _;
 use crate::theme::{self, len};
+use saturn_design::text;
 
 /// Files larger than this open read-only elsewhere; the editor keeps the whole text in memory.
 const MAX_SIZE: u64 = 4 * 1024 * 1024;
@@ -606,7 +608,7 @@ impl EditorView {
                 .flex()
                 .items_center()
                 .gap(len(space::SPACE_2))
-                .child(div().text_size(px(12.)).text_color(theme::color(color::INK_MUTED)).child("Rename to"))
+                .child(div().text_scale(text::META).text_color(theme::color(color::INK_MUTED)).child("Rename to"))
                 .child(div().w(px(200.)).child(crate::chrome::input(&rename.input)))
                 .into_any_element(),
         )
@@ -643,7 +645,7 @@ impl EditorView {
         Some(
             chrome::track_item("problems-button", false)
                 .px(len(space::SPACE_2))
-                .text_size(px(12.))
+                .text_scale(text::META)
                 .children((errors > 0).then(|| count(lsp_types::DiagnosticSeverity::ERROR, errors)))
                 .children((warnings > 0).then(|| count(lsp_types::DiagnosticSeverity::WARNING, warnings)))
                 .tooltip(chrome::tip("Errors and warnings the language servers found"))
@@ -705,7 +707,7 @@ impl EditorView {
     fn render_language_notice(&self, cx: &mut Context<Self>) -> Option<AnyElement> {
         let file = self.files.get(self.active).filter(|_| self.front == Front::File)?;
         let note = |text: String, colour| {
-            div().px(len(space::SPACE_2)).text_size(px(12.)).text_color(theme::color(colour)).child(text)
+            div().px(len(space::SPACE_2)).text_scale(text::META).text_color(theme::color(colour)).child(text)
         };
         let notice = match file.language.as_ref()? {
             Status::Running(_) => return None,
@@ -782,7 +784,7 @@ impl EditorView {
                 .child(
                     div()
                         .px(len(space::SPACE_2))
-                        .text_size(px(12.))
+                        .text_scale(text::META)
                         .text_color(theme::color(color::AMBER_TEXT))
                         .child(format!("{} changed on disk", file.name())),
                 )
@@ -1364,7 +1366,7 @@ impl EditorView {
                 .child(step("next-change", "chevron-down", true))
                 .child(
                     chrome::track()
-                        .p(px(2.))
+                        .p(len(space::SPACE_0))
                         .child(pick("Unified", DiffMode::Unified))
                         .child(pick("Split", DiffMode::Split)),
                 )
@@ -1556,13 +1558,13 @@ impl Render for EditorView {
                             .gap(len(space::SPACE_2))
                             .child(
                                 div()
-                                    .text_size(px(15.))
+                                    .text_scale(text::SUBTITLE)
                                     .font_weight(FontWeight::MEDIUM)
                                     .text_color(theme::color(color::INK))
                                     .child("No file open"),
                             )
                             .child(
-                                div().text_size(px(14.)).text_color(theme::color(color::INK_MUTED)).child(
+                                div().text_scale(text::BODY).text_color(theme::color(color::INK_MUTED)).child(
                                     self.problem.clone().unwrap_or_else(|| {
                                         "Pick a file in the sidebar. ⌘J hides this panel.".to_owned()
                                     }),
@@ -1578,7 +1580,7 @@ impl Render for EditorView {
                     .flex()
                     .flex_none()
                     .items_center()
-                    .gap(px(2.))
+                    .gap(len(space::SPACE_0))
                     .h(len(chrome::CONTROL_HEIGHT))
                     .children(self.render_preview_tab(cx))
                     .children(self.render_schema_tab(cx))
@@ -1611,7 +1613,7 @@ impl Render for EditorView {
                     .children(self.problem.clone().map(|problem| {
                         div()
                             .px(len(space::SPACE_3))
-                            .text_size(px(12.))
+                            .text_scale(text::META)
                             .text_color(theme::color(color::RED))
                             .child(problem)
                     })),

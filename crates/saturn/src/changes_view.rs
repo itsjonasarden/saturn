@@ -18,7 +18,9 @@ use saturn_core::git::{self, Change, Scope, Staged};
 use saturn_design::{color, radius, space};
 
 use crate::chrome;
+use crate::theme::TypeScale as _;
 use crate::theme::{self, len};
+use saturn_design::text;
 
 const ROW_HEIGHT: f32 = 26.0;
 
@@ -231,7 +233,7 @@ impl ChangesView {
             .pl(len(space::SPACE_2))
             .pr(len(space::SPACE_3))
             .cursor_pointer()
-            .text_size(px(12.))
+            .text_scale(text::META)
             .font_weight(FontWeight::MEDIUM)
             .text_color(theme::color(color::INK_MUTED))
             .child(chrome::icon(
@@ -246,7 +248,7 @@ impl ChangesView {
                     .rounded(theme::corner(radius::RADIUS_XS))
                     .bg(theme::fill_hover())
                     .font_family(saturn_design::font::MONO)
-                    .text_size(px(11.))
+                    .text_scale(text::MICRO)
                     .child(files.len().to_string()),
             )
             .child(checkbox(("stage-group", group as usize), staged).on_click(cx.listener(
@@ -292,7 +294,7 @@ impl ChangesView {
             .pr(len(space::SPACE_3))
             .rounded(theme::corner(radius::RADIUS_SM))
             .cursor_pointer()
-            .text_size(px(13.))
+            .text_scale(text::LABEL)
             .when(selected, |row| row.bg(theme::fill_pressed()))
             .when(!selected, |row| row.hover(|s| s.bg(theme::fill_hover())))
             .child(chrome::icon(icon, 14., theme::color(icon_color)))
@@ -336,7 +338,7 @@ impl ChangesView {
                     .flex_1()
                     .min_w_0()
                     .truncate()
-                    .text_size(px(12.))
+                    .text_scale(text::META)
                     .text_color(theme::color(color::INK_MUTED))
                     .child(self.branch.clone().unwrap_or_else(|| "No branch".to_owned())),
             )
@@ -405,7 +407,7 @@ pub fn stats(added: usize, removed: usize) -> impl IntoElement {
         .flex_none()
         .gap(len(space::SPACE_1))
         .font_family(saturn_design::font::MONO)
-        .text_size(px(11.))
+        .text_scale(text::MICRO)
         .when(added > 0, |stats| {
             stats.child(div().text_color(theme::color(color::TERM_GREEN)).child(format!("+{added}")))
         })
@@ -418,7 +420,7 @@ impl Render for ChangesView {
             div()
                 .flex_1()
                 .p(len(space::SPACE_4))
-                .text_size(px(14.))
+                .text_scale(text::BODY)
                 .text_color(theme::color(color::INK_MUTED))
                 .child("Nothing uncommitted.")
                 .into_any_element()
@@ -444,7 +446,7 @@ impl Render for ChangesView {
                     .flex_none()
                     .px(len(space::SPACE_3))
                     .py(len(space::SPACE_2))
-                    .text_size(px(12.))
+                    .text_scale(text::META)
                     .text_color(theme::color(color::RED))
                     .child(problem)
             }))

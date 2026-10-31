@@ -20,7 +20,9 @@ use saturn_core::git::{self, FileState};
 use saturn_design::{color, radius, space};
 
 use crate::chrome;
+use crate::theme::TypeScale as _;
 use crate::theme::{self, len};
+use saturn_design::text;
 
 const ROW_HEIGHT: f32 = 26.0;
 /// How far each level is indented.
@@ -302,7 +304,7 @@ impl FilesView {
             .pr(len(space::SPACE_3))
             .rounded(theme::corner(radius::RADIUS_SM))
             .cursor_pointer()
-            .text_size(px(13.))
+            .text_scale(text::LABEL)
             .text_color(theme::color(name_color))
             // What git ignores (build output, node_modules, local env files) is listed, but the
             // whole row steps back, icon and all, so it reads as scenery.
@@ -322,7 +324,7 @@ impl FilesView {
                 div()
                     .flex_none()
                     .font_family(saturn_design::font::MONO)
-                    .text_size(px(11.))
+                    .text_scale(text::MICRO)
                     .text_color(theme::color(badge_color(state)))
                     .child(state.badge())
             }))
@@ -408,7 +410,7 @@ impl Render for DraggedEntry {
             .px(len(space::SPACE_3))
             .py(len(space::SPACE_1))
             .rounded(theme::corner(radius::RADIUS_SM))
-            .text_size(px(13.))
+            .text_scale(text::LABEL)
             .text_color(theme::color(color::INK))
             .child(self.name.clone())
     }
@@ -457,13 +459,13 @@ fn ask_name(
             .child(
                 div()
                     .pb(len(space::SPACE_2))
-                    .text_size(px(13.))
+                    .text_scale(text::LABEL)
                     .text_color(theme::color(color::INK_MUTED))
                     .child(note.clone()),
             )
             .child(crate::chrome::input(&input))
             .children(wrong.map(|why| {
-                div().pt(len(space::SPACE_2)).text_size(px(13.)).text_color(theme::color(color::RED)).child(why)
+                div().pt(len(space::SPACE_2)).text_scale(text::LABEL).text_color(theme::color(color::RED)).child(why)
             }))
             .child(
                 div().flex().justify_end().pt(len(space::SPACE_4)).child(

@@ -14,7 +14,9 @@ use saturn_design::{color, radius, space};
 
 use crate::chrome;
 use crate::editor_view::EditorView;
+use crate::theme::TypeScale as _;
 use crate::theme::{self, len};
+use saturn_design::text;
 
 /// A place the symbol is used: its line (0-based) and column, and the line's text.
 struct Use {
@@ -85,7 +87,7 @@ impl ReferencesView {
                 div()
                     .flex_none()
                     .w(px(40.))
-                    .text_size(px(12.))
+                    .text_scale(text::META)
                     .font_family(saturn_design::font::MONO)
                     .text_color(theme::color(color::INK_FAINT))
                     .child((position.line + 1).to_string()),
@@ -96,7 +98,7 @@ impl ReferencesView {
                     .min_w_0()
                     .truncate()
                     .font_family(saturn_design::font::MONO)
-                    .text_size(px(12.))
+                    .text_scale(text::META)
                     .text_color(theme::color(color::INK_BODY))
                     .child(item.text.clone()),
             )
@@ -129,13 +131,13 @@ impl Render for ReferencesView {
                     .px(len(space::SPACE_4))
                     .pt(len(space::SPACE_3))
                     .pb(len(space::SPACE_1))
-                    .text_size(px(13.))
+                    .text_scale(text::LABEL)
                     .child(chrome::icon("file-code", 13., theme::color(color::INK_FAINT)))
                     .child(div().font_weight(FontWeight::MEDIUM).text_color(theme::color(color::INK)).child(name))
                     .child(div().min_w_0().truncate().text_color(theme::color(color::INK_FAINT)).child(folder))
                     .child(
                         div()
-                            .text_size(px(12.))
+                            .text_scale(text::META)
                             .text_color(theme::color(color::INK_FAINT))
                             .child(uses.len().to_string()),
                     ),
@@ -153,7 +155,7 @@ impl Render for ReferencesView {
                     .flex_none()
                     .px(len(space::SPACE_4))
                     .py(len(space::SPACE_3))
-                    .text_size(px(14.))
+                    .text_scale(text::BODY)
                     .font_weight(FontWeight::MEDIUM)
                     .text_color(theme::color(color::INK))
                     .child(headline),

@@ -12,7 +12,9 @@ use gpui_kit::{
 use saturn_core::git_graph::{self, Commit, Row, Span};
 use saturn_design::{color, radius, space};
 
+use crate::theme::TypeScale as _;
 use crate::theme::{self, len};
+use saturn_design::text;
 
 const ROW_HEIGHT: f32 = 28.;
 /// The distance between lanes.
@@ -100,7 +102,7 @@ impl HistoryView {
             .h(px(ROW_HEIGHT))
             .pr(len(space::SPACE_3))
             .cursor_pointer()
-            .text_size(px(13.))
+            .text_scale(text::LABEL)
             .when(selected, |line| line.bg(theme::fill_pressed()))
             .when(!selected, |line| line.hover(|s| s.bg(theme::fill_hover())))
             .child(graph(row, graph_width))
@@ -124,7 +126,7 @@ impl HistoryView {
                 div()
                     .flex_none()
                     .w(px(96.))
-                    .text_size(px(12.))
+                    .text_scale(text::META)
                     .text_color(theme::color(color::INK_FAINT))
                     .child(git_graph::when(commit.time, now)),
             )
@@ -133,7 +135,7 @@ impl HistoryView {
                     .flex_none()
                     .w(px(130.))
                     .truncate()
-                    .text_size(px(12.))
+                    .text_scale(text::META)
                     .text_color(theme::color(color::INK_MUTED))
                     .child(commit.author.clone()),
             )
@@ -142,7 +144,7 @@ impl HistoryView {
                     .flex_none()
                     .w(px(60.))
                     .font_family(saturn_design::font::MONO)
-                    .text_size(px(11.))
+                    .text_scale(text::MICRO)
                     .text_color(theme::color(color::INK_FAINT))
                     .child(commit.short_hash().to_owned()),
             )
@@ -170,7 +172,7 @@ fn ref_chip(name: &str) -> impl IntoElement {
         .border_color(if head { theme::color(color::BLUE).opacity(0.5) } else { theme::separator() })
         .bg(if head { theme::color(color::BLUE_VIVID).opacity(0.14) } else { theme::fill_hover() })
         .font_family(saturn_design::font::MONO)
-        .text_size(px(11.))
+        .text_scale(text::MICRO)
         .font_weight(FontWeight::MEDIUM)
         .text_color(theme::color(if head { color::BLUE } else { color::INK_MUTED }))
         .max_w(px(220.))
@@ -242,7 +244,7 @@ impl Render for HistoryView {
             return div()
                 .size_full()
                 .p(len(space::SPACE_4))
-                .text_size(px(14.))
+                .text_scale(text::BODY)
                 .text_color(theme::color(color::INK_MUTED))
                 .child("No commits here yet.")
                 .into_any_element();

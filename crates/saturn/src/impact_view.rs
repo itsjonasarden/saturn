@@ -20,7 +20,9 @@ use saturn_design::{color, radius, space};
 
 use crate::chrome;
 use crate::editor_view::EditorView;
+use crate::theme::TypeScale as _;
 use crate::theme::{self, len};
+use saturn_design::text;
 
 const ROW_HEIGHT: f32 = 28.;
 
@@ -195,7 +197,7 @@ impl ImpactView {
                             .flex_1()
                             .min_w_0()
                             .truncate()
-                            .text_size(px(14.))
+                            .text_scale(text::BODY)
                             .font_weight(FontWeight::MEDIUM)
                             .text_color(theme::color(color::INK))
                             .child(if self.loaded { headline } else { "Reading the imports…".to_owned() }),
@@ -286,11 +288,11 @@ impl ImpactView {
             .mx(len(space::SPACE_2))
             .px(len(space::SPACE_2))
             .rounded(theme::corner(radius::RADIUS_SM))
-            .text_size(px(13.))
+            .text_scale(text::LABEL)
             .when(file.is_some(), |row| row.cursor_pointer().hover(|s| s.bg(theme::fill_hover())))
             .child(chrome::icon(icon, 13., theme::color(color::INK_FAINT)))
             .child(div().flex_1().min_w_0().truncate().text_color(theme::color(color::INK_BODY)).child(name.to_owned()))
-            .child(div().flex_none().text_size(px(12.)).text_color(theme::color(color::INK_MUTED)).child(note))
+            .child(div().flex_none().text_scale(text::META).text_color(theme::color(color::INK_MUTED)).child(note))
             .on_click(cx.listener(move |this, _, window, cx| {
                 if let Some(file) = &file {
                     this.open(file, window, cx);
@@ -314,7 +316,7 @@ impl ImpactView {
             .px(len(space::SPACE_2))
             .rounded(theme::corner(radius::RADIUS_SM))
             .cursor_pointer()
-            .text_size(px(13.))
+            .text_scale(text::LABEL)
             .when(selected, |row| row.bg(theme::fill_pressed()))
             .when(!selected, |row| row.hover(|s| s.bg(theme::fill_hover())))
             .child(chrome::icon("file-code", 13., theme::color(color::INK_FAINT)))
@@ -325,11 +327,11 @@ impl ImpactView {
                     .flex_none()
                     .max_w(px(200.))
                     .truncate()
-                    .text_size(px(12.))
+                    .text_scale(text::META)
                     .text_color(theme::color(color::INK_FAINT))
                     .child(format!("via {}", name(via)))
             }))
-            .child(div().flex_none().text_size(px(12.)).text_color(theme::color(color::INK_MUTED)).child(note))
+            .child(div().flex_none().text_scale(text::META).text_color(theme::color(color::INK_MUTED)).child(note))
             .on_click(cx.listener(move |this, _, _, cx| this.focus(focused.clone(), cx)))
             .into_any_element()
     }
@@ -351,7 +353,7 @@ impl ImpactView {
                     column.child(
                         div()
                             .px(len(space::SPACE_4))
-                            .text_size(px(13.))
+                            .text_scale(text::LABEL)
                             .text_color(theme::color(color::INK_FAINT))
                             .child(empty),
                     )
@@ -380,7 +382,7 @@ impl ImpactView {
                     .child(
                         div()
                             .flex_none()
-                            .text_size(px(14.))
+                            .text_scale(text::BODY)
                             .font_weight(FontWeight::MEDIUM)
                             .text_color(theme::color(color::INK))
                             .child(name(file)),
@@ -390,7 +392,7 @@ impl ImpactView {
                             .flex_1()
                             .min_w_0()
                             .truncate()
-                            .text_size(px(13.))
+                            .text_scale(text::LABEL)
                             .text_color(theme::color(color::INK_FAINT))
                             .child(folder(file)),
                     )
@@ -411,7 +413,7 @@ impl ImpactView {
             } else {
                 div()
                     .p(len(space::SPACE_4))
-                    .text_size(px(13.))
+                    .text_scale(text::LABEL)
                     .text_color(theme::color(color::INK_MUTED))
                     .child("Saturn follows imports in JavaScript, TypeScript, Rust and Python.")
                     .into_any_element()
@@ -487,7 +489,7 @@ fn section_header(title: &str, count: usize) -> impl IntoElement {
         .px(len(space::SPACE_4))
         .pt(len(space::SPACE_3))
         .pb(len(space::SPACE_1))
-        .text_size(px(12.))
+        .text_scale(text::META)
         .font_weight(FontWeight::MEDIUM)
         .child(div().text_color(theme::color(color::INK_MUTED)).child(title.to_owned()))
         .child(div().text_color(theme::color(color::INK_FAINT)).child(count.to_string()))

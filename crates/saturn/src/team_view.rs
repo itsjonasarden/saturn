@@ -12,8 +12,10 @@ use saturn_core::teams::{Message, Task};
 use saturn_design::{color, radius, space};
 
 use crate::chrome;
+use crate::theme::TypeScale as _;
 use crate::theme::{self, len};
 use crate::workspace::Workspace;
+use saturn_design::text;
 
 pub struct TeamView {
     workspace: WeakEntity<Workspace>,
@@ -41,7 +43,7 @@ impl Render for TeamView {
         let team = self.workspace.upgrade().and_then(|workspace| workspace.read(cx).team(self.tab).cloned());
         let Some(team) = team else {
             return div()
-                .text_size(px(13.))
+                .text_scale(text::LABEL)
                 .text_color(theme::color(color::INK_MUTED))
                 .child("The team has finished: Claude Code removes it when its session ends.")
                 .into_any_element();
@@ -52,17 +54,23 @@ impl Render for TeamView {
             members = members.child(
                 div()
                     .px(len(space::SPACE_2))
-                    .py(px(2.))
+                    .py(len(space::SPACE_0))
                     .rounded(theme::corner(radius::RADIUS_XS))
                     .bg(theme::fill_control())
-                    .text_size(px(12.))
+                    .text_scale(text::META)
                     .font_weight(FontWeight::MEDIUM)
                     .text_color(theme::color(color::INK))
                     .child(if lead { format!("{} (lead)", member.name) } else { member.name.clone() }),
             );
         }
-        let mut list =
-            div().id("team").flex().flex_col().gap(px(2.)).max_h(px(560.)).overflow_y_scroll().child(members);
+        let mut list = div()
+            .id("team")
+            .flex()
+            .flex_col()
+            .gap(len(space::SPACE_0))
+            .max_h(px(560.))
+            .overflow_y_scroll()
+            .child(members);
         list = list.child(heading("Tasks"));
         if team.tasks.is_empty() {
             list = list.child(quiet("No tasks yet."));
@@ -92,22 +100,20 @@ fn task_row(task: &Task) -> impl IntoElement {
         .items_center()
         .gap(len(space::SPACE_3))
         .px(len(space::SPACE_2))
-        .py(px(3.))
-        .child(div().flex_none().w(px(60.)).text_size(px(12.)).text_color(theme::color(tone)).child(status))
+        .py(px(3.)) // off-scale: a status row, 3px a side for 22px in all
+        .child(div().flex_none().w(px(60.)).text_scale(text::META).text_color(theme::color(tone)).child(status))
         .child(
             div()
                 .flex_1()
                 .min_w_0()
                 .truncate()
-                .text_size(px(13.))
+                .text_scale(text::LABEL)
                 .text_color(theme::color(if task.status == "completed" { color::INK_MUTED } else { color::INK }))
                 .child(task.subject.clone()),
         )
-        .children(
-            task.owner.clone().map(|owner| {
-                div().flex_none().text_size(px(12.)).text_color(theme::color(color::INK_FAINT)).child(owner)
-            }),
-        )
+        .children(task.owner.clone().map(|owner| {
+            div().flex_none().text_scale(text::META).text_color(theme::color(color::INK_FAINT)).child(owner)
+        }))
 }
 
 fn message_row(message: &Message) -> impl IntoElement {
@@ -116,14 +122,14 @@ fn message_row(message: &Message) -> impl IntoElement {
     div()
         .flex()
         .flex_col()
-        .gap(px(2.))
+        .gap(len(space::SPACE_0))
         .px(len(space::SPACE_2))
         .py(len(space::SPACE_1))
         .child(
             div()
                 .flex()
                 .gap(len(space::SPACE_2))
-                .text_size(px(12.))
+                .text_scale(text::META)
                 .child(
                     div()
                         .font_weight(FontWeight::MEDIUM)
@@ -133,7 +139,7 @@ fn message_row(message: &Message) -> impl IntoElement {
                 .child(div().text_color(theme::color(color::INK_FAINT)).child(time))
                 .children((!message.read).then(|| div().text_color(theme::color(color::BLUE)).child("Unread"))),
         )
-        .child(div().text_size(px(13.)).text_color(theme::color(color::INK_MUTED)).child(message.text.clone()))
+        .child(div().text_scale(text::LABEL).text_color(theme::color(color::INK_MUTED)).child(message.text.clone()))
 }
 
 fn heading(text: &str) -> impl IntoElement {
@@ -141,14 +147,18 @@ fn heading(text: &str) -> impl IntoElement {
         .pt(len(space::SPACE_3))
         .pb(len(space::SPACE_1))
         .px(len(space::SPACE_2))
-        .text_size(px(11.))
+        .text_scale(text::MICRO)
         .font_weight(FontWeight::MEDIUM)
         .text_color(theme::color(color::INK_FAINT))
         .child(text.to_uppercase())
 }
 
 fn quiet(text: &str) -> impl IntoElement {
-    div().px(len(space::SPACE_2)).text_size(px(13.)).text_color(theme::color(color::INK_MUTED)).child(text.to_owned())
+    div()
+        .px(len(space::SPACE_2))
+        .text_scale(text::LABEL)
+        .text_color(theme::color(color::INK_MUTED))
+        .child(text.to_owned())
 }
 
 /// Opens the team the session in `tab` leads, named `title`.

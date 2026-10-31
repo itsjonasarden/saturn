@@ -13,7 +13,9 @@ use saturn_design::{Token, color, radius, space};
 
 use crate::chrome;
 use crate::editor_view::EditorView;
+use crate::theme::TypeScale as _;
 use crate::theme::{self, len};
+use saturn_design::text;
 
 /// How many errors and warnings `problems` hold (hints and notes don't count).
 pub fn counts(problems: &BTreeMap<PathBuf, Vec<Diagnostic>>) -> (usize, usize) {
@@ -84,7 +86,7 @@ impl ProblemsView {
             .px(len(space::SPACE_2))
             .rounded(theme::corner(radius::RADIUS_SM))
             .cursor_pointer()
-            .text_size(px(13.))
+            .text_scale(text::LABEL)
             .hover(|s| s.bg(theme::fill_hover()))
             .child(chrome::icon(icon, 13., theme::color(colour)))
             .child(div().flex_1().min_w_0().truncate().text_color(theme::color(color::INK_BODY)).child(message))
@@ -92,7 +94,7 @@ impl ProblemsView {
                 div()
                     .flex_none()
                     .font_family(saturn_design::font::MONO)
-                    .text_size(px(11.))
+                    .text_scale(text::MICRO)
                     .text_color(theme::color(color::INK_FAINT))
                     .child(format!("{}:{}", position.line + 1, position.character + 1)),
             )
@@ -131,13 +133,13 @@ impl Render for ProblemsView {
                     .px(len(space::SPACE_4))
                     .pt(len(space::SPACE_3))
                     .pb(len(space::SPACE_1))
-                    .text_size(px(13.))
+                    .text_scale(text::LABEL)
                     .child(chrome::icon("file-code", 13., theme::color(color::INK_FAINT)))
                     .child(div().font_weight(FontWeight::MEDIUM).text_color(theme::color(color::INK)).child(name))
                     .child(div().min_w_0().truncate().text_color(theme::color(color::INK_FAINT)).child(folder))
                     .child(
                         div()
-                            .text_size(px(12.))
+                            .text_scale(text::META)
                             .text_color(theme::color(color::INK_FAINT))
                             .child(problems.len().to_string()),
                     ),
@@ -155,7 +157,7 @@ impl Render for ProblemsView {
                     .flex_none()
                     .px(len(space::SPACE_4))
                     .py(len(space::SPACE_3))
-                    .text_size(px(14.))
+                    .text_scale(text::BODY)
                     .font_weight(FontWeight::MEDIUM)
                     .text_color(theme::color(color::INK))
                     .child(headline),

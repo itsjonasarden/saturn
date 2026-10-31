@@ -14,8 +14,10 @@ use saturn_core::waiting::Waiting;
 use saturn_design::{color, radius, space};
 
 use crate::chrome;
+use crate::theme::TypeScale as _;
 use crate::theme::{self, len};
 use crate::workspace::Workspace;
+use saturn_design::text;
 
 /// One agent that waits.
 pub struct Row {
@@ -33,7 +35,7 @@ pub fn open(workspace: WeakEntity<Workspace>, window: &mut Window, cx: &mut App)
         let list = if rows.is_empty() {
             div()
                 .py(len(space::SPACE_4))
-                .text_size(px(14.))
+                .text_scale(text::BODY)
                 .text_color(theme::color(color::INK_MUTED))
                 .child("No agent is waiting for you.")
                 .into_any_element()
@@ -100,12 +102,12 @@ fn render_row(workspace: &WeakEntity<Workspace>, row: Row) -> impl IntoElement {
                 .flex_col()
                 .flex_1()
                 .min_w_0()
-                .gap(px(2.))
+                .gap(len(space::SPACE_0))
                 .child(
                     div()
                         .flex()
                         .gap(len(space::SPACE_2))
-                        .text_size(px(14.))
+                        .text_scale(text::BODY)
                         .child(
                             div().font_weight(FontWeight::MEDIUM).text_color(theme::color(color::INK)).child(row.name),
                         )
@@ -118,12 +120,14 @@ fn render_row(workspace: &WeakEntity<Workspace>, row: Row) -> impl IntoElement {
                         } else {
                             saturn_design::look().sans
                         })
-                        .text_size(px(12.))
+                        .text_scale(text::META)
                         .text_color(theme::color(color::INK))
                         .truncate()
                         .child(detail)
                 }))
-                .child(div().text_size(px(12.)).text_color(theme::color(color::INK_FAINT)).truncate().child(row.place)),
+                .child(
+                    div().text_scale(text::META).text_color(theme::color(color::INK_FAINT)).truncate().child(row.place),
+                ),
         )
         .children(asks_permission.then(|| button("waiting-deny", "Deny", false, Act::Deny)))
         .children(asks_permission.then(|| button("waiting-allow", "Allow", true, Act::Allow)))

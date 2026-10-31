@@ -16,8 +16,10 @@ use saturn_core::layout::TabId;
 use saturn_design::{color, radius, space};
 
 use crate::chrome;
+use crate::theme::TypeScale as _;
 use crate::theme::{self, len};
 use crate::workspace::Workspace;
+use saturn_design::text;
 
 /// One pane a message could go to.
 pub struct Pane {
@@ -86,12 +88,13 @@ impl BroadcastView {
 
 impl Render for BroadcastView {
     fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
-        let mut list = div().id("broadcast-panes").flex().flex_col().gap(px(2.)).max_h(px(320.)).overflow_y_scroll();
+        let mut list =
+            div().id("broadcast-panes").flex().flex_col().gap(len(space::SPACE_0)).max_h(px(320.)).overflow_y_scroll();
         if self.panes.is_empty() {
             list = list.child(
                 div()
                     .py(len(space::SPACE_2))
-                    .text_size(px(13.))
+                    .text_scale(text::LABEL)
                     .text_color(theme::color(color::INK_MUTED))
                     .child("No panes are open."),
             );
@@ -108,7 +111,7 @@ impl Render for BroadcastView {
             .flex()
             .flex_col()
             .gap(len(space::SPACE_3))
-            .child(div().text_size(px(13.)).text_color(theme::color(color::INK_MUTED)).child(
+            .child(div().text_scale(text::LABEL).text_color(theme::color(color::INK_MUTED)).child(
                 "Pick the panes, then write the message once. A pane with only a shell starts your agent with it.",
             ))
             .child(list)
@@ -122,7 +125,7 @@ impl Render for BroadcastView {
                         div()
                             .flex_1()
                             .min_w_0()
-                            .text_size(px(13.))
+                            .text_scale(text::LABEL)
                             .text_color(theme::color(color::INK_MUTED))
                             .children(self.said.clone()),
                     )
@@ -159,7 +162,7 @@ impl BroadcastView {
             .child(
                 div()
                     .flex_none()
-                    .text_size(px(13.))
+                    .text_scale(text::LABEL)
                     .font_weight(FontWeight::MEDIUM)
                     .text_color(theme::color(if busy { color::INK_FAINT } else { color::INK }))
                     .child(pane.name.clone()),
@@ -169,11 +172,11 @@ impl BroadcastView {
                     .flex_1()
                     .min_w_0()
                     .truncate()
-                    .text_size(px(12.))
+                    .text_scale(text::META)
                     .text_color(theme::color(color::INK_FAINT))
                     .child(pane.place.clone()),
             )
-            .child(div().flex_none().text_size(px(12.)).text_color(theme::color(tone)).child(what));
+            .child(div().flex_none().text_scale(text::META).text_color(theme::color(tone)).child(what));
         if busy {
             return row;
         }

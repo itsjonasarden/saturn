@@ -21,7 +21,9 @@ use saturn_design::{color, radius, space};
 
 use crate::chrome;
 use crate::editor_view::EditorView;
+use crate::theme::TypeScale as _;
 use crate::theme::{self, len};
+use saturn_design::text;
 
 const MIN_ZOOM: f32 = 0.15;
 const MAX_ZOOM: f32 = 2.;
@@ -320,7 +322,7 @@ impl LineageView {
                         div()
                             .truncate()
                             .font_family(saturn_design::font::MONO)
-                            .text_size(px(12. * z))
+                            .text_size(px(text::META.size * z))
                             .line_height(px(16. * z))
                             .text_color(theme::color(color::INK))
                             .child(node.name.clone()),
@@ -386,7 +388,7 @@ impl LineageView {
                     div()
                         .w(px(44.))
                         .text_center()
-                        .text_size(px(12.))
+                        .text_scale(text::META)
                         .text_color(theme::color(color::INK_MUTED))
                         .child(format!("{}%", (self.zoom * 100.).round())),
                 )
@@ -422,7 +424,7 @@ impl LineageView {
             .items_center()
             .justify_center()
             .gap(len(space::SPACE_2))
-            .text_size(px(14.))
+            .text_scale(text::BODY)
             .text_color(theme::color(color::INK_MUTED))
             .child(format!(
                 "{} has {} models: too many to draw at once.",
@@ -448,7 +450,7 @@ impl LineageView {
             .absolute()
             .left(len(space::SPACE_3))
             .bottom(len(space::SPACE_2))
-            .text_size(px(11.))
+            .text_scale(text::MICRO)
             .text_color(theme::color(color::INK_FAINT))
             .child(format!(
                 "{} · {} · {} · {} · {} · {how}",
@@ -539,7 +541,7 @@ impl Render for LineageView {
                 .flex()
                 .items_center()
                 .justify_center()
-                .text_size(px(14.))
+                .text_scale(text::BODY)
                 .text_color(theme::color(color::INK_MUTED))
                 .child("This dbt project has no models yet.")
                 .into_any_element();
@@ -608,13 +610,15 @@ impl Render for LineageView {
                 .child(chrome::icon("search", 14., theme::color(color::INK_FAINT)))
                 .child(div().flex_1().child(Input::new(&search).appearance(false).cleanable(true)))
                 .when(!self.query.trim().is_empty(), |row| {
-                    row.child(div().flex_none().text_size(px(11.)).text_color(theme::color(color::INK_FAINT)).child(
-                        match found {
-                            0 => "none".to_owned(),
-                            1 => "1 node".to_owned(),
-                            n => format!("{n} nodes"),
-                        },
-                    ))
+                    row.child(
+                        div().flex_none().text_scale(text::MICRO).text_color(theme::color(color::INK_FAINT)).child(
+                            match found {
+                                0 => "none".to_owned(),
+                                1 => "1 node".to_owned(),
+                                n => format!("{n} nodes"),
+                            },
+                        ),
+                    )
                 }),
         )
         .child(self.render_controls(cx))

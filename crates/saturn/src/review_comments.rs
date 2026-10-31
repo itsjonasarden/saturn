@@ -23,7 +23,9 @@ use saturn_core::review::{self, Comment};
 use saturn_design::{color, radius, space};
 
 use crate::chrome;
+use crate::theme::TypeScale as _;
 use crate::theme::{self, len};
+use saturn_design::text;
 
 /// The comments are ready for the agent working in `repo`.
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -134,7 +136,7 @@ impl ReviewComments {
                 .flex_none()
                 .max_w(px(420.))
                 .truncate()
-                .text_size(px(12.))
+                .text_scale(text::META)
                 .text_color(theme::color(color::INK_MUTED))
                 .child(format!("Asked: “{latest}”"))
                 .tooltip(move |window, cx| gpui_kit::component::tooltip::Tooltip::new(tip.clone()).build(window, cx))
@@ -316,7 +318,7 @@ impl ReviewComments {
                 .bg(theme::color(color::SURFACE))
                 .border_1()
                 .border_color(theme::separator())
-                .text_size(px(13.))
+                .text_scale(text::LABEL)
         };
         if annotation.id() == &gpui_kit::ElementId::from("review-writing") {
             let Some(writing) = &self.writing else { return div().into_any_element() };
@@ -365,7 +367,7 @@ impl ReviewComments {
                 .py(len(space::SPACE_1))
                 .border_b_1()
                 .border_color(theme::separator())
-                .text_size(px(13.))
+                .text_scale(text::LABEL)
         };
         let mut rows = Vec::new();
         if let Some(hunk) = &self.picked {

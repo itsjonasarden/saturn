@@ -17,8 +17,10 @@ use saturn_core::past_sessions::{Index, Session};
 use saturn_design::{color, radius, space};
 
 use crate::chrome;
+use crate::theme::TypeScale as _;
 use crate::theme::{self, len};
 use crate::workspace::Workspace;
+use saturn_design::text;
 
 /// The sessions read so far, kept for the next search so only changed transcripts are read again.
 static INDEX: LazyLock<Mutex<Index>> = LazyLock::new(|| Mutex::new(Index::default()));
@@ -110,7 +112,7 @@ impl SessionsView {
             .id(("session", index))
             .flex()
             .flex_col()
-            .gap(px(2.))
+            .gap(len(space::SPACE_0))
             .px(len(space::SPACE_2))
             .py(len(space::SPACE_1))
             .rounded(theme::corner(radius::RADIUS_SM))
@@ -124,18 +126,20 @@ impl SessionsView {
                             .flex_1()
                             .min_w_0()
                             .truncate()
-                            .text_size(px(13.))
+                            .text_scale(text::LABEL)
                             .font_weight(FontWeight::MEDIUM)
                             .text_color(theme::color(if usable { color::INK } else { color::INK_FAINT }))
                             .child(session.title.clone()),
                     )
-                    .child(div().flex_none().text_size(px(12.)).text_color(theme::color(color::INK_FAINT)).child(when))
+                    .child(
+                        div().flex_none().text_scale(text::META).text_color(theme::color(color::INK_FAINT)).child(when),
+                    )
                     .child(
                         div()
                             .flex_none()
                             .w(px(110.))
                             .text_right()
-                            .text_size(px(12.))
+                            .text_scale(text::META)
                             .text_color(theme::color(if pane.is_some() { color::BLUE } else { color::INK_MUTED }))
                             .child(what),
                     ),
@@ -144,7 +148,7 @@ impl SessionsView {
                 div()
                     .flex()
                     .gap(len(space::SPACE_2))
-                    .text_size(px(12.))
+                    .text_scale(text::META)
                     .child(div().flex_none().text_color(theme::color(color::INK_FAINT)).child(place.join(" · ")))
                     .children(snippet.map(|snippet| {
                         div().flex_1().min_w_0().truncate().text_color(theme::color(color::INK_MUTED)).child(snippet)
@@ -169,12 +173,12 @@ impl SessionsView {
 impl Render for SessionsView {
     fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let query = self.query.read(cx).value().trim().to_owned();
-        let mut list = div().id("sessions").flex().flex_col().gap(px(2.)).h(px(480.)).overflow_y_scroll();
+        let mut list = div().id("sessions").flex().flex_col().gap(len(space::SPACE_0)).h(px(480.)).overflow_y_scroll();
         let quiet = |text: String| {
             div()
                 .py(len(space::SPACE_3))
                 .px(len(space::SPACE_2))
-                .text_size(px(13.))
+                .text_scale(text::LABEL)
                 .text_color(theme::color(color::INK_MUTED))
                 .child(text)
         };

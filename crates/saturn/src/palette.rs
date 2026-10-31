@@ -20,8 +20,10 @@ use saturn_core::fuzzy;
 use saturn_design::{color, radius, space};
 
 use crate::chrome;
+use crate::theme::TypeScale as _;
 use crate::theme::{self, len};
 use crate::workspace::{self, Workspace};
+use saturn_design::text;
 
 /// How many matches a palette lists: enough to scroll, few enough to draw at once.
 const SHOWN: usize = 60;
@@ -177,7 +179,7 @@ impl Palette {
             .px(len(space::SPACE_3))
             .rounded(theme::corner(radius::RADIUS_SM))
             .cursor_pointer()
-            .text_size(px(14.))
+            .text_scale(text::BODY)
             .when(selected, |line| line.bg(theme::fill_pressed()))
             .when(!selected, |line| line.hover(|s| s.bg(theme::fill_hover())))
             .child(chrome::icon(entry.icon, 14., theme::color(color::INK_MUTED)))
@@ -187,7 +189,7 @@ impl Palette {
                     .flex_1()
                     .min_w_0()
                     .truncate()
-                    .text_size(px(12.))
+                    .text_scale(text::META)
                     .text_color(theme::color(color::INK_FAINT))
                     .children(entry.detail.clone()),
             )
@@ -249,7 +251,7 @@ impl Render for Palette {
                 div()
                     .py(len(space::SPACE_3))
                     .px(len(space::SPACE_3))
-                    .text_size(px(13.))
+                    .text_scale(text::LABEL)
                     .text_color(theme::color(color::INK_FAINT))
                     .child(words)
                     .into_any_element()

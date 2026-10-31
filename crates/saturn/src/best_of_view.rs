@@ -19,8 +19,10 @@ use saturn_core::worktrees;
 use saturn_design::{color, radius, space};
 
 use crate::chrome;
+use crate::theme::TypeScale as _;
 use crate::theme::{self, len};
 use crate::workspace::Workspace;
+use saturn_design::text;
 
 /// The task and how many attempts, before they start.
 pub struct StartView {
@@ -82,7 +84,7 @@ impl StartView {
                 track = track.child(
                     chrome::track_item(("attempt-agent", index * 10 + agent as usize), chosen == agent)
                         .px(len(space::SPACE_2))
-                        .text_size(px(12.))
+                        .text_scale(text::META)
                         .child(agent.name())
                         .on_click(cx.listener(move |this, _, _, cx| {
                             if let Some(slot) = this.agents.get_mut(index) {
@@ -99,7 +101,7 @@ impl StartView {
                     .gap(len(space::SPACE_1))
                     .child(
                         div()
-                            .text_size(px(12.))
+                            .text_scale(text::META)
                             .text_color(theme::color(color::INK_FAINT))
                             .child(format!("{}", index + 1)),
                     )
@@ -128,7 +130,7 @@ impl Render for StartView {
             .flex()
             .flex_col()
             .gap(len(space::SPACE_3))
-            .child(div().text_size(px(13.)).text_color(theme::color(color::INK_MUTED)).child(format!(
+            .child(div().text_scale(text::LABEL).text_color(theme::color(color::INK_MUTED)).child(format!(
                 "Each agent gets a worktree of {} and the same task. Compare attempts shows what each changed, side by side.",
                 self.repo_name
             )))
@@ -144,7 +146,7 @@ impl Render for StartView {
                         div()
                             .flex_1()
                             .min_w_0()
-                            .text_size(px(13.))
+                            .text_scale(text::LABEL)
                             .text_color(theme::color(color::INK_MUTED))
                             .children(self.said.clone()),
                     )
@@ -215,7 +217,7 @@ impl CompareView {
         let mut list = div().id(("attempt-files", index)).flex().flex_col().flex_1().min_h_0().overflow_y_scroll();
         if outcome.files.is_empty() {
             list = list.child(
-                div().text_size(px(12.)).text_color(theme::color(color::INK_FAINT)).child("Nothing changed yet."),
+                div().text_scale(text::META).text_color(theme::color(color::INK_FAINT)).child("Nothing changed yet."),
             );
         }
         for (row, file) in outcome.files.iter().enumerate() {
@@ -228,7 +230,7 @@ impl CompareView {
                     .items_center()
                     .gap(len(space::SPACE_2))
                     .px(len(space::SPACE_1))
-                    .py(px(2.))
+                    .py(len(space::SPACE_0))
                     .rounded(theme::corner(radius::RADIUS_XS))
                     .cursor_pointer()
                     .hover(|s| s.bg(theme::fill_hover()))
@@ -237,7 +239,7 @@ impl CompareView {
                             .flex_1()
                             .min_w_0()
                             .truncate()
-                            .text_size(px(12.))
+                            .text_scale(text::META)
                             .text_color(theme::color(color::INK))
                             .child(file.path.clone()),
                     )
@@ -301,7 +303,7 @@ impl CompareView {
                     .child(
                         div()
                             .flex_1()
-                            .text_size(px(13.))
+                            .text_scale(text::LABEL)
                             .font_weight(FontWeight::MEDIUM)
                             .text_color(theme::color(color::INK))
                             .child(match agent {
@@ -311,7 +313,7 @@ impl CompareView {
                     )
                     .child(
                         div()
-                            .text_size(px(12.))
+                            .text_scale(text::META)
                             .text_color(theme::color(if working { color::BLUE } else { color::INK_MUTED }))
                             .child(state),
                     ),
@@ -319,7 +321,7 @@ impl CompareView {
             .child(
                 div()
                     .truncate()
-                    .text_size(px(12.))
+                    .text_scale(text::META)
                     .text_color(theme::color(color::INK_FAINT))
                     .child(worktree.branch.clone().unwrap_or_default()),
             )
@@ -329,7 +331,7 @@ impl CompareView {
                     .items_center()
                     .gap(len(space::SPACE_2))
                     .child(crate::changes_view::stats(outcome.added(), outcome.removed()))
-                    .child(div().text_size(px(12.)).text_color(theme::color(color::INK_MUTED)).child(summary)),
+                    .child(div().text_scale(text::META).text_color(theme::color(color::INK_MUTED)).child(summary)),
             )
             .child(list)
             .child(
@@ -347,7 +349,7 @@ impl Render for CompareView {
         let quiet = |text: &str| {
             div()
                 .py(len(space::SPACE_4))
-                .text_size(px(14.))
+                .text_scale(text::BODY)
                 .text_color(theme::color(color::INK_MUTED))
                 .child(text.to_owned())
         };
@@ -360,7 +362,7 @@ impl Render for CompareView {
             tasks = tasks.child(
                 chrome::track_item(("attempt-group", index), self.picked == index)
                     .px(len(space::SPACE_3))
-                    .text_size(px(12.))
+                    .text_scale(text::META)
                     .child(other.group.stem.clone())
                     .on_click(cx.listener(move |this, _, _, cx| {
                         this.picked = index;
@@ -397,7 +399,7 @@ impl Render for CompareView {
             .children(
                 self.said
                     .clone()
-                    .map(|said| div().text_size(px(13.)).text_color(theme::color(color::INK_MUTED)).child(said)),
+                    .map(|said| div().text_scale(text::LABEL).text_color(theme::color(color::INK_MUTED)).child(said)),
             )
             .into_any_element()
     }

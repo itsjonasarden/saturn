@@ -16,8 +16,10 @@ use saturn_core::instructions::{self, Kind, Repeat, Source};
 use saturn_design::{color, radius, space};
 
 use crate::chrome;
+use crate::theme::TypeScale as _;
 use crate::theme::{self, len};
 use crate::workspace::Workspace;
+use saturn_design::text;
 
 /// Opens the list for an agent working in `folder`, inside `checkout`.
 pub fn open(
@@ -60,7 +62,7 @@ pub fn open(
         if sources.is_empty() {
             list = list.child(
                 div()
-                    .text_size(px(14.))
+                    .text_scale(text::BODY)
                     .text_color(theme::color(color::INK_MUTED))
                     .child("Nothing here tells the agent anything: no CLAUDE.md, AGENTS.md, rules or skills."),
             );
@@ -79,7 +81,7 @@ fn heading(text: &str) -> impl IntoElement {
         .pt(len(space::SPACE_3))
         .pb(len(space::SPACE_1))
         .px(len(space::SPACE_2))
-        .text_size(px(11.))
+        .text_scale(text::MICRO)
         .font_weight(FontWeight::MEDIUM)
         .text_color(theme::color(color::INK_FAINT))
         .child(text.to_uppercase())
@@ -113,7 +115,7 @@ fn source_row(workspace: &WeakEntity<Workspace>, id: (Kind, usize), source: &Sou
         .child(
             div()
                 .flex_none()
-                .text_size(px(13.))
+                .text_scale(text::LABEL)
                 .font_weight(FontWeight::MEDIUM)
                 .text_color(theme::color(color::INK))
                 .child(source.name.clone()),
@@ -123,14 +125,14 @@ fn source_row(workspace: &WeakEntity<Workspace>, id: (Kind, usize), source: &Sou
                 .flex_1()
                 .min_w_0()
                 .truncate()
-                .text_size(px(12.))
+                .text_scale(text::META)
                 .text_color(theme::color(color::INK_FAINT))
                 .children(source.detail.clone()),
         )
         .children(size.map(|size| {
             div()
                 .flex_none()
-                .text_size(px(12.))
+                .text_scale(text::META)
                 .text_color(theme::color(if long { color::AMBER_TEXT } else { color::INK_FAINT }))
                 .child(if long { format!("{size}: long files are followed less") } else { size })
         }))
@@ -151,7 +153,7 @@ fn repeat_row(
         places = places.child(
             div()
                 .id(("repeat-place", index * 100 + place))
-                .text_size(px(12.))
+                .text_scale(text::META)
                 .text_color(theme::color(color::INK_MUTED))
                 .cursor_pointer()
                 .hover(|s| s.text_color(theme::color(color::INK)))
@@ -162,9 +164,9 @@ fn repeat_row(
     div()
         .flex()
         .flex_col()
-        .gap(px(2.))
+        .gap(len(space::SPACE_0))
         .px(len(space::SPACE_2))
         .py(len(space::SPACE_1))
-        .child(div().text_size(px(13.)).text_color(theme::color(color::INK)).truncate().child(repeat.text.clone()))
+        .child(div().text_scale(text::LABEL).text_color(theme::color(color::INK)).truncate().child(repeat.text.clone()))
         .child(places)
 }

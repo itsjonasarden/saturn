@@ -6,13 +6,15 @@ use std::time::Duration;
 
 use gpui_kit::{
     App, AppContext as _, Global, IntoElement as _, ParentElement as _, StatefulInteractiveElement as _, Styled as _,
-    div, px,
+    div,
 };
 use saturn_core::agents::{self, Agent, Found};
 use saturn_design::{color, space};
 
 use crate::settings;
+use crate::theme::TypeScale as _;
 use crate::theme::{self, len};
+use saturn_design::text;
 
 /// What was found, once it has been.
 #[derive(Default)]
@@ -146,7 +148,7 @@ pub fn row(id: &'static str, label: &'static str, cx: &App) -> Option<gpui_kit::
             .items_center()
             .gap(len(space::SPACE_2))
             .pt(len(space::SPACE_2))
-            .child(div().text_size(px(13.)).text_color(theme::color(color::INK_MUTED)).child(label))
+            .child(div().text_scale(text::LABEL).text_color(theme::color(color::INK_MUTED)).child(label))
             .child(track)
             .into_any_element(),
     )
@@ -164,7 +166,7 @@ pub fn switch(id: &'static str, cx: &App) -> Option<gpui_kit::AnyElement> {
         track = track.child(
             crate::chrome::track_item((id, agent as usize), agent == current)
                 .px(len(space::SPACE_3))
-                .text_size(px(12.))
+                .text_scale(text::META)
                 .child(agent.name())
                 .on_click(move |_, window, _| {
                     remember(agent);

@@ -12,8 +12,10 @@ use saturn_design::{color, radius, space};
 use crate::chrome;
 use crate::settings;
 use crate::spike;
+use crate::theme::TypeScale as _;
 use crate::theme::{self, len};
 use crate::workspace::{OpenProject, Placement, Workspace};
+use saturn_design::text;
 
 pub struct AppView {
     workspace: Option<Entity<Workspace>>,
@@ -97,7 +99,7 @@ impl AppView {
                         .min_w_0()
                         .child(
                             div()
-                                .text_size(px(15.))
+                                .text_scale(text::SUBTITLE)
                                 .font_weight(FontWeight::MEDIUM)
                                 .text_color(theme::color(color::INK))
                                 .truncate()
@@ -105,7 +107,7 @@ impl AppView {
                         )
                         .child(
                             div()
-                                .text_size(px(12.))
+                                .text_scale(text::META)
                                 .text_color(theme::color(color::INK_FAINT))
                                 .truncate()
                                 .child(folder),
@@ -135,7 +137,8 @@ impl AppView {
                 }
             }))
             .child(
-                div().flex_1().flex().items_center().justify_center().pb(px(48.)).child(
+                // A little above centre, where the eye takes the middle to be.
+                div().flex_1().flex().items_center().justify_center().pb(len(2. * space::SPACE_6)).child(
                     div()
                         .w(px(440.))
                         .flex()
@@ -146,8 +149,8 @@ impl AppView {
                                 .flex()
                                 .flex_col()
                                 .gap(len(space::SPACE_2))
-                                .child(chrome::headline("Open a", "project", 28.))
-                                .child(div().text_size(px(14.)).text_color(theme::color(color::INK_MUTED)).child(
+                                .child(chrome::headline("Open a", "project", text::HEADLINE.size))
+                                .child(div().text_scale(text::BODY).text_color(theme::color(color::INK_MUTED)).child(
                                     if recent.is_empty() {
                                         "Pick the folder you want your agents to work in."
                                     } else {

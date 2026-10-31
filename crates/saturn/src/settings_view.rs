@@ -13,8 +13,10 @@ use saturn_design::{color, radius, space};
 use crate::chrome;
 use crate::keymap::{self, SHORTCUTS, Shortcut};
 use crate::settings::{AgentCommands, AppearanceSetting, Settings, TEXT_SIZES};
+use crate::theme::TypeScale as _;
 use crate::theme::{self, len};
 use saturn_core::agents::Agent;
+use saturn_design::text;
 
 use crate::workspace::Workspace;
 
@@ -359,7 +361,7 @@ impl SettingsView {
                         .items_center()
                         .gap(len(space::SPACE_2))
                         .child(step("text-smaller", "−", -1, "Smaller text"))
-                        .child(div().w(px(28.)).text_center().text_size(px(13.)).child(size.to_string()))
+                        .child(div().w(px(28.)).text_center().text_scale(text::LABEL).child(size.to_string()))
                         .child(step("text-bigger", "+", 1, "Bigger text"))
                         .into_any_element()
                 },
@@ -470,7 +472,7 @@ impl SettingsView {
             Section::Agents,
             "On this Mac",
             detail,
-            div().text_size(px(13.)).text_color(theme::color(color::INK_MUTED)).child(status),
+            div().text_scale(text::LABEL).text_color(theme::color(color::INK_MUTED)).child(status),
         )
         .under(agent.name())
     }
@@ -567,7 +569,7 @@ impl SettingsView {
             .px(len(space::SPACE_3))
             .rounded(theme::corner(radius::RADIUS_SM))
             .cursor_pointer()
-            .text_size(px(13.))
+            .text_scale(text::LABEL)
             .map(|button| {
                 if recording {
                     button.bg(theme::color(color::BLUE).opacity(0.16)).text_color(theme::color(color::BLUE))
@@ -772,12 +774,12 @@ impl SettingsView {
             .flex_col()
             .flex_1()
             .min_w_0()
-            .gap(px(2.))
-            .child(div().text_size(px(13.)).font_weight(FontWeight::MEDIUM).child(row.title))
+            .gap(len(space::SPACE_0))
+            .child(div().text_scale(text::LABEL).font_weight(FontWeight::MEDIUM).child(row.title))
             .when(!row.detail.is_empty() && !row.compact, |words| {
                 words.child(
                     div()
-                        .text_size(px(12.))
+                        .text_scale(text::META)
                         .line_height(px(17.))
                         .text_color(theme::color(color::INK_MUTED))
                         .child(row.detail),
@@ -814,7 +816,7 @@ impl SettingsView {
     }
 
     fn render_nav(&self, searching: bool, cx: &mut Context<Self>) -> impl IntoElement {
-        let mut nav = div().flex().flex_col().gap(px(2.));
+        let mut nav = div().flex().flex_col().gap(len(space::SPACE_0));
         for section in Section::ALL {
             let selected = !searching && section == self.section;
             nav = nav.child(
@@ -844,7 +846,7 @@ fn heading(text: &str, first: bool) -> impl IntoElement {
     div()
         .pt(len(if first { space::SPACE_1 } else { space::SPACE_4 }))
         .pb(len(space::SPACE_1))
-        .text_size(px(11.))
+        .text_scale(text::MICRO)
         .font_weight(FontWeight::MEDIUM)
         .text_color(theme::color(color::INK_FAINT))
         .child(text.to_uppercase())
@@ -872,7 +874,7 @@ impl SettingsView {
             content = content.child(
                 div()
                     .pt(len(space::SPACE_4))
-                    .text_size(px(13.))
+                    .text_scale(text::LABEL)
                     .text_color(theme::color(color::INK_MUTED))
                     .child("No setting matches."),
             );
@@ -883,10 +885,11 @@ impl SettingsView {
     /// The chosen section: its name, then its settings, shortcuts under their group's heading.
     fn render_section(&self, mut content: Content, rows: Vec<Row>) -> Content {
         let muted = |text: String, tint| {
-            div().pb(len(space::SPACE_2)).text_size(px(12.)).text_color(theme::color(tint)).child(text)
+            div().pb(len(space::SPACE_2)).text_scale(text::META).text_color(theme::color(tint)).child(text)
         };
-        content = content
-            .child(div().pb(len(space::SPACE_2)).text_size(px(20.)).line_height(px(24.)).child(self.section.name()));
+        content = content.child(
+            div().pb(len(space::SPACE_2)).text_scale(text::TITLE).line_height(px(24.)).child(self.section.name()),
+        );
         if self.section == Section::Keymap {
             content = content
                 .child(muted(
@@ -926,8 +929,8 @@ impl Render for SettingsView {
                 .min_w_0()
                 .min_h_0()
                 .overflow_y_scroll()
-                .ml(px(-4.))
-                .pl(px(4.))
+                .ml(len(-space::SPACE_1))
+                .pl(len(space::SPACE_1))
                 .pr(len(space::SPACE_2));
         let content =
             if searching { Self::render_found(content, rows, &query) } else { self.render_section(content, rows) };

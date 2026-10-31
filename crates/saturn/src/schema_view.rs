@@ -18,7 +18,9 @@ use saturn_core::schema::{self, FRAME_TITLE, Frame, HEADER_HEIGHT, Key, Placed, 
 use saturn_design::{color, radius, space};
 
 use crate::chrome;
+use crate::theme::TypeScale as _;
 use crate::theme::{self, len};
+use saturn_design::text;
 
 const MIN_ZOOM: f32 = 0.15;
 const MAX_ZOOM: f32 = 2.;
@@ -174,13 +176,13 @@ impl SchemaView {
                     .flex()
                     .items_center()
                     .gap(px(8. * z))
-                    .text_size(px(15. * z))
+                    .text_size(px(text::SUBTITLE.size * z))
                     .font_weight(FontWeight::MEDIUM)
                     .text_color(theme::color(color::INK_MUTED))
                     .child(frame.name.clone())
                     .child(
                         div()
-                            .text_size(px(12. * z))
+                            .text_size(px(text::META.size * z))
                             .font_weight(FontWeight::NORMAL)
                             .text_color(theme::color(color::INK_FAINT))
                             .child(match frame.tables {
@@ -300,7 +302,7 @@ impl SchemaView {
                             .flex_1()
                             .min_w_0()
                             .truncate()
-                            .text_size(px(13. * z))
+                            .text_size(px(text::LABEL.size * z))
                             .font_weight(FontWeight::MEDIUM)
                             .text_color(theme::color(color::INK))
                             .child(table.name.clone()),
@@ -330,7 +332,7 @@ impl SchemaView {
                             .flex_1()
                             .min_w_0()
                             .truncate()
-                            .text_size(px(12. * z))
+                            .text_size(px(text::META.size * z))
                             .text_color(theme::color(color::INK_BODY))
                             .child(column.name.clone()),
                     )
@@ -340,7 +342,7 @@ impl SchemaView {
                             .max_w(px(100. * z))
                             .truncate()
                             .font_family(saturn_design::font::MONO)
-                            .text_size(px(11. * z))
+                            .text_size(px(text::MICRO.size * z))
                             .text_color(theme::color(color::INK_FAINT))
                             .child(format!("{}{}", column.ty, if column.nullable { "?" } else { "" })),
                     )
@@ -370,7 +372,7 @@ impl SchemaView {
                     div()
                         .w(px(44.))
                         .text_center()
-                        .text_size(px(12.))
+                        .text_scale(text::META)
                         .text_color(theme::color(color::INK_MUTED))
                         .child(format!("{}%", (self.zoom * 100.).round())),
                 )
@@ -401,7 +403,7 @@ impl SchemaView {
             .absolute()
             .left(len(space::SPACE_3))
             .bottom(len(space::SPACE_2))
-            .text_size(px(11.))
+            .text_scale(text::MICRO)
             .text_color(theme::color(color::INK_FAINT))
             .child(format!(
                 "{sources} · {} tables · {} relations · click a table to focus it, double-click to zoom to it",
@@ -491,7 +493,7 @@ impl Render for SchemaView {
                 .flex()
                 .items_center()
                 .justify_center()
-                .text_size(px(14.))
+                .text_scale(text::BODY)
                 .text_color(theme::color(color::INK_MUTED))
                 .child("No database schema found: Saturn looks for Prisma schemas and SQL migrations.")
                 .into_any_element();
@@ -560,13 +562,15 @@ impl Render for SchemaView {
                 .child(chrome::icon("search", 14., theme::color(color::INK_FAINT)))
                 .child(div().flex_1().child(Input::new(&search).appearance(false).cleanable(true)))
                 .when(!self.query.trim().is_empty(), |row| {
-                    row.child(div().flex_none().text_size(px(11.)).text_color(theme::color(color::INK_FAINT)).child(
-                        match found {
-                            0 => "none".to_owned(),
-                            1 => "1 table".to_owned(),
-                            n => format!("{n} tables"),
-                        },
-                    ))
+                    row.child(
+                        div().flex_none().text_scale(text::MICRO).text_color(theme::color(color::INK_FAINT)).child(
+                            match found {
+                                0 => "none".to_owned(),
+                                1 => "1 table".to_owned(),
+                                n => format!("{n} tables"),
+                            },
+                        ),
+                    )
                 }),
         )
         .child(self.render_controls(cx))

@@ -17,8 +17,10 @@ use saturn_core::prompts;
 use saturn_design::{color, radius, space};
 
 use crate::chrome;
+use crate::theme::TypeScale as _;
 use crate::theme::{self, len};
 use crate::workspace::Workspace;
+use saturn_design::text;
 
 pub struct TeachView {
     workspace: WeakEntity<Workspace>,
@@ -101,12 +103,13 @@ impl TeachView {
 
 impl Render for TeachView {
     fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
-        let mut list = div().id("teach-prompts").flex().flex_col().gap(px(2.)).max_h(px(300.)).overflow_y_scroll();
+        let mut list =
+            div().id("teach-prompts").flex().flex_col().gap(len(space::SPACE_0)).max_h(px(300.)).overflow_y_scroll();
         if self.prompts.is_empty() {
             list = list.child(
                 div()
                     .py(len(space::SPACE_2))
-                    .text_size(px(13.))
+                    .text_scale(text::LABEL)
                     .text_color(theme::color(color::INK_MUTED))
                     .child("No agent session in this pane yet: write the lesson yourself below."),
             );
@@ -128,7 +131,7 @@ impl Render for TeachView {
                         div()
                             .flex_none()
                             .w(px(80.))
-                            .text_size(px(11.))
+                            .text_scale(text::MICRO)
                             .font_weight(FontWeight::MEDIUM)
                             .text_color(theme::color(if *correction { color::AMBER_TEXT } else { color::INK_FAINT }))
                             .child(if *correction { "Correction" } else { "Prompt" }),
@@ -137,7 +140,7 @@ impl Render for TeachView {
                         div()
                             .flex_1()
                             .min_w_0()
-                            .text_size(px(13.))
+                            .text_scale(text::LABEL)
                             .text_color(theme::color(color::INK))
                             .child(prompt.clone()),
                     )
@@ -152,7 +155,7 @@ impl Render for TeachView {
             files = files.child(
                 chrome::track_item(("teach-file", index), self.file == index)
                     .px(len(space::SPACE_3))
-                    .text_size(px(12.))
+                    .text_scale(text::META)
                     .child(file_label(file))
                     .on_click(cx.listener(move |this, _, _, cx| {
                         this.file = index;
@@ -166,7 +169,7 @@ impl Render for TeachView {
             .gap(len(space::SPACE_3))
             .child(
                 div()
-                    .text_size(px(13.))
+                    .text_scale(text::LABEL)
                     .text_color(theme::color(color::INK_MUTED))
                     .child("Pick what you told the agent, then say it as a lesson for every session after this one."),
             )
@@ -182,7 +185,7 @@ impl Render for TeachView {
                         div()
                             .flex_1()
                             .min_w_0()
-                            .text_size(px(13.))
+                            .text_scale(text::LABEL)
                             .text_color(theme::color(color::INK_MUTED))
                             .children(self.said.clone()),
                     )

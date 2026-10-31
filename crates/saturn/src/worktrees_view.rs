@@ -19,8 +19,10 @@ use saturn_core::worktrees::{self, Archived, Archives, Merged, Worktree};
 use saturn_design::{color, radius, space};
 
 use crate::chrome;
+use crate::theme::TypeScale as _;
 use crate::theme::{self, len};
 use crate::workspace::Workspace;
+use saturn_design::text;
 
 /// A worktree and what's known about it.
 #[derive(Clone)]
@@ -259,21 +261,21 @@ impl WorktreesView {
                     .min_w_0()
                     .child(
                         div()
-                            .text_size(px(14.))
+                            .text_scale(text::BODY)
                             .font_weight(FontWeight::MEDIUM)
                             .text_color(theme::color(color::INK_MUTED))
                             .truncate()
                             .child(folder_name(&archived.path)),
                     )
                     .child(
-                        div().text_size(px(12.)).text_color(theme::color(color::INK_FAINT)).truncate().child(format!(
-                            "{} · archived {}{kept}",
-                            archived.branch,
-                            ago(now - archived.at)
-                        )),
+                        div()
+                            .text_scale(text::META)
+                            .text_color(theme::color(color::INK_FAINT))
+                            .truncate()
+                            .child(format!("{} · archived {}{kept}", archived.branch, ago(now - archived.at))),
                     ),
             )
-            .child(div().flex_none().w(px(190.)).flex().justify_end().text_size(px(12.)).child(action))
+            .child(div().flex_none().w(px(190.)).flex().justify_end().text_scale(text::META).child(action))
     }
 
     /// Removes worktrees, one after another, then reads the list again.
@@ -404,28 +406,32 @@ impl WorktreesView {
                     .min_w_0()
                     .child(
                         div()
-                            .text_size(px(14.))
+                            .text_scale(text::BODY)
                             .font_weight(FontWeight::MEDIUM)
                             .text_color(theme::color(color::INK))
                             .truncate()
                             .child(folder_name(&row.worktree.path)),
                     )
                     .child(
-                        div().text_size(px(12.)).text_color(theme::color(color::INK_FAINT)).truncate().child(detail),
+                        div()
+                            .text_scale(text::META)
+                            .text_color(theme::color(color::INK_FAINT))
+                            .truncate()
+                            .child(detail),
                     ),
             )
             .children(merged.map(|merged| {
-                div().flex_none().text_size(px(12.)).text_color(theme::color(color::INK_MUTED)).child(merged)
+                div().flex_none().text_scale(text::META).text_color(theme::color(color::INK_MUTED)).child(merged)
             }))
             .children(pull_request.map(|pr| {
                 div()
                     .flex_none()
                     .font_family(saturn_design::font::MONO)
-                    .text_size(px(12.))
+                    .text_scale(text::META)
                     .text_color(theme::color(color::INK_MUTED))
                     .child(pr)
             }))
-            .child(div().flex_none().w(px(300.)).flex().justify_end().text_size(px(12.)).child(action))
+            .child(div().flex_none().w(px(300.)).flex().justify_end().text_scale(text::META).child(action))
     }
 }
 
@@ -435,7 +441,7 @@ impl Render for WorktreesView {
         let Some(rows) = self.rows.clone() else {
             return div()
                 .py(len(space::SPACE_4))
-                .text_size(px(14.))
+                .text_scale(text::BODY)
                 .text_color(theme::color(color::INK_MUTED))
                 .child("Reading the worktrees…")
                 .into_any_element();
@@ -460,7 +466,7 @@ impl Render for WorktreesView {
                     .pt(len(space::SPACE_4))
                     .pb(len(space::SPACE_1))
                     .px(len(space::SPACE_3))
-                    .text_size(px(11.))
+                    .text_scale(text::MICRO)
                     .font_weight(FontWeight::MEDIUM)
                     .text_color(theme::color(color::INK_FAINT))
                     .child("ARCHIVED"),
@@ -478,7 +484,13 @@ impl Render for WorktreesView {
                     .flex()
                     .items_center()
                     .gap(len(space::SPACE_3))
-                    .child(div().flex_1().text_size(px(13.)).text_color(theme::color(color::INK_MUTED)).child(summary))
+                    .child(
+                        div()
+                            .flex_1()
+                            .text_scale(text::LABEL)
+                            .text_color(theme::color(color::INK_MUTED))
+                            .child(summary),
+                    )
                     .children((!finished.is_empty()).then(|| {
                         chrome::button("remove-finished", "Remove the finished ones", None, true)
                             .on_click(cx.listener(move |this, _, _, cx| this.remove(finished.clone(), cx)))
@@ -487,7 +499,7 @@ impl Render for WorktreesView {
             .children(
                 self.said
                     .clone()
-                    .map(|said| div().text_size(px(13.)).text_color(theme::color(color::INK_MUTED)).child(said)),
+                    .map(|said| div().text_scale(text::LABEL).text_color(theme::color(color::INK_MUTED)).child(said)),
             )
             .child(list)
             .into_any_element()

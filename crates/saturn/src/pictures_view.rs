@@ -17,7 +17,9 @@ use saturn_core::servers::Server;
 use saturn_design::{color, radius, space};
 
 use crate::chrome;
+use crate::theme::TypeScale as _;
 use crate::theme::{self, len};
+use saturn_design::text;
 
 pub struct PicturesView {
     /// Where this repository's sets are kept.
@@ -102,16 +104,18 @@ impl PicturesView {
 
     fn render_set_row(&self, index: usize, set: &Set, cx: &mut Context<Self>) -> impl IntoElement + use<> {
         let side = |id: &'static str, label: &'static str, chosen: bool, cx: &mut Context<Self>| {
-            chrome::track_item((id, index), chosen).px(len(space::SPACE_2)).text_size(px(12.)).child(label).on_click(
-                cx.listener(move |this, _, _, cx| {
+            chrome::track_item((id, index), chosen)
+                .px(len(space::SPACE_2))
+                .text_scale(text::META)
+                .child(label)
+                .on_click(cx.listener(move |this, _, _, cx| {
                     if id == "left" {
                         this.left = Some(index);
                     } else {
                         this.right = Some(index);
                     }
                     cx.notify();
-                }),
-            )
+                }))
         };
         let pages = set.files.iter().filter(|file| file.starts_with("desktop-")).count();
         let s = if pages == 1 { "" } else { "s" };
@@ -119,10 +123,13 @@ impl PicturesView {
             .flex()
             .items_center()
             .gap(len(space::SPACE_2))
-            .py(px(2.))
-            .child(div().flex_1().min_w_0().truncate().text_size(px(13.)).child(set.label.clone()))
+            .py(len(space::SPACE_0))
+            .child(div().flex_1().min_w_0().truncate().text_scale(text::LABEL).child(set.label.clone()))
             .child(
-                div().text_size(px(12.)).text_color(theme::color(color::INK_FAINT)).child(format!("{pages} page{s}")),
+                div()
+                    .text_scale(text::META)
+                    .text_color(theme::color(color::INK_FAINT))
+                    .child(format!("{pages} page{s}")),
             )
             .child(chrome::track().child(side("left", "Left", self.left == Some(index), cx)).child(side(
                 "right",
@@ -161,7 +168,7 @@ impl PicturesView {
                     .flex()
                     .items_center()
                     .justify_center()
-                    .text_size(px(12.))
+                    .text_scale(text::META)
                     .text_color(theme::color(color::INK_FAINT))
                     .child("Not in this set"),
             }
@@ -176,7 +183,7 @@ impl PicturesView {
                     .gap(len(space::SPACE_1))
                     .child(
                         div()
-                            .text_size(px(12.))
+                            .text_scale(text::META)
                             .text_color(theme::color(color::INK_MUTED))
                             .child(name.trim_end_matches(".png").to_owned()),
                     )
@@ -196,7 +203,7 @@ impl Render for PicturesView {
             servers = servers.child(
                 chrome::track_item(("picture-server", index), self.server == index)
                     .px(len(space::SPACE_3))
-                    .text_size(px(12.))
+                    .text_scale(text::META)
                     .child(format!("{} :{}", server.name, server.port))
                     .on_click(cx.listener(move |this, _, _, cx| {
                         this.server = index;
@@ -206,7 +213,7 @@ impl Render for PicturesView {
         }
         let source = if self.servers.is_empty() {
             div()
-                .text_size(px(13.))
+                .text_scale(text::LABEL)
                 .text_color(theme::color(color::INK_MUTED))
                 .child("This pane runs no server to take pictures of. Start the app (⌘⇧P) and open this again.")
                 .into_any_element()
@@ -240,13 +247,13 @@ impl Render for PicturesView {
             .children(
                 self.said
                     .clone()
-                    .map(|said| div().text_size(px(13.)).text_color(theme::color(color::INK_MUTED)).child(said)),
+                    .map(|said| div().text_scale(text::LABEL).text_color(theme::color(color::INK_MUTED)).child(said)),
             )
             .child(
                 div()
                     .flex()
                     .items_center()
-                    .child(div().flex_1().text_size(px(13.)).font_weight(FontWeight::MEDIUM).child("Sets"))
+                    .child(div().flex_1().text_scale(text::LABEL).font_weight(FontWeight::MEDIUM).child("Sets"))
                     .child(chrome::button("open-pictures", "Open folder", None, false).on_click(move |_, _, _| {
                         let _ = std::fs::create_dir_all(&root);
                         let _ = std::process::Command::new("open").arg(&root).spawn();

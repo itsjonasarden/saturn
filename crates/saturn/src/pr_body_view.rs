@@ -15,8 +15,10 @@ use saturn_core::pr_body;
 use saturn_design::{color, space};
 
 use crate::chrome;
+use crate::theme::TypeScale as _;
 use crate::theme::{self, len};
 use crate::workspace::Workspace;
+use saturn_design::text;
 
 pub struct PrBodyView {
     workspace: WeakEntity<Workspace>,
@@ -115,7 +117,7 @@ impl Render for PrBodyView {
                     div()
                         .flex_1()
                         .min_w_0()
-                        .text_size(px(13.))
+                        .text_scale(text::LABEL)
                         .text_color(theme::color(color::INK_MUTED))
                         .children(said),
                 )

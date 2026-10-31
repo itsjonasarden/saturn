@@ -9,7 +9,9 @@ use gpui_kit::{
 use saturn_design::{color, radius, space};
 
 use crate::chrome;
+use crate::theme::TypeScale as _;
 use crate::theme::{self, len};
+use saturn_design::text;
 
 /// One line of a menu: an icon, what it does, and the action that does it. `None` is a separator.
 pub type Item = Option<(&'static str, &'static str, Box<dyn Action>)>;
@@ -30,8 +32,13 @@ pub fn render(
         .top_full()
         .right_0()
         .child(
-            deferred(anchored().anchor(Anchor::TopRight).snap_to_window_with_margin(px(8.)).child(list.mt(px(4.))))
-                .with_priority(1),
+            deferred(
+                anchored()
+                    .anchor(Anchor::TopRight)
+                    .snap_to_window_with_margin(px(8.))
+                    .child(list.mt(len(space::SPACE_1))),
+            )
+            .with_priority(1),
         )
         .into_any_element()
 }
@@ -92,7 +99,7 @@ fn lines(
                         line.hover(|s| s.bg(theme::fill_hover()))
                     }
                 })
-                .text_size(px(13.))
+                .text_scale(text::LABEL)
                 .font_weight(FontWeight::NORMAL)
                 .text_color(theme::color(color::INK))
                 .child(chrome::icon(icon, 14., theme::color(color::INK_MUTED)))
@@ -101,7 +108,7 @@ fn lines(
                 .children(shortcut(action.as_ref(), cx).map(|keys| {
                     div()
                         .pl(len(space::SPACE_4))
-                        .text_size(px(12.))
+                        .text_scale(text::META)
                         .text_color(theme::color(color::INK_FAINT))
                         .child(keys)
                 }))
