@@ -11,8 +11,8 @@ Saturn follows the Quarn workflow-automation design (Behance, 2026) with blue in
 
 Four layers, each using only the one below it:
 
-1. **Tokens**, `design/tokens.json`: colours (a dark and a light value for every theme), the spacing scale, radii, shadows, fonts, the type scale, and the themes.
-2. **`crates/saturn-design`** compiles them into constants: `color::INK`, `space::SPACE_3`, `text::LABEL`, `THEMES`. Nothing in it is written by hand.
+1. **Tokens**, `design/tokens.json`: colours (a dark and a light value for every theme), tones (how strong a relative fill or stroke is), the spacing scale, radii, shadows, fonts, the type scale, icon sizes, sizes (controls, rows, dots, the title bar, dialogs), and the themes.
+2. **`crates/saturn-design`** compiles them into constants: `color::INK`, `tone::EDGE`, `space::SPACE_3`, `text::LABEL`, `icon::SM`, `size::ROW`, `THEMES`. Nothing in it is written by hand.
 3. **Components**, `crates/saturn/src/chrome.rs`: `button`, `icon_button`, `corner_button`, `track` and `track_item`, `tab` and `tab_row`, `selector`, `switch`, `input`, `panel` and `card`, `floating`, and the menu in `menu.rs`. A component reads the theme (`chrome::look()`) and draws the version it asks for.
 4. **Views** put components together. A view never writes a size, a spacing or a radius of its own, and never asks which theme is on.
 
@@ -20,7 +20,10 @@ Four layers, each using only the one below it:
 
 - text sizes come from the type scale: `.text_scale(text::META)`, not `.text_size(px(12.))`;
 - spacing comes from the spacing scale: `.gap(len(space::SPACE_1))`, not `.gap(px(4.))`;
+- line heights come from the type scale: `.line_height(px(text::META.line_height))`;
 - corners come from the theme: `.rounded(theme::corner(radius::RADIUS_SM))`;
+- fills and strokes come in the tones: `theme::tone(tone::HOVER)`, not `overlay(0.06)`;
+- icons come in the icon sizes: `chrome::icon(name, icon::SM, …)`;
 - nothing compares theme names.
 
 A value off a scale that a shape needs (a dot lined up with the first line of text, a badge's padding) says why on its line, after `// off-scale:`. Components and `theme.rs` draw shapes, so they may write pixels.
@@ -79,7 +82,7 @@ A test in `crates/saturn-design` fails when one of these stops adding up, and th
 
 ## Density
 
-Development tools need room for content, so controls are 28px tall, cards sit 6px apart and pad 4px.
+Development tools need room for content, so controls and list rows are 28px tall (`size::CONTROL`, `size::ROW`), cards sit 6px apart (4 in Cyberdeck) and pad 4px. Dialogs come in three widths, `size::DIALOG_SMALL` (a field and a few words), `DIALOG_MEDIUM` (a list) and `DIALOG_LARGE` (two panes or a table); marks are `size::DOT`, and `DOT_LARGE` for an agent's state. Tones run from `wash` (3%) to `outline-strong` (40%), each named for its job; icons are 11, 13, 14 or 16px.
 
 ## Fonts
 

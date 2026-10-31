@@ -25,11 +25,16 @@ fn lines() -> Vec<(String, usize, String)> {
 
 /// Whether `line` writes a number straight into `call`, as in `.text_size(px(13.))`.
 fn writes_a_number(line: &str, call: &str) -> bool {
+    writes_a_number_then(line, call, "))")
+}
+
+/// Whether `line` writes a number into `call` that `end` follows, as in `overlay(0.3)`.
+fn writes_a_number_then(line: &str, call: &str, end: &str) -> bool {
     line.match_indices(call).any(|(at, _)| {
         let rest = &line[at + call.len()..];
         let rest = rest.strip_prefix('-').unwrap_or(rest);
         let number: String = rest.chars().take_while(|c| c.is_ascii_digit() || *c == '.').collect();
-        !number.is_empty() && rest[number.len()..].starts_with("))")
+        !number.is_empty() && rest[number.len()..].starts_with(end)
     })
 }
 
@@ -67,6 +72,30 @@ fn spacing_comes_from_the_spacing_scale() {
 fn corners_come_from_the_theme() {
     let found = breaks(|file, line| !draws_shapes(file) && writes_a_number(line, ".rounded(px("));
     assert!(found.is_empty(), "write `theme::corner(radius::…)`:\n{}", found.join("\n"));
+}
+
+#[test]
+fn line_heights_come_from_the_type_scale() {
+    let found = breaks(|file, line| !draws_shapes(file) && writes_a_number(line, ".line_height(px("));
+    assert!(found.is_empty(), "write `px(text::….line_height)`:\n{}", found.join("\n"));
+}
+
+#[test]
+fn icons_come_in_the_icon_sizes() {
+    // `icon(name, 13., …)`: a number straight after the name.
+    let found = breaks(|_, line| {
+        line.match_indices("icon(").any(|(at, _)| {
+            let rest = &line[at..];
+            rest.split_once(", ").is_some_and(|(_, size)| size.starts_with(|c: char| c.is_ascii_digit()))
+        })
+    });
+    assert!(found.is_empty(), "write `icon::SM` (or XS, MD, LG):\n{}", found.join("\n"));
+}
+
+#[test]
+fn fills_and_strokes_come_in_the_tones() {
+    let found = breaks(|file, line| file != "theme.rs" && writes_a_number_then(line, "overlay(", ")"));
+    assert!(found.is_empty(), "write `theme::tone(tone::…)`:\n{}", found.join("\n"));
 }
 
 #[test]

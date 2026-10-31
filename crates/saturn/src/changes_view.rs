@@ -24,7 +24,7 @@ use saturn_design::icon;
 use saturn_design::text;
 use saturn_design::tone;
 
-const ROW_HEIGHT: f32 = 26.0;
+const ROW_HEIGHT: f32 = saturn_design::size::ROW;
 
 pub enum ChangesEvent {
     /// Review the changes, starting at `path`.
@@ -390,14 +390,14 @@ pub fn checkbox(id: impl Into<ElementId>, staged: Staged) -> gpui_kit::Stateful<
             }])
         })
         .when(!on, |box_| {
-            box_.bg(theme::overlay(0.04))
+            box_.bg(theme::tone(tone::FAINT))
                 .border_1()
                 .border_color(theme::tone(tone::STRONG))
                 .hover(|s| s.border_color(theme::tone(tone::OUTLINE_STRONG)))
         })
         .children(match staged {
-            Staged::Yes => Some(chrome::icon("check", 10., gpui_kit::white())),
-            Staged::Partly => Some(chrome::icon("minus", 10., gpui_kit::white())),
+            Staged::Yes => Some(chrome::icon("check", icon::XS, gpui_kit::white())),
+            Staged::Partly => Some(chrome::icon("minus", icon::XS, gpui_kit::white())),
             Staged::No => None,
         })
 }

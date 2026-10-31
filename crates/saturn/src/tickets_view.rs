@@ -228,7 +228,7 @@ impl TicketsView {
                     .child(
                         div()
                             .text_scale(text::LABEL)
-                            .line_height(px(18.))
+                            .line_height(px(text::BODY.line_height))
                             .text_color(theme::color(color::INK))
                             .child(ticket.title.clone()),
                     ),

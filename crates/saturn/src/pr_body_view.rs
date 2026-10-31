@@ -152,7 +152,7 @@ pub fn open(
             .title(title.clone())
             .entrance(gpui_kit::component::dialog::DialogEntrance::None)
             .bg(chrome::dialog_surface())
-            .w(px(760.))
+            .w(px(saturn_design::size::DIALOG_LARGE))
             .child(view.clone())
     });
 }

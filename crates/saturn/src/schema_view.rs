@@ -168,9 +168,9 @@ impl SchemaView {
             .w(px(width * z))
             .h(px(height * z))
             .rounded(px(saturn_design::corner(radius::RADIUS_LG) * z.max(0.5)))
-            .bg(theme::overlay(0.025))
+            .bg(theme::tone(tone::WASH))
             .border_1()
-            .border_color(theme::overlay(0.07))
+            .border_color(theme::tone(tone::CONTROL))
             .child(
                 div()
                     .h(px(FRAME_TITLE * z))
@@ -298,7 +298,7 @@ impl SchemaView {
                     .bg(theme::fill_hover())
                     .border_b_1()
                     .border_color(theme::separator())
-                    .child(chrome::icon("database", 12. * z, theme::color(color::BLUE)))
+                    .child(chrome::icon("database", icon::SM * z, theme::color(color::BLUE)))
                     .child(
                         div()
                             .flex_1()
@@ -327,7 +327,7 @@ impl SchemaView {
                         div()
                             .flex_none()
                             .w(px(12. * z))
-                            .children(icon.map(|icon| chrome::icon(icon, 11. * z, theme::color(tint)))),
+                            .children(icon.map(|icon| chrome::icon(icon, icon::XS * z, theme::color(tint)))),
                     )
                     .child(
                         div()
@@ -467,7 +467,7 @@ fn relations(view: &SchemaView, related: Option<&[bool]>) -> impl IntoElement {
                 } else if *dim {
                     theme::tone(tone::HOVER)
                 } else {
-                    theme::overlay(0.28)
+                    theme::tone(tone::STRONG)
                 };
                 if let Ok(path) = path.build() {
                     window.paint_path(path, colour);

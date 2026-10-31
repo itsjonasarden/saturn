@@ -216,7 +216,7 @@ fn lit_panel_cut(glow: Option<saturn_design::Shadows>, corner: Cut) -> gpui_kit:
         // Mostly opaque: the glass shows through, never enough to fight the text.
         .bg(theme::color(color::SURFACE).opacity(if dark { 0.8 } else { 0.83 }))
         .border_1()
-        .border_color(theme::overlay(if dark { 0.07 } else { 0.08 }))
+        .border_color(theme::tone(tone::CONTROL))
         .shadow(edge)
         .overflow_hidden();
     match glow {
@@ -264,7 +264,7 @@ pub fn track() -> gpui_kit::Div {
 /// surface, so it reads over any desktop. The edge is a shadow, not a border, so it adds no size.
 pub fn on_glass(content: gpui_kit::Div) -> gpui_kit::Div {
     let dark = saturn_design::appearance() == saturn_design::Appearance::Dark;
-    let ring = shadow(0., 0., 0., 1., theme::overlay(if dark { 0.07 } else { 0.08 }), false);
+    let ring = shadow(0., 0., 0., 1., theme::tone(tone::CONTROL), false);
     let lift = if dark {
         shadow(0., 1., 0., 0., gpui_kit::hsla(0., 0., 1., 0.05), true)
     } else {
@@ -316,11 +316,14 @@ pub fn floating(element: gpui_kit::Div) -> gpui_kit::Div {
         let edge = theme::tone(tone::OUTLINE);
         return element.relative().child(cut_surface(edge, theme::color(color::SURFACE), 1., 10., Cut::BottomRight));
     }
-    element
-        .bg(theme::color(color::SURFACE))
-        .border_1()
-        .border_color(theme::overlay(if dark { 0.1 } else { 0.08 }))
-        .shadow(vec![shadow(0., 2., 8., 0., gpui_kit::hsla(0., 0., 0., if dark { 0.4 } else { 0.1 }), false)])
+    element.bg(theme::color(color::SURFACE)).border_1().border_color(theme::tone(tone::SEPARATOR)).shadow(vec![shadow(
+        0.,
+        2.,
+        8.,
+        0.,
+        gpui_kit::hsla(0., 0., 0., if dark { 0.4 } else { 0.1 }),
+        false,
+    )])
 }
 
 /// An item in a track: raised when pressed (see `raised`), else quiet until hovered.
@@ -354,7 +357,7 @@ pub fn track_item(id: impl Into<ElementId>, pressed: bool) -> gpui_kit::Stateful
 /// Cyberdeck's selection, under a selected item's children: an outline in ink round a faint fill,
 /// its bottom right corner cut, as a list marks the line you're on.
 pub fn selection() -> impl IntoElement {
-    cut_surface(theme::color(color::INK), theme::overlay(0.07), 1., control_cut(), Cut::BottomRight)
+    cut_surface(theme::color(color::INK), theme::tone(tone::CONTROL), 1., control_cut(), Cut::BottomRight)
 }
 
 /// Cyberdeck's hover, under a clickable line's children: a quieter `selection`, shown only while
@@ -389,7 +392,7 @@ pub fn tab(id: impl Into<ElementId>, selected: bool) -> gpui_kit::Stateful<gpui_
         .child(div().absolute().bottom_0().left_0().right_0().h(px(2.)).bg(if selected {
             theme::color(color::INK)
         } else {
-            theme::overlay(0.16)
+            theme::tone(tone::EDGE)
         }))
 }
 
@@ -451,7 +454,7 @@ pub fn selector(
                 div().w(px(10.)).h(px(2.)).bg(if index == current {
                     theme::color(color::INK)
                 } else {
-                    theme::overlay(0.2)
+                    theme::tone(tone::STRONG)
                 })
             }),
         )
@@ -467,7 +470,7 @@ pub fn selector(
         .text_scale(text::LABEL)
         .font_weight(FontWeight::MEDIUM)
         .text_color(theme::color(color::INK))
-        .child(cut_surface(theme::overlay(0.3), theme::tone(tone::WASH), 1., control_cut(), Cut::BottomRight))
+        .child(cut_surface(theme::tone(tone::OUTLINE), theme::tone(tone::WASH), 1., control_cut(), Cut::BottomRight))
         .child(step(labels.len(), true, current.checked_sub(1)))
         .child(
             div()
@@ -489,7 +492,7 @@ pub fn selector(
 
 /// The selector's arrow: an outlined triangle pointing left or right, faint where it can't step.
 fn arrow(left: bool, enabled: bool) -> impl IntoElement {
-    let ink = if enabled { theme::color(color::INK) } else { theme::overlay(0.2) };
+    let ink = if enabled { theme::color(color::INK) } else { theme::tone(tone::STRONG) };
     canvas(
         |_, _, _| (),
         move |bounds: Bounds<Pixels>, (), window: &mut Window, _: &mut App| {
@@ -524,7 +527,7 @@ pub fn switch(id: &'static str, on: bool, toggle: impl Fn(&bool, &mut Window, &m
         .map(|block| if on { block.right(px(3.)) } else { block.left(px(3.)) })
         .child(cut_surface(
             gpui_kit::transparent_black(),
-            if on { theme::color(color::INK) } else { theme::overlay(0.22) },
+            if on { theme::color(color::INK) } else { theme::tone(tone::STRONG) },
             0.,
             5.,
             Cut::BottomRight,
@@ -548,7 +551,7 @@ pub fn switch(id: &'static str, on: bool, toggle: impl Fn(&bool, &mut Window, &m
                 .relative()
                 .w(px(52.))
                 .h(px(22.))
-                .child(cut_surface(theme::overlay(0.3), theme::color(color::SURFACE), 1., 6., Cut::BottomRight))
+                .child(cut_surface(theme::tone(tone::OUTLINE), theme::color(color::SURFACE), 1., 6., Cut::BottomRight))
                 .child(block),
         )
         .on_click(move |_, window, cx| toggle(&!on, window, cx))
@@ -650,7 +653,7 @@ pub fn button(
                     .group("cyberdeck-button")
                     .text_color(theme::color(color::INK))
                     .child(cut_surface(
-                        theme::overlay(0.3),
+                        theme::tone(tone::OUTLINE),
                         theme::tone(tone::WASH),
                         1.,
                         control_cut(),
@@ -735,7 +738,7 @@ pub fn dot_grid() -> impl IntoElement {
                     // light falling on the card rather than a pattern stamped on it.
                     let across = ((x / width - 0.5) * 2.).hypot((y / height - 0.5) * 2.);
                     let strength = (1. - across / std::f32::consts::SQRT_2).clamp(0., 1.).powf(1.5);
-                    let dot = theme::overlay(0.22 * strength);
+                    let dot = theme::overlay(tone::STRONG.get() * strength);
                     let origin = point(bounds.origin.x + px(x - 1.), bounds.origin.y + px(y - 1.));
                     window.paint_quad(fill(Bounds::new(origin, size(px(2.), px(2.))), dot).corner_radii(px(1.)));
                     x += PITCH;

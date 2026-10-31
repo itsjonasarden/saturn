@@ -292,7 +292,7 @@ fn open(title: &'static str, palette: Entity<Palette>, window: &mut Window, cx: 
             .title(title)
             .entrance(DialogEntrance::None)
             .bg(chrome::dialog_surface())
-            .w(px(640.))
+            .w(px(saturn_design::size::DIALOG_MEDIUM))
             .child(palette.clone())
     });
 }

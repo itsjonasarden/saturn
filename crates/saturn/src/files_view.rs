@@ -25,7 +25,7 @@ use crate::theme::{self, len};
 use saturn_design::icon;
 use saturn_design::text;
 
-const ROW_HEIGHT: f32 = 26.0;
+const ROW_HEIGHT: f32 = saturn_design::size::ROW;
 /// How far each level is indented.
 const INDENT: f32 = 14.0;
 /// File changes are gathered this long before the tree reads them, so a `git checkout` touching a
@@ -315,7 +315,7 @@ impl FilesView {
             .child(div().w(px(12.)).flex_none().when(row.is_dir, |slot| {
                 slot.child(chrome::icon(
                     if row.expanded { "chevron-down" } else { "chevron-right" },
-                    12.,
+                    icon::SM,
                     theme::color(color::INK_FAINT),
                 ))
             }))
@@ -330,7 +330,13 @@ impl FilesView {
                     .child(state.badge())
             }))
             .when(changed_inside, |row| {
-                row.child(div().flex_none().size(px(5.)).rounded_full().bg(theme::color(color::AMBER_TEXT)))
+                row.child(
+                    div()
+                        .flex_none()
+                        .size(px(saturn_design::size::DOT))
+                        .rounded_full()
+                        .bg(theme::color(color::AMBER_TEXT)),
+                )
             })
             .on_mouse_down(MouseButton::Right, {
                 let row = row.clone();
@@ -372,7 +378,7 @@ fn render_icon(icon: FileIcon) -> AnyElement {
             .font_family(saturn_design::font::MONO)
             .font_weight(gpui_kit::FontWeight::BOLD)
             .text_size(px(if text.len() > 1 { 7. } else { 9. }))
-            .line_height(px(14.))
+            .line_height(px(14.)) // off-scale: a letter inside a 14px icon
             .map(|square| {
                 if filled {
                     square.bg(tint).text_color(theme::color(color::SURFACE))
@@ -452,7 +458,7 @@ fn ask_name(
             .title(title)
             .entrance(gpui_kit::component::dialog::DialogEntrance::None)
             .bg(chrome::dialog_surface())
-            .w(px(420.))
+            .w(px(saturn_design::size::DIALOG_SMALL))
             .on_ok(move |_, window, cx| {
                 on_ok(window, cx);
                 false

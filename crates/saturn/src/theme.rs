@@ -64,7 +64,7 @@ pub fn fill_control() -> Hsla {
 }
 
 pub fn fill_pressed() -> Hsla {
-    overlay(0.11)
+    tone(saturn_design::tone::PRESSED)
 }
 
 /// gpui-component's own controls (switches, dialogs, inputs, scrollbars) in Saturn's colours,

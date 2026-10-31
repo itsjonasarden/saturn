@@ -169,7 +169,7 @@ pub fn open(workspace: WeakEntity<Workspace>, tab: TabId, title: String, window:
             .title(format!("Agent team {title}"))
             .entrance(gpui_kit::component::dialog::DialogEntrance::None)
             .bg(chrome::dialog_surface())
-            .w(px(720.))
+            .w(px(saturn_design::size::DIALOG_MEDIUM))
             .child(view.clone())
     });
 }

@@ -313,7 +313,7 @@ impl LineageView {
             .when(dimmed, |node| node.opacity(0.3))
             .overflow_hidden()
             .cursor_pointer()
-            .child(chrome::icon(kind_icon(node.kind), 14. * z, theme::color(tint)))
+            .child(chrome::icon(kind_icon(node.kind), icon::MD * z, theme::color(tint)))
             .child(
                 div()
                     .flex_1()
@@ -511,7 +511,7 @@ fn edges(view: &LineageView, lit: Option<&[bool]>) -> impl IntoElement {
                 } else if *dim {
                     theme::tone(tone::HOVER)
                 } else {
-                    theme::overlay(0.28)
+                    theme::tone(tone::STRONG)
                 };
                 if let Ok(path) = path.build() {
                     window.paint_path(path, colour);

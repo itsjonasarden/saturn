@@ -1399,7 +1399,7 @@ impl EditorView {
                         if dirty {
                             slot.child(
                                 div()
-                                    .size(px(7.))
+                                    .size(px(saturn_design::size::DOT))
                                     .rounded_full()
                                     .bg(theme::color(color::INK))
                                     .group_hover("editor-tab", gpui_kit::Styled::invisible),

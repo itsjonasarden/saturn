@@ -9,6 +9,7 @@ use saturn_core::agent_state::AgentState;
 use saturn_design::{radius, space};
 
 use crate::theme::{self, len};
+use saturn_design::tone;
 
 /// The gradient's bright and deep ends for a state. The card always carries white text, so these
 /// are the same in light and dark mode.
@@ -25,7 +26,7 @@ fn tint(state: AgentState) -> (u32, u32, u32) {
 pub fn surface(id: impl Into<ElementId>, state: AgentState) -> gpui_kit::Stateful<gpui_kit::Div> {
     if crate::chrome::look().agent_cards == saturn_design::AgentCards::Slab {
         // No gradient: a raised slab with its top right corner cut.
-        let edge = theme::overlay(0.16);
+        let edge = theme::tone(tone::EDGE);
         return div().id(id).relative().flex().flex_col().gap(len(space::SPACE_1)).p(len(space::SPACE_3)).child(
             crate::chrome::cut_surface(
                 edge,

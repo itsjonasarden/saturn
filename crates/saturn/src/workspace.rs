@@ -721,9 +721,9 @@ fn pull_request_chip(cell: CellId, pr: &PullRequest) -> impl IntoElement {
     };
     let tip = format!("{} · {}{checks}", pr.state.label(), pr.title);
     let mark = pr.checks.state().map(|state| match state {
-        ChecksState::Passed => chrome::icon("circle-check", 12., theme::color(color::TERM_GREEN)),
-        ChecksState::Running => chrome::icon("circle-dot", 12., theme::color(color::AMBER_TEXT)),
-        ChecksState::Failed => chrome::icon("circle-x", 12., theme::color(color::RED)),
+        ChecksState::Passed => chrome::icon("circle-check", icon::SM, theme::color(color::TERM_GREEN)),
+        ChecksState::Running => chrome::icon("circle-dot", icon::SM, theme::color(color::AMBER_TEXT)),
+        ChecksState::Failed => chrome::icon("circle-x", icon::SM, theme::color(color::RED)),
     });
     div()
         .id(("pr-chip", cell.key()))
@@ -3726,7 +3726,7 @@ impl Workspace {
                     .font_weight(FontWeight::MEDIUM)
                     .text_color(theme::color(color::INK_MUTED))
                     .hover(|s| s.bg(theme::fill_hover()))
-                    .child(chrome::icon(icon, 12., theme::color(tint)))
+                    .child(chrome::icon(icon, icon::SM, theme::color(tint)))
                     .child(run.name.clone())
                     .tooltip(move |window, cx| Tooltip::new(tip.clone()).build(window, cx))
                     .on_click(cx.listener(move |this, _, window, cx| {

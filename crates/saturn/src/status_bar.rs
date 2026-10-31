@@ -204,7 +204,7 @@ impl StatusBar {
                 .flex()
                 .items_center()
                 .gap(len(space::SPACE_1))
-                .child(chrome::icon(icon, 12., theme::color(tint)))
+                .child(chrome::icon(icon, icon::SM, theme::color(tint)))
                 .child(count.to_string())
         };
         Self::item("status-problems")
@@ -235,7 +235,7 @@ impl StatusBar {
             Self::item("status-branch")
                 .cursor_pointer()
                 .hover(|s| s.bg(theme::fill_hover()))
-                .child(chrome::icon("git-branch", 12., theme::color(color::INK_FAINT)))
+                .child(chrome::icon("git-branch", icon::SM, theme::color(color::INK_FAINT)))
                 .child(branch.name.clone())
                 .children(sync.map(|sync| div().text_color(theme::color(color::INK_FAINT)).child(sync)))
                 .tooltip(chrome::tip("The branch, and commits to push (↑) and pull (↓); click for History"))

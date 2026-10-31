@@ -71,7 +71,7 @@ pub fn open(
             .title("What the agent is told")
             .entrance(gpui_kit::component::dialog::DialogEntrance::None)
             .bg(chrome::dialog_surface())
-            .w(px(760.))
+            .w(px(saturn_design::size::DIALOG_LARGE))
             .child(list)
     });
 }

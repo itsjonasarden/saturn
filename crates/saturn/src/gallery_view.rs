@@ -8,11 +8,10 @@ use gpui_kit::{
     AnyElement, AppContext as _, Context, Entity, FontWeight, IntoElement, ParentElement as _, Render, SharedString,
     Styled as _, Window, div, px,
 };
-use saturn_design::{color, radius, shadow, space, text};
+use saturn_design::{color, icon, radius, shadow, space, text, tone};
 
 use crate::chrome;
 use crate::theme::{self, TypeScale as _, len};
-use saturn_design::tone;
 
 pub struct GalleryView {
     input: Entity<InputState>,
@@ -112,6 +111,49 @@ fn colours() -> impl IntoElement {
                     .bg(theme::color(token)),
             )
             .child(div().text_scale(text::MICRO).text_color(theme::color(color::INK_FAINT)).child(name))
+    }))
+}
+
+fn tones() -> impl IntoElement {
+    let tones = [
+        ("wash", tone::WASH),
+        ("faint", tone::FAINT),
+        ("hover", tone::HOVER),
+        ("track", tone::TRACK),
+        ("control", tone::CONTROL),
+        ("separator", tone::SEPARATOR),
+        ("pressed", tone::PRESSED),
+        ("rule", tone::RULE),
+        ("edge", tone::EDGE),
+        ("strong", tone::STRONG),
+        ("outline", tone::OUTLINE),
+        ("outline+", tone::OUTLINE_STRONG),
+    ];
+    row().children(tones.map(|(name, strength)| {
+        div()
+            .flex()
+            .flex_col()
+            .items_center()
+            .gap(len(space::SPACE_1))
+            .child(div().size(px(32.)).rounded(theme::corner(radius::RADIUS_XS)).bg(theme::tone(strength)))
+            .child(div().text_scale(text::MICRO).text_color(theme::color(color::INK_FAINT)).child(name))
+    }))
+}
+
+fn icons() -> impl IntoElement {
+    let sizes = [("xs", icon::XS), ("sm", icon::SM), ("md", icon::MD), ("lg", icon::LG)];
+    row().children(sizes.map(|(name, size)| {
+        div()
+            .flex()
+            .items_center()
+            .gap(len(space::SPACE_1))
+            .child(chrome::icon("git-branch", size, theme::color(color::INK)))
+            .child(
+                div()
+                    .text_scale(text::MICRO)
+                    .text_color(theme::color(color::INK_FAINT))
+                    .child(format!("{name} {size}")),
+            )
     }))
 }
 
@@ -215,7 +257,9 @@ impl Render for GalleryView {
                         column()
                             .child(section("Type scale", type_scale()))
                             .child(section("Spacing", spacing()))
-                            .child(section("Colours", colours())),
+                            .child(section("Colours", colours()))
+                            .child(section("Tones", tones()))
+                            .child(section("Icons", icons())),
                     )
                     .child(
                         column()

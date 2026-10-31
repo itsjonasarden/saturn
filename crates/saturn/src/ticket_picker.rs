@@ -66,7 +66,7 @@ pub fn open(workspace: WeakEntity<Workspace>, connected: bool, window: &mut Wind
             .title("New agent")
             .entrance(gpui_kit::component::dialog::DialogEntrance::None)
             .bg(crate::chrome::dialog_surface())
-            .w(px(600.))
+            .w(px(saturn_design::size::DIALOG_MEDIUM))
             // Room around the field inside the dialog, which clips at its edge, so the focus ring is
             // whole.
             .child(div().px(px(3.)).child(crate::chrome::input(&search))) // off-scale: the focus ring, 3px outside the field

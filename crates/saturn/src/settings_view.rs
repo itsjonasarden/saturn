@@ -18,6 +18,7 @@ use crate::theme::{self, len};
 use saturn_core::agents::Agent;
 use saturn_design::icon;
 use saturn_design::text;
+use saturn_design::tone;
 
 use crate::workspace::Workspace;
 
@@ -781,7 +782,7 @@ impl SettingsView {
                 words.child(
                     div()
                         .text_scale(text::META)
-                        .line_height(px(17.))
+                        .line_height(px(text::META.line_height))
                         .text_color(theme::color(color::INK_MUTED))
                         .child(row.detail),
                 )
@@ -796,7 +797,13 @@ impl SettingsView {
                 .pb(padding)
                 .px(len(space::SPACE_4))
                 .when(index > 0, |line| line.mt(len(space::SPACE_1)))
-                .child(chrome::cut_surface(theme::overlay(0.), theme::overlay(0.04), 0., 9., chrome::Cut::Row))
+                .child(chrome::cut_surface(
+                    gpui_kit::transparent_black(),
+                    theme::tone(tone::FAINT),
+                    0.,
+                    9.,
+                    chrome::Cut::Row,
+                ))
         } else {
             div()
                 .id(("setting", index))
@@ -892,7 +899,11 @@ impl SettingsView {
             div().pb(len(space::SPACE_2)).text_scale(text::META).text_color(theme::color(tint)).child(text)
         };
         content = content.child(
-            div().pb(len(space::SPACE_2)).text_scale(text::TITLE).line_height(px(24.)).child(self.section.name()),
+            div()
+                .pb(len(space::SPACE_2))
+                .text_scale(text::TITLE)
+                .line_height(px(text::TITLE.line_height))
+                .child(self.section.name()),
         );
         if self.section == Section::Keymap {
             content = content
