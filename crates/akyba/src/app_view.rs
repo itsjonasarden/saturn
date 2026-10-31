@@ -186,8 +186,9 @@ impl Render for AppView {
             Some(workspace) => workspace.clone().into_any_element(),
             None => self.render_welcome(cx).into_any_element(),
         };
-        // Saturn's own background, not the desktop: a deep blue in dark mode, a soft periwinkle in
-        // light, the same over any wallpaper. The cards stand on it.
+        // The theme's own background, not the desktop, the same over any wallpaper: in Saturn a deep
+        // blue in dark mode and a soft periwinkle in light, in Cyberdeck its near-black ground. The
+        // cards stand on it.
         let backdrop = gpui_kit::linear_gradient(
             155.,
             gpui_kit::linear_color_stop(theme::color(color::BACKDROP), 0.),

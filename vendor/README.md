@@ -22,7 +22,7 @@ written against this version of GPUI. Every change is marked "Akyba's patch":
 - `gpui-pre/src/scene.rs` (and its copy): monochrome glyphs are sorted by cached keys, in the same
   stable paint order, and a frame already in order isn't sorted at all. The test that holds it to
   the original order, and a benchmark to run by hand, are in
-  `crates/saturn-terminal/tests/scene_sort.rs`.
+  `crates/akyba-terminal/tests/scene_sort.rs`.
 - `gpui-pre/src/window.rs`: `Window::paint_backdrop_blur`.
 - `gpui-pre-apple/build.rs`: exports `BackdropBlur` and `BackdropBlurInputIndex` to the header.
 - `gpui-pre-apple/src/metal_renderer.rs`: the layer's texture stays readable; a blur batch copies
