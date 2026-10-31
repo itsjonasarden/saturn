@@ -1400,7 +1400,7 @@ impl EditorView {
                             slot.child(
                                 div()
                                     .size(px(saturn_design::size::DOT))
-                                    .rounded_full()
+                                    .map(crate::chrome::pill)
                                     .bg(theme::color(color::INK))
                                     .group_hover("editor-tab", gpui_kit::Styled::invisible),
                             )

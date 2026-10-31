@@ -64,6 +64,12 @@ pub fn cut_corners() -> bool {
     look().corners == Corners::Cut
 }
 
+/// A dot, a badge or a handle as round as it can be where the theme rounds corners; square where
+/// it cuts them.
+pub fn pill<E: gpui_kit::Styled>(element: E) -> E {
+    if cut_corners() { element } else { element.rounded_full() }
+}
+
 /// How far along each edge the theme cuts a panel's corner, and a selection's or a button's.
 fn panel_cut() -> f32 {
     look().panel_cut
@@ -878,7 +884,7 @@ pub fn quiet_resize_handle() -> gpui_kit::base::ResizeHandleRenderer {
                 .items_center()
                 .w(px(1.))
                 .h_full()
-                .child(div().flex_none().ml(px(-1.)).w(px(3.)).h(px(36.)).rounded_full().bg(pill))
+                .child(div().flex_none().ml(px(-1.)).w(px(3.)).h(px(36.)).map(crate::chrome::pill).bg(pill))
                 .into_any_element(),
             gpui_kit::Axis::Vertical => div()
                 .flex_none()
@@ -886,7 +892,7 @@ pub fn quiet_resize_handle() -> gpui_kit::base::ResizeHandleRenderer {
                 .justify_center()
                 .h(px(1.))
                 .w_full()
-                .child(div().flex_none().mt(px(-1.)).h(px(3.)).w(px(36.)).rounded_full().bg(pill))
+                .child(div().flex_none().mt(px(-1.)).h(px(3.)).w(px(36.)).map(crate::chrome::pill).bg(pill))
                 .into_any_element(),
         })
     })

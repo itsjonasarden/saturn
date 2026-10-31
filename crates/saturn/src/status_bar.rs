@@ -257,7 +257,7 @@ impl Render for StatusBar {
                 ServerState::Absent => (color::INK_FAINT, "No language server: the editor's strip says why"),
             };
             Self::item("status-server")
-                .child(div().size(px(saturn_design::size::DOT)).rounded_full().bg(theme::color(dot)))
+                .child(div().size(px(saturn_design::size::DOT)).map(crate::chrome::pill).bg(theme::color(dot)))
                 .child(name)
                 .tooltip(chrome::tip(tip))
         });

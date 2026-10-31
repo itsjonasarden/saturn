@@ -325,5 +325,5 @@ pub fn status_dot(ticket: &Ticket) -> impl IntoElement {
         .as_deref()
         .and_then(|hex| u32::from_str_radix(hex.trim_start_matches('#'), 16).ok())
         .map_or_else(|| theme::color(color::INK_FAINT), |value| rgb(value).into());
-    div().flex_none().size(px(saturn_design::size::DOT_LARGE)).rounded_full().bg(colour)
+    div().flex_none().size(px(saturn_design::size::DOT_LARGE)).map(crate::chrome::pill).bg(colour)
 }

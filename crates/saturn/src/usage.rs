@@ -9,6 +9,7 @@
 
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
+use gpui_kit::prelude::FluentBuilder as _;
 use gpui_kit::{
     App, AppContext as _, FontWeight, Global, Hsla, IntoElement, ParentElement as _, StatefulInteractiveElement as _,
     Styled as _, div, px,
@@ -222,17 +223,25 @@ fn meter(percent: f64) -> gpui_kit::AnyElement {
         .relative()
         .h(px(2.))
         .w_full()
-        .rounded_full()
+        .map(crate::chrome::pill)
         .bg(white(0.18))
-        .child(div().absolute().top_0().left_0().h_full().w(gpui_kit::relative(width)).rounded_full().bg(fill).shadow(
-            vec![gpui_kit::BoxShadow {
-                color: fill.opacity(0.6),
-                offset: gpui_kit::point(px(0.), px(0.)),
-                blur_radius: px(6.),
-                spread_radius: px(0.),
-                inset: false,
-            }],
-        ))
+        .child(
+            div()
+                .absolute()
+                .top_0()
+                .left_0()
+                .h_full()
+                .w(gpui_kit::relative(width))
+                .map(crate::chrome::pill)
+                .bg(fill)
+                .shadow(vec![gpui_kit::BoxShadow {
+                    color: fill.opacity(0.6),
+                    offset: gpui_kit::point(px(0.), px(0.)),
+                    blur_radius: px(6.),
+                    spread_radius: px(0.),
+                    inset: false,
+                }]),
+        )
         .into_any_element()
 }
 

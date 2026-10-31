@@ -4,6 +4,7 @@
 //! the pane (Return for Claude's highlighted "Yes", Escape for "No"), so the pane stays the truth.
 
 use gpui_kit::component::WindowExt as _;
+use gpui_kit::prelude::FluentBuilder as _;
 use gpui_kit::{
     App, FontWeight, InteractiveElement as _, IntoElement, ParentElement as _, StatefulInteractiveElement as _,
     Styled as _, WeakEntity, Window, div, px,
@@ -99,7 +100,7 @@ fn render_row(workspace: &WeakEntity<Workspace>, row: Row) -> impl IntoElement {
             div()
                 .flex_none()
                 .size(px(saturn_design::size::DOT_LARGE))
-                .rounded_full()
+                .map(crate::chrome::pill)
                 .bg(crate::workspace::state_color(row.state)),
         )
         .child(

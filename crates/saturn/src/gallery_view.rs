@@ -157,6 +157,106 @@ fn icons() -> impl IntoElement {
     }))
 }
 
+/// Every icon the app draws, by name, to review a theme's icons in full.
+const EVERY_ICON: &[&str] = &[
+    "arrow-left",
+    "book-open",
+    "bot",
+    "box",
+    "calendar-clock",
+    "camera",
+    "check",
+    "chevron-down",
+    "chevron-right",
+    "chevron-up",
+    "circle-check",
+    "circle-dot",
+    "circle-x",
+    "columns-2",
+    "database",
+    "delete",
+    "ellipsis",
+    "external-link",
+    "file",
+    "file-code",
+    "file-plus",
+    "folder",
+    "folder-git",
+    "folder-open",
+    "folder-plus",
+    "git-branch",
+    "git-commit-horizontal",
+    "git-compare",
+    "git-fork",
+    "git-merge",
+    "git-pull-request",
+    "git-pull-request-closed",
+    "git-pull-request-draft",
+    "globe",
+    "info",
+    "key-round",
+    "keyboard",
+    "link-2",
+    "list-checks",
+    "list-filter",
+    "locate",
+    "locate-fixed",
+    "maximize",
+    "maximize-2",
+    "menu",
+    "message-square",
+    "minimize-2",
+    "minus",
+    "panel-left",
+    "panel-right",
+    "panel-top",
+    "pencil",
+    "play",
+    "plus",
+    "redo-2",
+    "refresh-cw",
+    "rotate-ccw",
+    "rows-2",
+    "scan",
+    "search",
+    "send",
+    "settings",
+    "sprout",
+    "square-arrow-right",
+    "square-dot",
+    "square-minus",
+    "square-plus",
+    "square-terminal",
+    "square-x",
+    "sun-moon",
+    "tag",
+    "text-search",
+    "trash",
+    "triangle-alert",
+    "undo",
+    "undo-2",
+    "users",
+    "waypoints",
+    "workflow",
+    "wrench",
+    "x",
+    "zoom-in",
+    "zoom-out",
+];
+
+fn every_icon() -> impl IntoElement {
+    row().children(EVERY_ICON.iter().map(|name| {
+        div()
+            .w(px(64.))
+            .flex()
+            .flex_col()
+            .items_center()
+            .gap(len(space::SPACE_1))
+            .child(chrome::icon(name, icon::LG, theme::color(color::INK)))
+            .child(div().text_scale(text::BADGE).text_color(theme::color(color::INK_FAINT)).truncate().child(*name))
+    }))
+}
+
 /// The icons the app shows most, at the size they are drawn in a control, to see the set's style.
 fn icon_set() -> impl IntoElement {
     let names = [
@@ -309,7 +409,7 @@ impl Render for GalleryView {
                             .child(section("Field", div().w(px(320.)).child(chrome::input(&self.input))))
                             .child(section("Panels", panels())),
                     )
-                    .child(column().child(section("Menu", menu(cx)))),
+                    .child(column().child(section("Menu", menu(cx))).child(section("Every icon", every_icon()))),
             )
     }
 }

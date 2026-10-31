@@ -70,8 +70,10 @@ fn spacing_comes_from_the_spacing_scale() {
 
 #[test]
 fn corners_come_from_the_theme() {
-    let found = breaks(|file, line| !draws_shapes(file) && writes_a_number(line, ".rounded(px("));
-    assert!(found.is_empty(), "write `theme::corner(radius::…)`:\n{}", found.join("\n"));
+    let found = breaks(|file, line| {
+        !draws_shapes(file) && (writes_a_number(line, ".rounded(px(") || line.contains(".rounded_full()"))
+    });
+    assert!(found.is_empty(), "write `theme::corner(radius::…)`, or `chrome::pill` for a dot:\n{}", found.join("\n"));
 }
 
 #[test]

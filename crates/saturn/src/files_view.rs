@@ -334,7 +334,7 @@ impl FilesView {
                     div()
                         .flex_none()
                         .size(px(saturn_design::size::DOT))
-                        .rounded_full()
+                        .map(crate::chrome::pill)
                         .bg(theme::color(color::AMBER_TEXT)),
                 )
             })

@@ -268,7 +268,7 @@ impl TicketsView {
                         .min_w(px(14.))
                         .h(px(14.))
                         .px(px(3.)) // off-scale: a count badge, 14px, round
-                        .rounded_full()
+                        .map(crate::chrome::pill)
                         .flex()
                         .items_center()
                         .justify_center()

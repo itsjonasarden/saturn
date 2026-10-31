@@ -976,7 +976,7 @@ pub fn state_color(state: AgentState) -> Hsla {
 }
 
 fn status_dot(state: AgentState) -> impl IntoElement {
-    div().size(px(saturn_design::size::DOT_LARGE)).flex_none().rounded_full().bg(state_color(state))
+    div().size(px(saturn_design::size::DOT_LARGE)).flex_none().map(crate::chrome::pill).bg(state_color(state))
 }
 
 /// Moves the divider after `index` to `at` (0–1 across the container), keeping both neighbours
