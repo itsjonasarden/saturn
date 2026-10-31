@@ -75,8 +75,9 @@ Action)` when a shortcut does the same, so the shortcut shows. A button that say
 - **Words:** sentence case, no emoji, buttons say what happens ("Add repo", not "OK").
 - Both themes, always: check light and dark.
 
-- **Sizes, spacing and corners come from the scales**: `.text_scale(text::LABEL)`,
-  `len(space::SPACE_3)`, `theme::corner(radius::RADIUS_SM)`. Views use the components in `chrome.rs`
+- **Sizes, spacing, corners, tones and icons come from the scales**: `.text_scale(text::LABEL)`,
+  `len(space::SPACE_3)`, `theme::corner(radius::RADIUS_SM)`, `theme::tone(tone::HOVER)`, `icon::SM`,
+  `size::ROW`. Views use the components in `chrome.rs`
   and never ask which theme is on; a component asks the theme (`chrome::look()`) which version to
   draw. `crates/saturn/tests/design_rules.rs` checks this in `pnpm health`. `pnpm gallery` shows
   every component in the current theme.
