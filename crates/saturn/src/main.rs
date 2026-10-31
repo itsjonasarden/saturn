@@ -13,6 +13,7 @@ mod context_view;
 mod dock;
 mod editor_view;
 mod files_view;
+mod gallery_view;
 mod github;
 mod history_view;
 mod impact_view;
@@ -269,6 +270,12 @@ fn open_main_window(project: Option<std::path::PathBuf>, cx: &mut App) {
         window_background: WindowBackgroundAppearance::Blurred,
         ..WindowOptions::default()
     };
+    // The design system's gallery instead, to see every component in the theme Settings has.
+    if std::env::var_os("SATURN_GALLERY").is_some() {
+        gpui_kit::open_window(options, cx, |window, cx| cx.new(|cx| gallery_view::GalleryView::new(window, cx)))
+            .expect("the window opens");
+        return;
+    }
     gpui_kit::open_window(options, cx, |window, cx| cx.new(|cx| AppView::new(project, window, cx)))
         .expect("the window opens");
 }

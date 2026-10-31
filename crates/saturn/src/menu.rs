@@ -58,7 +58,7 @@ pub fn render_at(
         .into_any_element()
 }
 
-fn lines(
+pub fn lines(
     id: &'static str,
     items: Vec<Item>,
     pick: impl Fn(Box<dyn Action>, &mut gpui_kit::Window, &mut gpui_kit::App) + 'static,

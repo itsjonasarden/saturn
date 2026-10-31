@@ -13,6 +13,7 @@
     "deps": "cargo machete && cargo deny check",
     "health": "pnpm run fmt:check && pnpm run lint && pnpm run test && pnpm run deps",
     "dev": "cargo build -p saturn && sh scripts/sign-local.sh target/debug/saturn && target/debug/saturn",
+    "gallery": "cargo build -p saturn && sh scripts/sign-local.sh target/debug/saturn && SATURN_GALLERY=1 target/debug/saturn",
     "prepare": "husky",
     "dist": "sh scripts/bundle.sh",
     "install-app": "sh scripts/bundle.sh --install",

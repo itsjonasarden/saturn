@@ -7,6 +7,39 @@ Saturn follows the Quarn workflow-automation design (Behance, 2026) with blue in
 
 ![The Saturn main window](images/saturn-window.png)
 
+## How it's built
+
+Four layers, each using only the one below it:
+
+1. **Tokens**, `design/tokens.json`: colours (a dark and a light value for every theme), the spacing scale, radii, shadows, fonts, the type scale, and the themes.
+2. **`crates/saturn-design`** compiles them into constants: `color::INK`, `space::SPACE_3`, `text::LABEL`, `THEMES`. Nothing in it is written by hand.
+3. **Components**, `crates/saturn/src/chrome.rs`: `button`, `icon_button`, `corner_button`, `track` and `track_item`, `tab` and `tab_row`, `selector`, `switch`, `input`, `panel` and `card`, `floating`, and the menu in `menu.rs`. A component reads the theme (`chrome::look()`) and draws the version it asks for.
+4. **Views** put components together. A view never writes a size, a spacing or a radius of its own, and never asks which theme is on.
+
+`crates/saturn/tests/design_rules.rs` holds the views to that, in `pnpm health`:
+
+- text sizes come from the type scale: `.text_scale(text::META)`, not `.text_size(px(12.))`;
+- spacing comes from the spacing scale: `.gap(len(space::SPACE_1))`, not `.gap(px(4.))`;
+- corners come from the theme: `.rounded(theme::corner(radius::RADIUS_SM))`;
+- nothing compares theme names.
+
+A value off a scale that a shape needs (a dot lined up with the first line of text, a badge's padding) says why on its line, after `// off-scale:`. Components and `theme.rs` draw shapes, so they may write pixels.
+
+**The gallery** shows every component in every state, in the theme and appearance Settings has: `pnpm gallery`. With `SATURN_GALLERY=1 SATURN_SCREENSHOT=…` it is pictured offscreen like any spike, so a component's change can be seen in every theme side by side before it ships.
+
+### Themes
+
+A theme is a description in `design/tokens.json` (under `themes`), not code: its name, font, corners (round, or cut by `panelCut` and `controlCut`), the gap between cards, the colour of focus, and which version of each control it draws: title bar, tabs, selection, choices, switch, buttons, menus, setting rows, meters, agent cards and the editor's current line. `themes.options` lists every version with what it looks like. Settings lists the themes from the same file.
+
+To add a theme:
+
+1. Add an entry to `themes.themes` with a new `id`, choosing a version of each control.
+2. Give the colours that differ an `<id>-dark` and an `<id>-light` value; the rest borrow the first theme's.
+3. If it needs a font, add its family under `type.families` and its files to `crates/saturn/assets/fonts`.
+4. Look at it with `pnpm gallery`, then in the app.
+
+A new version of a control (a third kind of tab, say) is a new option in `themes.options`, a variant in `saturn-design`, and its drawing in that one component.
+
 ## What colour means
 
 | Colour | Means                                                  | Where                                              |
@@ -56,4 +89,4 @@ Urbanist for the interface and JetBrains Mono for terminals and code, bundled so
 
 ### Cyberdeck
 
-The second theme (Settings → Appearance → Theme). Its own true-grey neutrals on an opaque near-black ground (near-white in light mode), from the `cyberdeck-dark` and `cyberdeck-light` values in `design/tokens.json`; a token without one uses Saturn's, so the signal colours mean the same in both. Corners are square (`theme::corner`), cards sit 4px apart instead of 8 (`chrome::pane_gap`), with no glass to show between them, panels have their top-right corner cut and a 1px edge that takes the status ring's colour, a selection is an ink outline round a faint fill with its bottom-right corner cut, and buttons are the same outline (the primary one in blue, its words blue too). A choice of a few values is a selector (`chrome::selector`): the value between two arrows, over a dash for each value. Focus is ink, not blue. The editor's current line has no fill; its number is in full ink. Tabs (`chrome::tab`) are words over a bar, lit under the tab you're on. A switch is the word (On, Off) and a cut box whose block sits right and lit, or left and dim (`chrome::switch`); a menu outlines the line under the pointer; each setting is its own slab, notched along its top edge with its bottom-left corner cut (`chrome::Cut::Row`); the agent and usage cards are grey slabs instead of gradients, and the usage meters are rows of square dots, orange from 80%. The interface font is Rajdhani (500, 600, 700, OFL 1.1, no Reserved Font Name); code stays in JetBrains Mono.
+The second theme. Its own true-grey neutrals on an opaque near-black ground (near-white in light mode); the signal colours borrow Saturn's, so they mean the same in both. Square panels, their top-right corner cut, with a 1px edge that takes the status ring's colour; cards 4px apart. A selection is an ink outline round a faint fill, its bottom-right corner cut, and buttons are the same outline (the primary one blue, its words blue too). Tabs are words over a bar; a choice is a selector, the value between two arrows; a switch is the word and a cut box. Focus is ink, not blue; the editor's current line is marked by its number alone. Each setting is its own notched slab, agent and usage cards are grey slabs, usage meters are rows of square dots. Rajdhani (500, 600, 700, OFL 1.1, no Reserved Font Name) for the interface; code stays in JetBrains Mono.
