@@ -4257,7 +4257,8 @@ impl Workspace {
                         }),
                 );
             }
-            chrome::on_glass(track)
+            // In Cyberdeck the counts stand bare, as the tabs do, as tall as them.
+            if chrome::cyberdeck() { track.p_0().bg(gpui_kit::transparent_black()) } else { chrome::on_glass(track) }
         });
         div()
             .flex()
@@ -4271,7 +4272,8 @@ impl Workspace {
             // toggles and Settings are in the status bar, at the window's foot.
             // In Cyberdeck the tabs stand bare, each over its own bar.
             .child(if chrome::cyberdeck() {
-                self.render_repo_tabs(chrome::tab_row().gap(len(space::SPACE_2)), cx)
+                // A little way from the window's buttons, which a track's edge would otherwise keep.
+                self.render_repo_tabs(chrome::tab_row().ml(len(space::SPACE_3)).gap(len(space::SPACE_2)), cx)
             } else {
                 chrome::on_glass(self.render_repo_tabs(chrome::track(), cx))
             })
@@ -4286,7 +4288,8 @@ impl Workspace {
     /// tooltip, to keep the bar short. Its arrow holds the other ways to start agents: several at
     /// once, again, on a schedule.
     fn render_new_agent(&self, cx: &mut Context<Self>) -> impl IntoElement {
-        let height = len(TITLEBAR_CONTROL + 2. * space::SPACE_1);
+        // As tall as the tracks beside it; in Cyberdeck, where nothing stands in a track, as the tabs.
+        let height = len(if chrome::cyberdeck() { TITLEBAR_CONTROL } else { TITLEBAR_CONTROL + 2. * space::SPACE_1 });
         // A part of the button, with no fill of its own: like the primary button, it doesn't light
         // up under the pointer, so the gradient stays whole. The arrow looks pressed while its menu
         // is open.
