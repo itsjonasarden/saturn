@@ -2,8 +2,8 @@
 
 Akyba has two themes, made from one set of tokens and components. **Cyberdeck**, the default: square panels with cut corners on an opaque near-black ground, true greys, neon signals, Rajdhani. **Saturn**, after the Quarn workflow-automation design (Behance, 2026) with blue in place of its green: glass between rounded cards, depth from light and blur instead of decoration. In both, grey almost everywhere and colour only where it has a job.
 
-- **Browsable reference:** the Akyba Design System artifact, https://claude.ai/artifact/RC4SBXYReNJprpjxDNapf3: brand book, tokens in both themes, every component with a live preview, and the full main window.
-- **In this repo:** `design/tokens.json` (the tokens, same file as the artifact) and `design/components.css` (the component classes the previews use). `crates/akyba-design` compiles the tokens into Rust constants with a dark and a light value each, so a token changes in one place.
+- **Browsable reference:** the Akyba Design System artifact, https://claude.ai/artifact/T1AStNjEW6sEdXwrDB2XRm: brand book, tokens in every theme and appearance, the type, and the mark. Its `tokens.json` is generated from `design/tokens.json`, Cyberdeck first.
+- **In this repo:** `design/tokens.json` (the tokens; the artifact's are generated from it) and `design/components.css` (the component classes the previews use). `crates/akyba-design` compiles the tokens into Rust constants with a dark and a light value each, so a token changes in one place.
 
 ![The Akyba main window](images/akyba-window.png)
 

@@ -1,7 +1,7 @@
 //! The Akyba design system's tokens as Rust constants, compiled from `design/tokens.json`.
 //!
 //! `color`, `space`, `radius`, `shadow`, `font` and `text` mirror the token families of the design
-//! system (<https://claude.ai/artifact/RC4SBXYReNJprpjxDNapf3>). Change a value in
+//! system (<https://claude.ai/artifact/T1AStNjEW6sEdXwrDB2XRm>). Change a value in
 //! `design/tokens.json`, never here.
 //!
 //! A theme ([`Look`], one of [`THEMES`]) is a description: its font, its corners, how far apart its

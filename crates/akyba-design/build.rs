@@ -1,5 +1,5 @@
-//! Compiles design/tokens.json (the one source of every design value, the same file as the Akyba
-//! Design System artifact) into Rust constants, so a token changes in one place.
+//! Compiles design/tokens.json (the one source of every design value, from which the Akyba Design
+//! System artifact's tokens are generated) into Rust constants, so a token changes in one place.
 
 use std::collections::HashMap;
 use std::fmt::Write as _;
