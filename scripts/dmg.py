@@ -2,13 +2,14 @@
 # layout file itself, so building the image never opens a Finder window.
 #
 # `stage` is the folder holding Akyba.app and "How to open Akyba.txt"; the Applications shortcut
-# is added here. The background (design/dmg-background.html) has a card under each icon, so the
-# positions below are the cards' centres.
+# is added here. The background (design/dmg-background.html) frames each item, so the positions
+# below are the frames' centres.
 import os.path
 
 stage = defines["stage"]  # noqa: F821, set by dmgbuild from `-D stage=…`
 
-format = "UDZO"
+# LZMA: tighter than the default zlib, and opened by every macOS Akyba runs on.
+format = "ULMO"
 files = [os.path.join(stage, "Akyba.app"), os.path.join(stage, "How to open Akyba.txt")]
 symlinks = {"Applications": "/Applications"}
 

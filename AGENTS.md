@@ -122,7 +122,7 @@ the repo's settings).
 
 ```sh
 pnpm install-app      # Akyba.app in /Applications, for this Mac
-pnpm dist:dmg         # a disk image for Apple Silicon and Intel, to share
+pnpm dist:dmg         # a disk image each for Apple Silicon and Intel, to share
 pnpm release 0.2.0    # publish a version: installed copies offer it within a day
 ```
 

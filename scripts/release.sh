@@ -1,10 +1,11 @@
 #!/bin/sh
 # Publishes a version of Akyba: `pnpm release 0.2.0`.
 #
-# Sets the version, commits and tags it, builds the disk image for Apple Silicon and Intel, signs
-# it with the Sparkle key in this Mac's keychain, and publishes a GitHub release carrying the disk
-# image and `appcast.xml`, the feed every installed Akyba checks once a day. The newest release's
-# feed is the one they read (releases/latest/download/appcast.xml).
+# Sets the version, commits and tags it, builds a disk image for Apple Silicon and one for Intel,
+# signs each with the Sparkle key in this Mac's keychain, and publishes a GitHub release carrying
+# them and a feed for each kind of Mac (`appcast-apple-silicon.xml`, `appcast-intel.xml`), which
+# every installed Akyba of that kind checks once a day. The newest release's feeds are the ones
+# they read (releases/latest/download/appcast-<kind>.xml).
 #
 # The signing key was made with Sparkle's `generate_keys`; back it up with
 # `target/sparkle-2.10.0/bin/generate_keys -x <file>`. Without it, installed copies can't be updated.
@@ -34,11 +35,7 @@ git commit -q -am "chore: release $version"
 git tag "$tag"
 
 pnpm dist:dmg
-dmg="target/Akyba-$version.dmg"
-
-# Sparkle's signature over the disk image, from the key in the keychain.
 sparkle=$(sh scripts/sparkle.sh)
-signature=$("$sparkle/bin/sign_update" "$dmg")
 
 # What changed, from the commit subjects since the last release: features and fixes.
 range=${previous:+$previous..}HEAD
@@ -47,9 +44,14 @@ notes=$(git log --format='%s' "$range" | grep -E '^(feat|fix)' | sed -E 's/^[a-z
 html=$(printf '%s\n' "$notes" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/^/<li>/; s/$/<\/li>/' | tr -d '\n')
 markdown=$(printf '%s\n' "$notes" | sed 's/^/- /')
 
-url="https://github.com/itsjonasarden/akyba/releases/download/$tag/Akyba-$version.dmg"
 date=$(LC_ALL=C date -u '+%a, %d %b %Y %H:%M:%S +0000')
-cat > target/appcast.xml <<XML
+assets=""
+for kind in apple-silicon intel; do
+  dmg="target/Akyba-$version-$kind.dmg"
+  # Sparkle's signature over the disk image, from the key in the keychain.
+  signature=$("$sparkle/bin/sign_update" "$dmg")
+  url="https://github.com/itsjonasarden/akyba/releases/download/$tag/Akyba-$version-$kind.dmg"
+  cat > "target/appcast-$kind.xml" <<XML
 <?xml version="1.0" encoding="utf-8"?>
 <rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
   <channel>
@@ -66,11 +68,14 @@ cat > target/appcast.xml <<XML
   </channel>
 </rss>
 XML
-
-# The same disk image under a name without the version, so the README's download link
-# (releases/latest/download/Akyba.dmg) always gets the newest.
-cp "$dmg" target/Akyba.dmg
+  # The same disk image under a name without the version, so the README's download links
+  # (releases/latest/download/Akyba-<kind>.dmg) always get the newest.
+  cp "$dmg" "target/Akyba-$kind.dmg"
+  assets="$assets $dmg target/Akyba-$kind.dmg target/appcast-$kind.xml"
+done
 
 git push -q origin main "$tag"
-gh release create "$tag" "$dmg" target/Akyba.dmg target/appcast.xml --title "Akyba $version" --notes "$markdown"
+# Word-split on purpose: the paths have no spaces.
+# shellcheck disable=SC2086
+gh release create "$tag" $assets --title "Akyba $version" --notes "$markdown"
 echo "Released Akyba $version: every installed Akyba offers it within a day."

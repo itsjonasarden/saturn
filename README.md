@@ -10,7 +10,7 @@ A native macOS workbench for [Claude Code](https://claude.com/claude-code) and
 [Codex](https://developers.openai.com/codex): a grid of terminals, a light editor, a diff review,
 and a clear signal when an agent needs you.
 
-<a href="https://github.com/itsjonasarden/akyba/releases/latest/download/Akyba.dmg"><b>Download for macOS</b></a>
+<b>Download for macOS:</b> <a href="https://github.com/itsjonasarden/akyba/releases/latest/download/Akyba-apple-silicon.dmg"><b>Apple Silicon</b></a> or <a href="https://github.com/itsjonasarden/akyba/releases/latest/download/Akyba-intel.dmg">Intel</a>
 ·
 <a href="docs/features.md">Everything it does</a>
 ·
@@ -63,9 +63,10 @@ keeps the files and diffs they touch one click away. It isn't an IDE; it's where
 
 ## Install
 
-[Download Akyba](https://github.com/itsjonasarden/akyba/releases/latest/download/Akyba.dmg),
-open the disk image and drag Akyba to Applications. It runs on macOS 13 or newer, on Apple Silicon
-and Intel, with [Claude Code](https://claude.com/claude-code),
+Download Akyba for your Mac:
+[Apple Silicon](https://github.com/itsjonasarden/akyba/releases/latest/download/Akyba-apple-silicon.dmg)
+(M1 and later) or [Intel](https://github.com/itsjonasarden/akyba/releases/latest/download/Akyba-intel.dmg).
+Open the disk image and drag Akyba to Applications. It runs on macOS 13 or newer, with [Claude Code](https://claude.com/claude-code),
 [Codex](https://developers.openai.com/codex) or both.
 
 > [!NOTE]

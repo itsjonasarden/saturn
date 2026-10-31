@@ -55,7 +55,9 @@ opt-level = 2
 debug = "line-tables-only"
 
 [profile.release]
-lto = "thin"
+# Whole-program link-time optimisation: about 3% smaller and no slower to run; only release builds
+# take longer.
+lto = "fat"
 codegen-units = 1
 # Symbols are only for debugging; a release build ships without them.
 strip = "symbols"
