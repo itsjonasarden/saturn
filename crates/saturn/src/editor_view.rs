@@ -1597,10 +1597,10 @@ impl Render for EditorView {
                     .children(self.render_impact_button(cx))
                     .children(self.render_review_controls(cx))
                     .child(
-                        chrome::icon_button(
+                        chrome::corner_button(
                             "maximize-panel",
                             if self.maximized { "minimize-2" } else { "maximize-2" },
-                            true,
+                            false,
                         )
                         .tooltip(chrome::tip("Make the editor bigger, or back"))
                         .on_click(cx.listener(|this, _, _, cx| {

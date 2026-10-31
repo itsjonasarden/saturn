@@ -554,6 +554,36 @@ pub fn icon_button(id: impl Into<ElementId>, name: &str, quiet: bool) -> gpui_ki
         .child(icon(name, 14., theme::color(if quiet { color::INK_MUTED } else { color::INK })))
 }
 
+/// A quiet icon button in a panel's top right corner, the last of its strip. In Cyberdeck the
+/// panel's corner is cut, so the button's fill (under the pointer, or `pressed` while its menu is
+/// open) has its top right corner cut along the same diagonal instead of poking past it.
+pub fn corner_button(id: impl Into<ElementId>, name: &str, pressed: bool) -> gpui_kit::Stateful<gpui_kit::Div> {
+    if !cyberdeck() {
+        return icon_button(id, name, true).when(pressed, |button| button.bg(theme::fill_pressed()));
+    }
+    let fill = if pressed { theme::fill_pressed() } else { theme::fill_hover() };
+    div()
+        .id(id)
+        .relative()
+        .group("corner-button")
+        .flex()
+        .flex_none()
+        .items_center()
+        .justify_center()
+        .size(len(CONTROL_HEIGHT))
+        .cursor_pointer()
+        .child(
+            div()
+                .absolute()
+                .top_0()
+                .left_0()
+                .size_full()
+                .when(!pressed, |under| under.invisible().group_hover("corner-button", gpui_kit::Styled::visible))
+                .child(cut_surface(gpui_kit::transparent_black(), fill, 0., SELECTION_CUT, Cut::TopRight)),
+        )
+        .child(icon(name, 14., theme::color(color::INK_MUTED)))
+}
+
 /// A text button with an optional shortcut. `primary` is the one action a view is for: the
 /// accent fill with a soft blue bloom beneath it.
 pub fn button(

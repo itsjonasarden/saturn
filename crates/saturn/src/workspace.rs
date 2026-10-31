@@ -3893,7 +3893,7 @@ impl Workspace {
             )
             .child({
                 let tab = cell.active;
-                chrome::icon_button(("close-pane", cell_id.key()), "x", true)
+                chrome::corner_button(("close-pane", cell_id.key()), "x", false)
                     .tooltip(chrome::tip_for("Close this terminal", CloseTab))
                     .on_click(cx.listener(move |this, _, window, cx| this.close_tab(tab, window, cx)))
             });
@@ -4360,8 +4360,7 @@ impl Workspace {
             div().flex().items_center().children(lineage).children(schema).child(follow).child(
                 self.with_menu(
                     OpenMenu::Repo,
-                    chrome::icon_button("repo-menu", "ellipsis", true)
-                        .when(self.open_menu == Some(OpenMenu::Repo), |button| button.bg(theme::fill_pressed()))
+                    chrome::corner_button("repo-menu", "ellipsis", self.open_menu == Some(OpenMenu::Repo))
                         .tooltip(chrome::tip("This repo: worktrees, attempts, history"))
                         .on_click(cx.listener(|this, _, _, cx| this.toggle_menu(OpenMenu::Repo, cx))),
                     cx,
