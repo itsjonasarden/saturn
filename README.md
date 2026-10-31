@@ -26,7 +26,7 @@ and a clear signal when an agent needs you.
 
 <picture>
   <source media="(prefers-reduced-motion: reduce)" srcset="docs/images/akyba-window.png" />
-  <img src="docs/images/agents.gif" alt="Akyba with four agents: one by one they stop working, one rings orange because it needs you, two ring green because they're done, and the title bar counts them" />
+  <img src="docs/images/agents.gif" alt="Akyba with four agents at work: one rings orange because it needs you, then two ring green because they're done, and the title bar counts them" />
 </picture>
 
 ## Why
