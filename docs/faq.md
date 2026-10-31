@@ -23,8 +23,3 @@ versions published here.
 **Is it free?** Yes, under the MIT licence. The agents need your own Claude or ChatGPT plan.
 
 **Windows or Linux?** No, Akyba is made for macOS.
-
-**Wasn't this Saturn?** Yes, until 0.2.0. Akyba is the same app under a new name. Open it once and
-your repos, windows, sessions, routines and settings come over from Saturn, with Claude Code's
-status line; then delete Saturn from Applications. A repository's `.saturn/worktree.json` still
-works, and terminals still get `SATURN_PORT` beside `AKYBA_PORT`.

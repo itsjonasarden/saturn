@@ -76,10 +76,6 @@ Open the disk image and drag Akyba to Applications. It runs on macOS 13 or newer
 Akyba updates itself: once a day it checks for a new release and offers it. To build it from the
 code, see [Develop](docs/develop.md).
 
-**Coming from Saturn?** Akyba was called Saturn until 0.2.0. Install Akyba and open it: your repos,
-windows, sessions, routines and settings come over by themselves, and Claude Code's status line
-follows. Then delete Saturn from Applications.
-
 ## The shortcuts that matter
 
 | Keys     | Does                                  |
