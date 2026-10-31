@@ -115,6 +115,7 @@ pub fn set_menus(cx: &mut App) {
             MenuItem::separator(),
             MenuItem::action("Go to File…", GoToFile),
             MenuItem::action("Open Project…", OpenProject),
+            MenuItem::action("Close Project", workspace::CloseRepo),
             MenuItem::action("Save", SaveFile),
         ]),
         Menu::new("Terminal").items([
