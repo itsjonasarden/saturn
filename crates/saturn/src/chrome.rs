@@ -13,7 +13,9 @@ use saturn_design::{Buttons, Choices, Corners, Look, Selection, Switch, Tabs, co
 
 use crate::theme::TypeScale as _;
 use crate::theme::{self, len};
+use saturn_design::icon;
 use saturn_design::text;
+use saturn_design::tone;
 
 /// A tooltip saying what a control does.
 pub fn tip(text: &'static str) -> impl Fn(&mut Window, &mut App) -> AnyView + 'static {
@@ -36,7 +38,7 @@ pub fn pane_gap() -> f32 {
 }
 
 /// Height of every control: tabs, buttons, track items, segments. Dense, as development tools are.
-pub const CONTROL_HEIGHT: f32 = 28.0;
+pub const CONTROL_HEIGHT: f32 = saturn_design::size::CONTROL;
 
 /// A Lucide icon from gpui-kit's bundled set, e.g. `panel-left`. SVGs don't inherit the text
 /// colour, so it is given here.
@@ -183,7 +185,7 @@ fn lit_panel_cut(glow: Option<saturn_design::Shadows>, corner: Cut) -> gpui_kit:
     let dark = saturn_design::appearance() == saturn_design::Appearance::Dark;
     if cut_corners() {
         let ring = glow.and_then(|glow| glow.get().first()).map(|layer| theme::layers(&[*layer])[0].color);
-        let edge = ring.unwrap_or_else(|| theme::overlay(if dark { 0.16 } else { 0.18 }));
+        let edge = ring.unwrap_or_else(|| theme::tone(tone::EDGE));
         return div()
             .relative()
             .flex()
@@ -255,7 +257,7 @@ pub fn track() -> gpui_kit::Div {
         .gap(len(space::SPACE_0))
         .p(len(space::SPACE_1))
         .rounded(theme::corner(radius::RADIUS_MD))
-        .bg(theme::overlay(if saturn_design::appearance() == saturn_design::Appearance::Dark { 0.07 } else { 0.05 }))
+        .bg(theme::tone(tone::TRACK))
 }
 
 /// What sits right on the window's glass (the title bar's tracks and buttons): on the panes' own
@@ -290,9 +292,9 @@ pub fn raised<E: gpui_kit::Styled>(item: E, pressed: bool) -> E {
         // An outlined selection is drawn by `selection`, under the item's children.
         item.border_color(gpui_kit::transparent_black())
     } else if pressed && dark {
-        item.bg(theme::overlay(0.14)).border_color(gpui_kit::transparent_black())
+        item.bg(theme::tone(tone::RULE)).border_color(gpui_kit::transparent_black())
     } else if pressed {
-        item.bg(gpui_kit::white()).border_color(theme::overlay(0.06)).shadow(vec![shadow(
+        item.bg(gpui_kit::white()).border_color(theme::tone(tone::HOVER)).shadow(vec![shadow(
             0.,
             1.,
             2.,
@@ -311,7 +313,7 @@ pub fn floating(element: gpui_kit::Div) -> gpui_kit::Div {
     let dark = saturn_design::appearance() == saturn_design::Appearance::Dark;
     if cut_corners() {
         // Square, its bottom right corner cut, with a stronger edge than a panel's since it floats.
-        let edge = theme::overlay(if dark { 0.3 } else { 0.32 });
+        let edge = theme::tone(tone::OUTLINE);
         return element.relative().child(cut_surface(edge, theme::color(color::SURFACE), 1., 10., Cut::BottomRight));
     }
     element
@@ -358,14 +360,9 @@ pub fn selection() -> impl IntoElement {
 /// Cyberdeck's hover, under a clickable line's children: a quieter `selection`, shown only while
 /// the pointer is over the hover group `group`.
 pub fn hover_outline(group: &'static str) -> impl IntoElement {
-    div()
-        .absolute()
-        .top_0()
-        .left_0()
-        .size_full()
-        .invisible()
-        .group_hover(group, gpui_kit::Styled::visible)
-        .child(cut_surface(theme::overlay(0.4), theme::overlay(0.05), 1., control_cut(), Cut::BottomRight))
+    div().absolute().top_0().left_0().size_full().invisible().group_hover(group, gpui_kit::Styled::visible).child(
+        cut_surface(theme::tone(tone::OUTLINE_STRONG), theme::tone(tone::FAINT), 1., control_cut(), Cut::BottomRight),
+    )
 }
 
 /// A tab: one of a few views of the same place (Files and Changes, open files, repos). In Saturn's
@@ -470,7 +467,7 @@ pub fn selector(
         .text_scale(text::LABEL)
         .font_weight(FontWeight::MEDIUM)
         .text_color(theme::color(color::INK))
-        .child(cut_surface(theme::overlay(0.3), theme::overlay(0.03), 1., control_cut(), Cut::BottomRight))
+        .child(cut_surface(theme::overlay(0.3), theme::tone(tone::WASH), 1., control_cut(), Cut::BottomRight))
         .child(step(labels.len(), true, current.checked_sub(1)))
         .child(
             div()
@@ -560,7 +557,7 @@ pub fn switch(id: &'static str, on: bool, toggle: impl Fn(&bool, &mut Window, &m
 
 /// A thin divider between groups in a track.
 pub fn track_separator() -> impl IntoElement {
-    div().flex_none().w(px(1.)).h(px(16.)).mx(len(space::SPACE_1)).bg(theme::overlay(0.14))
+    div().flex_none().w(px(1.)).h(px(16.)).mx(len(space::SPACE_1)).bg(theme::tone(tone::RULE))
 }
 
 /// A square icon button, as tall as every control. Quiet ones have no fill until hovered.
@@ -581,7 +578,7 @@ pub fn icon_button(id: impl Into<ElementId>, name: &str, quiet: bool) -> gpui_ki
                 button.bg(theme::fill_control()).hover(|s| s.bg(theme::fill_pressed()))
             }
         })
-        .child(icon(name, 14., theme::color(if quiet { color::INK_MUTED } else { color::INK })))
+        .child(icon(name, icon::MD, theme::color(if quiet { color::INK_MUTED } else { color::INK })))
 }
 
 /// The cut of a button inset `SPACE_1` into a panel's cut corner, so the gap along the diagonal is
@@ -618,7 +615,7 @@ pub fn corner_button(id: impl Into<ElementId>, name: &str, pressed: bool) -> gpu
                 .when(!pressed, |under| under.invisible().group_hover("corner-button", gpui_kit::Styled::visible))
                 .child(cut_surface(gpui_kit::transparent_black(), fill, 0., corner_button_cut(), Cut::TopRight)),
         )
-        .child(icon(name, 14., theme::color(color::INK_MUTED)))
+        .child(icon(name, icon::MD, theme::color(color::INK_MUTED)))
 }
 
 /// A text button with an optional shortcut. `primary` is the one action a view is for: the
@@ -652,7 +649,13 @@ pub fn button(
                     .relative()
                     .group("cyberdeck-button")
                     .text_color(theme::color(color::INK))
-                    .child(cut_surface(theme::overlay(0.3), theme::overlay(0.03), 1., control_cut(), Cut::BottomRight))
+                    .child(cut_surface(
+                        theme::overlay(0.3),
+                        theme::tone(tone::WASH),
+                        1.,
+                        control_cut(),
+                        Cut::BottomRight,
+                    ))
                     .child(hover_outline("cyberdeck-button"))
             } else {
                 button
@@ -785,7 +788,7 @@ pub fn sidebar_header(name: &str, detail: &str, action: impl IntoElement) -> imp
                 .size(len(CONTROL_HEIGHT))
                 .rounded(theme::corner(radius::RADIUS_SM))
                 .bg(theme::fill_control())
-                .child(icon("folder", 14., theme::color(color::INK))),
+                .child(icon("folder", icon::MD, theme::color(color::INK))),
         )
         .child(
             div()

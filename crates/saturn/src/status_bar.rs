@@ -21,9 +21,11 @@ use crate::problems_view;
 use crate::theme::TypeScale as _;
 use crate::theme::{self, len};
 use crate::workspace::{OpenSettings, ToggleEditor, ToggleSidebar, ToggleTickets, Workspace};
+use saturn_design::icon;
 use saturn_design::text;
+use saturn_design::tone;
 
-pub const HEIGHT: f32 = 28.;
+pub const HEIGHT: f32 = saturn_design::size::CONTROL;
 
 /// The branch checked out, and commits ahead of and behind its upstream.
 #[derive(Clone, PartialEq, Eq)]
@@ -161,9 +163,9 @@ impl StatusBar {
                 .w(px(24.))
                 .px_0()
                 .cursor_pointer()
-                .when(on, |item| item.bg(theme::overlay(0.1)))
+                .when(on, |item| item.bg(theme::tone(tone::SEPARATOR)))
                 .hover(|s| s.bg(theme::fill_hover()))
-                .child(chrome::icon(icon, 13., theme::color(if on { color::INK } else { color::INK_MUTED })))
+                .child(chrome::icon(icon, icon::SM, theme::color(if on { color::INK } else { color::INK_MUTED })))
         };
         let mut toggles = vec![
             toggle("toggle-sidebar", "panel-left", sidebar)
@@ -255,7 +257,7 @@ impl Render for StatusBar {
                 ServerState::Absent => (color::INK_FAINT, "No language server: the editor's strip says why"),
             };
             Self::item("status-server")
-                .child(div().size(px(6.)).rounded_full().bg(theme::color(dot)))
+                .child(div().size(px(saturn_design::size::DOT)).rounded_full().bg(theme::color(dot)))
                 .child(name)
                 .tooltip(chrome::tip(tip))
         });

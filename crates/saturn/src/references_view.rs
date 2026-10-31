@@ -16,6 +16,7 @@ use crate::chrome;
 use crate::editor_view::EditorView;
 use crate::theme::TypeScale as _;
 use crate::theme::{self, len};
+use saturn_design::icon;
 use saturn_design::text;
 
 /// A place the symbol is used: its line (0-based) and column, and the line's text.
@@ -132,7 +133,7 @@ impl Render for ReferencesView {
                     .pt(len(space::SPACE_3))
                     .pb(len(space::SPACE_1))
                     .text_scale(text::LABEL)
-                    .child(chrome::icon("file-code", 13., theme::color(color::INK_FAINT)))
+                    .child(chrome::icon("file-code", icon::SM, theme::color(color::INK_FAINT)))
                     .child(div().font_weight(FontWeight::MEDIUM).text_color(theme::color(color::INK)).child(name))
                     .child(div().min_w_0().truncate().text_color(theme::color(color::INK_FAINT)).child(folder))
                     .child(

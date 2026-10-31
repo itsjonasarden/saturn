@@ -30,6 +30,24 @@ pub struct Shadow {
     pub color: Color,
 }
 
+/// How strong a relative fill or stroke is, in dark mode and in light: white or black at this
+/// opacity.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct Tone {
+    pub dark: f32,
+    pub light: f32,
+}
+
+impl Tone {
+    /// The opacity in the current appearance.
+    pub fn get(self) -> f32 {
+        match appearance() {
+            Appearance::Dark => self.dark,
+            Appearance::Light => self.light,
+        }
+    }
+}
+
 /// A text style from the type scale: its size and line height in pixels, and its weight (400 is
 /// regular, 500 medium).
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -270,7 +288,7 @@ impl Shadows {
 mod generated {
     use super::{
         AgentCards, Buttons, Choices, Color, Corners, CurrentLine, Look, Menus, Meters, Selection, SettingRows, Shadow,
-        Shadows, Surfaces, Switch, Tabs, TextStyle, TitleBar, Token,
+        Shadows, Surfaces, Switch, Tabs, TextStyle, TitleBar, Token, Tone,
     };
     include!(concat!(env!("OUT_DIR"), "/tokens.rs"));
 }

@@ -12,6 +12,7 @@ use saturn_design::{color, radius, shadow, space, text};
 
 use crate::chrome;
 use crate::theme::{self, TypeScale as _, len};
+use saturn_design::tone;
 
 pub struct GalleryView {
     input: Entity<InputState>,
@@ -107,7 +108,7 @@ fn colours() -> impl IntoElement {
                     .size(px(32.))
                     .rounded(theme::corner(radius::RADIUS_XS))
                     .border_1()
-                    .border_color(theme::overlay(0.12))
+                    .border_color(theme::tone(tone::PRESSED))
                     .bg(theme::color(token)),
             )
             .child(div().text_scale(text::MICRO).text_color(theme::color(color::INK_FAINT)).child(name))

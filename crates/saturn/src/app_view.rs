@@ -15,6 +15,7 @@ use crate::spike;
 use crate::theme::TypeScale as _;
 use crate::theme::{self, len};
 use crate::workspace::{OpenProject, Placement, Workspace};
+use saturn_design::icon;
 use saturn_design::text;
 
 pub struct AppView {
@@ -92,7 +93,7 @@ impl AppView {
                 .rounded(theme::corner(radius::RADIUS_SM))
                 .cursor_pointer()
                 .hover(|s| s.bg(theme::fill_hover()))
-                .child(chrome::icon("folder", 16., theme::color(color::INK_MUTED)))
+                .child(chrome::icon("folder", icon::LG, theme::color(color::INK_MUTED)))
                 .child(
                     div()
                         .flex_1()
@@ -140,7 +141,7 @@ impl AppView {
                 // A little above centre, where the eye takes the middle to be.
                 div().flex_1().flex().items_center().justify_center().pb(len(2. * space::SPACE_6)).child(
                     div()
-                        .w(px(440.))
+                        .w(px(saturn_design::size::DIALOG_SMALL))
                         .flex()
                         .flex_col()
                         .gap(len(space::SPACE_6))

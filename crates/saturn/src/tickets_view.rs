@@ -19,6 +19,7 @@ use crate::theme::TypeScale as _;
 use crate::theme::{self, len};
 use crate::ticket_picker::status_dot;
 use crate::workspace::{OpenSettings, Workspace};
+use saturn_design::icon;
 use saturn_design::text;
 
 pub struct TicketsView {
@@ -377,7 +378,7 @@ impl Render for TicketsView {
                         .px(len(space::SPACE_2))
                         .rounded(theme::corner(radius::RADIUS_SM))
                         .bg(theme::fill_control())
-                        .child(chrome::icon("search", 13., theme::color(color::INK_FAINT)))
+                        .child(chrome::icon("search", icon::SM, theme::color(color::INK_FAINT)))
                         .child(div().flex_1().child(Input::new(&self.search).appearance(false))),
                 )
             })

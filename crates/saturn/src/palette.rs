@@ -23,6 +23,7 @@ use crate::chrome;
 use crate::theme::TypeScale as _;
 use crate::theme::{self, len};
 use crate::workspace::{self, Workspace};
+use saturn_design::icon;
 use saturn_design::text;
 
 /// How many matches a palette lists: enough to scroll, few enough to draw at once.
@@ -182,7 +183,7 @@ impl Palette {
             .text_scale(text::BODY)
             .when(selected, |line| line.bg(theme::fill_pressed()))
             .when(!selected, |line| line.hover(|s| s.bg(theme::fill_hover())))
-            .child(chrome::icon(entry.icon, 14., theme::color(color::INK_MUTED)))
+            .child(chrome::icon(entry.icon, icon::MD, theme::color(color::INK_MUTED)))
             .child(div().flex_none().text_color(theme::color(color::INK)).child(entry.label.clone()))
             .child(
                 div()
@@ -237,7 +238,7 @@ impl Render for Palette {
                     .px(len(space::SPACE_3))
                     .rounded(theme::corner(radius::RADIUS_SM))
                     .bg(theme::fill_control())
-                    .child(chrome::icon("search", 14., theme::color(color::INK_FAINT)))
+                    .child(chrome::icon("search", icon::MD, theme::color(color::INK_FAINT)))
                     .child(div().flex_1().child(Input::new(&self.search).appearance(false))),
             )
             .child(if rows.is_empty() {

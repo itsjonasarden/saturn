@@ -39,6 +39,11 @@ pub fn layers(layers: &[Shadow]) -> Vec<BoxShadow> {
 // so they read the same over any background, as AppKit's separator and fill colours do.
 
 /// Black in light mode, white in dark, at `alpha`: a fill or stroke relative to what's under it.
+/// A relative fill or stroke at a named strength (design/tokens.json's tones).
+pub fn tone(tone: saturn_design::Tone) -> Hsla {
+    overlay(tone.get())
+}
+
 pub fn overlay(alpha: f32) -> Hsla {
     let base = if saturn_design::appearance() == saturn_design::Appearance::Dark { 1.0 } else { 0.0 };
     gpui_kit::hsla(0., 0., base, alpha)
@@ -46,16 +51,16 @@ pub fn overlay(alpha: f32) -> Hsla {
 
 /// A hairline between things: AppKit's separator colour (10%).
 pub fn separator() -> Hsla {
-    overlay(0.1)
+    tone(saturn_design::tone::SEPARATOR)
 }
 
 /// Fills for controls on glass or cards, from faint to strong (AppKit's system fills).
 pub fn fill_hover() -> Hsla {
-    overlay(0.06)
+    tone(saturn_design::tone::HOVER)
 }
 
 pub fn fill_control() -> Hsla {
-    overlay(0.08)
+    tone(saturn_design::tone::CONTROL)
 }
 
 pub fn fill_pressed() -> Hsla {

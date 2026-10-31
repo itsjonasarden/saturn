@@ -51,7 +51,7 @@ pub fn open(workspace: WeakEntity<Workspace>, window: &mut Window, cx: &mut App)
             .title("Waiting for you")
             .entrance(gpui_kit::component::dialog::DialogEntrance::None)
             .bg(chrome::dialog_surface())
-            .w(px(680.))
+            .w(px(saturn_design::size::DIALOG_MEDIUM))
             .child(list)
     });
 }
@@ -95,7 +95,13 @@ fn render_row(workspace: &WeakEntity<Workspace>, row: Row) -> impl IntoElement {
         .py(len(space::SPACE_2))
         .rounded(theme::corner(radius::RADIUS_SM))
         .bg(theme::fill_control())
-        .child(div().flex_none().size(px(8.)).rounded_full().bg(crate::workspace::state_color(row.state)))
+        .child(
+            div()
+                .flex_none()
+                .size(px(saturn_design::size::DOT_LARGE))
+                .rounded_full()
+                .bg(crate::workspace::state_color(row.state)),
+        )
         .child(
             div()
                 .flex()

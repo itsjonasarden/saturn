@@ -22,6 +22,7 @@ use saturn_design::{color, radius, space};
 use crate::chrome;
 use crate::theme::TypeScale as _;
 use crate::theme::{self, len};
+use saturn_design::icon;
 use saturn_design::text;
 
 const ROW_HEIGHT: f32 = 26.0;
@@ -383,7 +384,7 @@ fn render_icon(icon: FileIcon) -> AnyElement {
             .into_any_element()
     };
     match icon {
-        FileIcon::Icon(name) => chrome::icon(name, 14., tint).into_any_element(),
+        FileIcon::Icon(name) => chrome::icon(name, icon::MD, tint).into_any_element(),
         FileIcon::Language(text) => letters(text, true),
         FileIcon::Format(text) => letters(text, false),
     }

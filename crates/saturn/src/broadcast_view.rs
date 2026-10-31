@@ -198,7 +198,7 @@ pub fn open(workspace: WeakEntity<Workspace>, panes: Vec<Pane>, window: &mut Win
             .title("Send to several agents")
             .entrance(gpui_kit::component::dialog::DialogEntrance::None)
             .bg(chrome::dialog_surface())
-            .w(px(680.))
+            .w(px(saturn_design::size::DIALOG_MEDIUM))
             .child(view.clone())
     });
 }

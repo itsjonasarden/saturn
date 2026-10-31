@@ -20,6 +20,7 @@ use saturn_design::space;
 use crate::theme::TypeScale as _;
 use crate::theme::len;
 use saturn_design::text;
+use saturn_design::tone;
 
 /// How often the usage is read while nothing happens.
 const EVERY: Duration = Duration::from_mins(5);
@@ -205,7 +206,7 @@ fn dots(percent: f64) -> gpui_kit::Div {
         crate::theme::color(if percent >= 80. { saturn_design::color::ORANGE } else { saturn_design::color::INK });
     div().flex().gap(len(space::SPACE_0)).children((0..DOTS).map(|index| {
         let dot = div().flex_1().h(px(4.));
-        if index < lit { dot.bg(fill) } else { dot.bg(crate::theme::overlay(0.14)) }
+        if index < lit { dot.bg(fill) } else { dot.bg(crate::theme::tone(tone::RULE)) }
     }))
 }
 

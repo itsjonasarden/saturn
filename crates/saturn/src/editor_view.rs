@@ -32,6 +32,7 @@ use crate::review_comments::{ReviewComments, SendToAgent, Touched};
 use crate::schema_view::SchemaView;
 use crate::theme::TypeScale as _;
 use crate::theme::{self, len};
+use saturn_design::icon;
 use saturn_design::text;
 
 /// Files larger than this open read-only elsewhere; the editor keeps the whole text in memory.
@@ -639,7 +640,7 @@ impl EditorView {
                 .flex()
                 .items_center()
                 .gap(len(space::SPACE_1))
-                .child(chrome::icon(icon, 13., theme::color(colour)))
+                .child(chrome::icon(icon, icon::SM, theme::color(colour)))
                 .child(count.to_string())
         };
         Some(
@@ -662,7 +663,7 @@ impl EditorView {
                 .group("problems-tab")
                 .pl(len(space::SPACE_3))
                 .pr(len(space::SPACE_1))
-                .child(chrome::icon("circle-x", 13., theme::color(color::INK_MUTED)))
+                .child(chrome::icon("circle-x", icon::SM, theme::color(color::INK_MUTED)))
                 .child("Problems")
                 .child(
                     div()
@@ -670,10 +671,10 @@ impl EditorView {
                         .flex()
                         .items_center()
                         .justify_center()
-                        .size(px(20.))
+                        .size(px(saturn_design::size::CONTROL_SMALL))
                         .rounded(theme::corner(radius::RADIUS_XS))
                         .hover(|s| s.bg(theme::fill_control()))
-                        .child(chrome::icon("x", 11., theme::color(color::INK_MUTED)))
+                        .child(chrome::icon("x", icon::XS, theme::color(color::INK_MUTED)))
                         .tooltip(chrome::tip("Close"))
                         .when(!in_front, |slot| slot.invisible().group_hover("problems-tab", gpui_kit::Styled::visible))
                         .on_mouse_down(MouseButton::Left, |_, _, cx| cx.stop_propagation())
@@ -884,7 +885,7 @@ impl EditorView {
                 .group("preview-tab")
                 .pl(len(space::SPACE_3))
                 .pr(len(space::SPACE_1))
-                .child(chrome::icon("globe", 13., theme::color(color::INK_MUTED)))
+                .child(chrome::icon("globe", icon::SM, theme::color(color::INK_MUTED)))
                 .child("Preview")
                 .child(
                     div()
@@ -892,10 +893,10 @@ impl EditorView {
                         .flex()
                         .items_center()
                         .justify_center()
-                        .size(px(20.))
+                        .size(px(saturn_design::size::CONTROL_SMALL))
                         .rounded(theme::corner(radius::RADIUS_XS))
                         .hover(|s| s.bg(theme::fill_control()))
-                        .child(chrome::icon("x", 11., theme::color(color::INK_MUTED)))
+                        .child(chrome::icon("x", icon::XS, theme::color(color::INK_MUTED)))
                         .tooltip(chrome::tip("Close"))
                         .when(!in_front, |slot| slot.invisible().group_hover("preview-tab", gpui_kit::Styled::visible))
                         .on_mouse_down(MouseButton::Left, |_, _, cx| cx.stop_propagation())
@@ -1106,7 +1107,7 @@ impl EditorView {
                 .group("review-tab")
                 .pl(len(space::SPACE_3))
                 .pr(len(space::SPACE_1))
-                .child(chrome::icon("git-compare", 13., theme::color(color::INK_MUTED)))
+                .child(chrome::icon("git-compare", icon::SM, theme::color(color::INK_MUTED)))
                 .child(label)
                 .child(
                     div()
@@ -1114,10 +1115,10 @@ impl EditorView {
                         .flex()
                         .items_center()
                         .justify_center()
-                        .size(px(20.))
+                        .size(px(saturn_design::size::CONTROL_SMALL))
                         .rounded(theme::corner(radius::RADIUS_XS))
                         .hover(|s| s.bg(theme::fill_control()))
-                        .child(chrome::icon("x", 11., theme::color(color::INK_MUTED)))
+                        .child(chrome::icon("x", icon::XS, theme::color(color::INK_MUTED)))
                         .tooltip(chrome::tip("Close"))
                         .when(!in_front, |slot| slot.invisible().group_hover("review-tab", gpui_kit::Styled::visible))
                         .on_mouse_down(MouseButton::Left, |_, _, cx| cx.stop_propagation())
@@ -1143,7 +1144,7 @@ impl EditorView {
                 .group("schema-tab")
                 .pl(len(space::SPACE_3))
                 .pr(len(space::SPACE_1))
-                .child(chrome::icon("database", 13., theme::color(color::INK_MUTED)))
+                .child(chrome::icon("database", icon::SM, theme::color(color::INK_MUTED)))
                 .child("Database")
                 .child(
                     div()
@@ -1151,10 +1152,10 @@ impl EditorView {
                         .flex()
                         .items_center()
                         .justify_center()
-                        .size(px(20.))
+                        .size(px(saturn_design::size::CONTROL_SMALL))
                         .rounded(theme::corner(radius::RADIUS_XS))
                         .hover(|s| s.bg(theme::fill_control()))
-                        .child(chrome::icon("x", 11., theme::color(color::INK_MUTED)))
+                        .child(chrome::icon("x", icon::XS, theme::color(color::INK_MUTED)))
                         .tooltip(chrome::tip("Close"))
                         .when(!in_front, |slot| slot.invisible().group_hover("schema-tab", gpui_kit::Styled::visible))
                         .on_mouse_down(MouseButton::Left, |_, _, cx| cx.stop_propagation())
@@ -1180,7 +1181,7 @@ impl EditorView {
                 .group("lineage-tab")
                 .pl(len(space::SPACE_3))
                 .pr(len(space::SPACE_1))
-                .child(chrome::icon("workflow", 13., theme::color(color::INK_MUTED)))
+                .child(chrome::icon("workflow", icon::SM, theme::color(color::INK_MUTED)))
                 .child("Lineage")
                 .child(
                     div()
@@ -1188,10 +1189,10 @@ impl EditorView {
                         .flex()
                         .items_center()
                         .justify_center()
-                        .size(px(20.))
+                        .size(px(saturn_design::size::CONTROL_SMALL))
                         .rounded(theme::corner(radius::RADIUS_XS))
                         .hover(|s| s.bg(theme::fill_control()))
-                        .child(chrome::icon("x", 11., theme::color(color::INK_MUTED)))
+                        .child(chrome::icon("x", icon::XS, theme::color(color::INK_MUTED)))
                         .tooltip(chrome::tip("Close"))
                         .when(!in_front, |slot| slot.invisible().group_hover("lineage-tab", gpui_kit::Styled::visible))
                         .on_mouse_down(MouseButton::Left, |_, _, cx| cx.stop_propagation())
@@ -1217,7 +1218,7 @@ impl EditorView {
                 .group("impact-tab")
                 .pl(len(space::SPACE_3))
                 .pr(len(space::SPACE_1))
-                .child(chrome::icon("waypoints", 13., theme::color(color::INK_MUTED)))
+                .child(chrome::icon("waypoints", icon::SM, theme::color(color::INK_MUTED)))
                 .child("Impact")
                 .child(
                     div()
@@ -1225,10 +1226,10 @@ impl EditorView {
                         .flex()
                         .items_center()
                         .justify_center()
-                        .size(px(20.))
+                        .size(px(saturn_design::size::CONTROL_SMALL))
                         .rounded(theme::corner(radius::RADIUS_XS))
                         .hover(|s| s.bg(theme::fill_control()))
-                        .child(chrome::icon("x", 11., theme::color(color::INK_MUTED)))
+                        .child(chrome::icon("x", icon::XS, theme::color(color::INK_MUTED)))
                         .tooltip(chrome::tip("Close"))
                         .when(!in_front, |slot| slot.invisible().group_hover("impact-tab", gpui_kit::Styled::visible))
                         .on_mouse_down(MouseButton::Left, |_, _, cx| cx.stop_propagation())
@@ -1271,7 +1272,7 @@ impl EditorView {
                 .group("references-tab")
                 .pl(len(space::SPACE_3))
                 .pr(len(space::SPACE_1))
-                .child(chrome::icon("search", 13., theme::color(color::INK_MUTED)))
+                .child(chrome::icon("search", icon::SM, theme::color(color::INK_MUTED)))
                 .child("References")
                 .child(
                     div()
@@ -1279,10 +1280,10 @@ impl EditorView {
                         .flex()
                         .items_center()
                         .justify_center()
-                        .size(px(20.))
+                        .size(px(saturn_design::size::CONTROL_SMALL))
                         .rounded(theme::corner(radius::RADIUS_XS))
                         .hover(|s| s.bg(theme::fill_control()))
-                        .child(chrome::icon("x", 11., theme::color(color::INK_MUTED)))
+                        .child(chrome::icon("x", icon::XS, theme::color(color::INK_MUTED)))
                         .tooltip(chrome::tip("Close"))
                         .when(!in_front, |slot| {
                             slot.invisible().group_hover("references-tab", gpui_kit::Styled::visible)
@@ -1310,7 +1311,7 @@ impl EditorView {
                 .group("history-tab")
                 .pl(len(space::SPACE_3))
                 .pr(len(space::SPACE_1))
-                .child(chrome::icon("git-branch", 13., theme::color(color::INK_MUTED)))
+                .child(chrome::icon("git-branch", icon::SM, theme::color(color::INK_MUTED)))
                 .child("History")
                 .child(
                     div()
@@ -1318,10 +1319,10 @@ impl EditorView {
                         .flex()
                         .items_center()
                         .justify_center()
-                        .size(px(20.))
+                        .size(px(saturn_design::size::CONTROL_SMALL))
                         .rounded(theme::corner(radius::RADIUS_XS))
                         .hover(|s| s.bg(theme::fill_control()))
-                        .child(chrome::icon("x", 11., theme::color(color::INK_MUTED)))
+                        .child(chrome::icon("x", icon::XS, theme::color(color::INK_MUTED)))
                         .tooltip(chrome::tip("Close"))
                         .when(!in_front, |slot| slot.invisible().group_hover("history-tab", gpui_kit::Styled::visible))
                         .on_mouse_down(MouseButton::Left, |_, _, cx| cx.stop_propagation())
@@ -1382,7 +1383,7 @@ impl EditorView {
             .group("editor-tab")
             .pl(len(space::SPACE_3))
             .pr(len(space::SPACE_1))
-            .child(chrome::icon("file", 13., theme::color(color::INK_MUTED)))
+            .child(chrome::icon("file", icon::SM, theme::color(color::INK_MUTED)))
             .child(file.name())
             .child(
                 div()
@@ -1390,7 +1391,7 @@ impl EditorView {
                     .flex()
                     .items_center()
                     .justify_center()
-                    .size(px(20.))
+                    .size(px(saturn_design::size::CONTROL_SMALL))
                     .rounded(theme::corner(radius::RADIUS_XS))
                     .hover(|s| s.bg(theme::fill_control()))
                     .map(|slot| {
@@ -1404,9 +1405,10 @@ impl EditorView {
                                     .group_hover("editor-tab", gpui_kit::Styled::invisible),
                             )
                         } else {
-                            slot.child(chrome::icon("x", 11., theme::color(color::INK_MUTED))).when(!selected, |slot| {
-                                slot.invisible().group_hover("editor-tab", gpui_kit::Styled::visible)
-                            })
+                            slot.child(chrome::icon("x", icon::XS, theme::color(color::INK_MUTED)))
+                                .when(!selected, |slot| {
+                                    slot.invisible().group_hover("editor-tab", gpui_kit::Styled::visible)
+                                })
                         }
                     })
                     .tooltip(chrome::tip("Close"))

@@ -16,7 +16,7 @@ use crate::theme::TypeScale as _;
 use crate::theme::{self, len};
 use saturn_design::text;
 
-const ROW_HEIGHT: f32 = 28.;
+const ROW_HEIGHT: f32 = saturn_design::size::ROW;
 /// The distance between lanes.
 const LANE: f32 = 14.;
 /// How many commits the graph reads: enough history to orient, quick to draw.

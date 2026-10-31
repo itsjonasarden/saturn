@@ -187,6 +187,9 @@ fn main() {
     }
     out.push_str("}\n\n");
 
+    out.push_str(&tones(&tokens));
+    out.push_str(&sizes(&tokens, "icon", "icon", "icon-"));
+    out.push_str(&sizes(&tokens, "size", "size", ""));
     out.push_str(&text_styles(&tokens));
     out.push_str(&looks(&tokens, themes));
 
@@ -277,5 +280,43 @@ fn looks(tokens: &Value, themes: &[Value]) -> String {
     )
     .ok();
 
+    out
+}
+
+/// The tones: an opacity for dark mode and one for light, the same when only one is given.
+fn tones(tokens: &Value) -> String {
+    let mut out = String::from("pub mod tone {\n    use super::Tone;\n");
+    for token in tokens["tone"]["tokens"].as_array().expect("tones") {
+        let value = &token["value"];
+        let at = |appearance: &str| value.get(appearance).unwrap_or(value).as_f64().expect("an opacity");
+        let usage = token["usage"].as_str().unwrap_or_default().replace('`', "");
+        writeln!(
+            out,
+            "    /// {usage}\n    pub const {}: Tone = Tone {{ dark: {:?}, light: {:?} }};",
+            const_name(token["name"].as_str().expect("name")),
+            at("dark"),
+            at("light")
+        )
+        .ok();
+    }
+    out.push_str("}\n\n");
+    out
+}
+
+/// A family of sizes in pixels as `pub mod module`, each named without `prefix`.
+fn sizes(tokens: &Value, family: &str, module: &str, prefix: &str) -> String {
+    let mut out = format!("pub mod {module} {{\n");
+    for token in tokens[family]["tokens"].as_array().expect("sizes") {
+        let usage = token["usage"].as_str().unwrap_or_default().replace('`', "");
+        let name = token["name"].as_str().expect("name");
+        writeln!(
+            out,
+            "    /// {usage}\n    pub const {}: f32 = {:?};",
+            const_name(name.trim_start_matches(prefix)),
+            px(token["value"].as_str().expect("value"))
+        )
+        .ok();
+    }
+    out.push_str("}\n\n");
     out
 }

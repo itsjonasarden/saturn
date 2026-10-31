@@ -23,7 +23,9 @@ use crate::chrome;
 use crate::editor_view::EditorView;
 use crate::theme::TypeScale as _;
 use crate::theme::{self, len};
+use saturn_design::icon;
 use saturn_design::text;
+use saturn_design::tone;
 
 const MIN_ZOOM: f32 = 0.15;
 const MAX_ZOOM: f32 = 2.;
@@ -307,7 +309,7 @@ impl LineageView {
             .rounded(px(saturn_design::corner(radius::RADIUS_SM) * z.max(0.5)))
             .bg(theme::color(color::SURFACE))
             .border_1()
-            .border_color(if focused { theme::color(color::BLUE) } else { theme::overlay(0.12) })
+            .border_color(if focused { theme::color(color::BLUE) } else { theme::tone(tone::PRESSED) })
             .when(dimmed, |node| node.opacity(0.3))
             .overflow_hidden()
             .cursor_pointer()
@@ -507,7 +509,7 @@ fn edges(view: &LineageView, lit: Option<&[bool]>) -> impl IntoElement {
                 let colour: Hsla = if *highlighted {
                     theme::color(color::BLUE)
                 } else if *dim {
-                    theme::overlay(0.06)
+                    theme::tone(tone::HOVER)
                 } else {
                     theme::overlay(0.28)
                 };
@@ -607,7 +609,7 @@ impl Render for LineageView {
                 .flex()
                 .items_center()
                 .gap(len(space::SPACE_2))
-                .child(chrome::icon("search", 14., theme::color(color::INK_FAINT)))
+                .child(chrome::icon("search", icon::MD, theme::color(color::INK_FAINT)))
                 .child(div().flex_1().child(Input::new(&search).appearance(false).cleanable(true)))
                 .when(!self.query.trim().is_empty(), |row| {
                     row.child(

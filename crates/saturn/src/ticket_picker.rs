@@ -16,6 +16,7 @@ use saturn_design::{color, radius, space};
 use crate::theme::TypeScale as _;
 use crate::theme::{self, len};
 use crate::workspace::Workspace;
+use saturn_design::icon;
 use saturn_design::text;
 
 /// Opens the dialog. `connected` says whether ClickUp is, given by the caller: the workspace opens
@@ -249,7 +250,7 @@ fn name_row(workspace: &Entity<Workspace>, name: &str, cx: &App) -> impl IntoEle
         .rounded(theme::corner(radius::RADIUS_SM))
         .cursor_pointer()
         .hover(|s| s.bg(theme::fill_hover()))
-        .child(crate::chrome::icon("git-branch", 14., theme::color(color::INK_MUTED)))
+        .child(crate::chrome::icon("git-branch", icon::MD, theme::color(color::INK_MUTED)))
         .child(
             div()
                 .flex_1()
@@ -324,5 +325,5 @@ pub fn status_dot(ticket: &Ticket) -> impl IntoElement {
         .as_deref()
         .and_then(|hex| u32::from_str_radix(hex.trim_start_matches('#'), 16).ok())
         .map_or_else(|| theme::color(color::INK_FAINT), |value| rgb(value).into());
-    div().flex_none().size(px(8.)).rounded_full().bg(colour)
+    div().flex_none().size(px(saturn_design::size::DOT_LARGE)).rounded_full().bg(colour)
 }

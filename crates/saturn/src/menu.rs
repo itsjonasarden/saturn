@@ -11,6 +11,7 @@ use saturn_design::{color, radius, space};
 use crate::chrome;
 use crate::theme::TypeScale as _;
 use crate::theme::{self, len};
+use saturn_design::icon;
 use saturn_design::text;
 
 /// One line of a menu: an icon, what it does, and the action that does it. `None` is a separator.
@@ -102,7 +103,7 @@ pub fn lines(
                 .text_scale(text::LABEL)
                 .font_weight(FontWeight::NORMAL)
                 .text_color(theme::color(color::INK))
-                .child(chrome::icon(icon, 14., theme::color(color::INK_MUTED)))
+                .child(chrome::icon(icon, icon::MD, theme::color(color::INK_MUTED)))
                 .child(div().flex_1().child(label))
                 // Its shortcut, as macOS menus show it, so the keys are learned by using the menu.
                 .children(shortcut(action.as_ref(), cx).map(|keys| {

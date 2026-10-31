@@ -166,7 +166,7 @@ pub fn start(workspace: WeakEntity<Workspace>, repo: &Path, window: &mut Window,
             .title("Best of N")
             .entrance(gpui_kit::component::dialog::DialogEntrance::None)
             .bg(chrome::dialog_surface())
-            .w(px(680.))
+            .w(px(saturn_design::size::DIALOG_MEDIUM))
             .child(view.clone())
     });
 }

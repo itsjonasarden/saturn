@@ -15,6 +15,7 @@ use crate::chrome;
 use crate::editor_view::EditorView;
 use crate::theme::TypeScale as _;
 use crate::theme::{self, len};
+use saturn_design::icon;
 use saturn_design::text;
 
 /// How many errors and warnings `problems` hold (hints and notes don't count).
@@ -88,7 +89,7 @@ impl ProblemsView {
             .cursor_pointer()
             .text_scale(text::LABEL)
             .hover(|s| s.bg(theme::fill_hover()))
-            .child(chrome::icon(icon, 13., theme::color(colour)))
+            .child(chrome::icon(icon, icon::SM, theme::color(colour)))
             .child(div().flex_1().min_w_0().truncate().text_color(theme::color(color::INK_BODY)).child(message))
             .child(
                 div()
@@ -134,7 +135,7 @@ impl Render for ProblemsView {
                     .pt(len(space::SPACE_3))
                     .pb(len(space::SPACE_1))
                     .text_scale(text::LABEL)
-                    .child(chrome::icon("file-code", 13., theme::color(color::INK_FAINT)))
+                    .child(chrome::icon("file-code", icon::SM, theme::color(color::INK_FAINT)))
                     .child(div().font_weight(FontWeight::MEDIUM).text_color(theme::color(color::INK)).child(name))
                     .child(div().min_w_0().truncate().text_color(theme::color(color::INK_FAINT)).child(folder))
                     .child(

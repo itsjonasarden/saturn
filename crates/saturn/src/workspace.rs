@@ -54,7 +54,9 @@ use crate::theme::TypeScale as _;
 use crate::theme::{self, len};
 use crate::tickets_view::TicketsView;
 use crate::{dock, github, menu_bar, notify, palette, settings_view, ticket_picker};
+use saturn_design::icon;
 use saturn_design::text;
+use saturn_design::tone;
 
 actions!(
     saturn,
@@ -218,11 +220,11 @@ pub enum Placement {
 }
 
 /// Tall enough that the title bar's outer controls sit 10px from the window's edges: 48 = 28 + 2 × 10.
-const TITLEBAR_HEIGHT: f32 = 40.0;
+const TITLEBAR_HEIGHT: f32 = saturn_design::size::TITLEBAR;
 /// The title bar's controls: smaller than the panes' (`chrome::CONTROL_HEIGHT`), so the bar stays a
 /// thin strip. Their tracks are this plus the track's padding, and macOS's buttons sit on the same
 /// middle line (see `traffic_light_position` in main.rs).
-const TITLEBAR_CONTROL: f32 = 24.0;
+const TITLEBAR_CONTROL: f32 = saturn_design::size::TITLEBAR_CONTROL;
 
 /// Whether the title bar's controls stand bare, not in tracks.
 fn bare_title_bar() -> bool {
@@ -737,7 +739,7 @@ fn pull_request_chip(cell: CellId, pr: &PullRequest) -> impl IntoElement {
         .font_weight(FontWeight::MEDIUM)
         .text_color(theme::color(color::INK_MUTED))
         .hover(|s| s.bg(theme::fill_hover()))
-        .child(chrome::icon(icon, 14., theme::color(state_color)))
+        .child(chrome::icon(icon, icon::MD, theme::color(state_color)))
         .child(format!("#{}", pr.number))
         .children(mark)
         .tooltip(move |window, cx| Tooltip::new(tip.clone()).build(window, cx))
@@ -767,7 +769,7 @@ fn preview_chip(cell: CellId, pr: &PullRequest) -> Option<impl IntoElement> {
             .font_weight(FontWeight::MEDIUM)
             .text_color(theme::color(if preview.ready { color::INK_MUTED } else { color::INK_FAINT }))
             .when(preview.url.is_some(), |chip| chip.cursor_pointer().hover(|s| s.bg(theme::fill_hover())))
-            .child(chrome::icon("external-link", 13., theme::color(color::INK_MUTED)))
+            .child(chrome::icon("external-link", icon::SM, theme::color(color::INK_MUTED)))
             .child(if preview.ready { "Preview" } else { "Deploying…" })
             .tooltip(move |window, cx| Tooltip::new(tip.clone()).build(window, cx))
             .on_click(move |_, _, _| {
@@ -801,7 +803,7 @@ fn link_chip(
         .text_color(theme::color(color::INK_MUTED))
         .cursor_pointer()
         .hover(|s| s.bg(theme::fill_hover()))
-        .child(chrome::icon("link-2", 13., theme::color(color::INK_MUTED)))
+        .child(chrome::icon("link-2", icon::SM, theme::color(color::INK_MUTED)))
         .child(repo.to_owned())
         .tooltip(chrome::tip("The same work in another repo: go to it"))
         .on_click(cx.listener(move |this: &mut Workspace, _, window, cx| this.go_to_folder(&folder, window, cx)))
@@ -823,7 +825,7 @@ fn attempt_chip(cell: CellId, number: usize) -> impl IntoElement {
         .text_color(theme::color(color::INK_MUTED))
         .cursor_pointer()
         .hover(|s| s.bg(theme::fill_hover()))
-        .child(chrome::icon("git-fork", 13., theme::color(color::INK_MUTED)))
+        .child(chrome::icon("git-fork", icon::SM, theme::color(color::INK_MUTED)))
         .child(format!("Attempt {number}"))
         .tooltip(chrome::tip_for("Compare the attempts side by side", CompareAttempts))
         .on_click(|_, window, cx| window.dispatch_action(Box::new(CompareAttempts), cx))
@@ -852,7 +854,7 @@ fn team_chip(cell: CellId, tab: TabId, team: &Team, cx: &mut Context<Workspace>)
         .text_color(theme::color(color::INK_MUTED))
         .cursor_pointer()
         .hover(|s| s.bg(theme::fill_hover()))
-        .child(chrome::icon("users", 13., theme::color(color::INK_MUTED)))
+        .child(chrome::icon("users", icon::SM, theme::color(color::INK_MUTED)))
         .child(label)
         .when(unread > 0, |chip| {
             chip.child(div().text_color(theme::color(color::BLUE)).child(format!("· {unread} unread")))
@@ -889,7 +891,7 @@ fn overlap_chip(cell: CellId, others: &[(PathBuf, Vec<String>)]) -> impl IntoEle
         .text_scale(text::META)
         .font_weight(FontWeight::MEDIUM)
         .text_color(theme::color(color::INK_MUTED))
-        .child(chrome::icon("triangle-alert", 13., theme::color(color::AMBER_TEXT)))
+        .child(chrome::icon("triangle-alert", icon::SM, theme::color(color::AMBER_TEXT)))
         .child(format!("{count} shared file{s}"))
         .tooltip(move |window, cx| Tooltip::new(tip.clone()).build(window, cx))
 }
@@ -912,7 +914,7 @@ fn server_chip(cell: CellId, server: &Server) -> impl IntoElement {
         .font_weight(FontWeight::MEDIUM)
         .text_color(theme::color(color::INK_MUTED))
         .hover(|s| s.bg(theme::fill_hover()))
-        .child(chrome::icon("globe", 13., theme::color(color::INK_FAINT)))
+        .child(chrome::icon("globe", icon::SM, theme::color(color::INK_FAINT)))
         .child(server.name.clone())
         .child(div().text_color(theme::color(color::INK_FAINT)).child(format!(":{}", server.port)))
         .tooltip(move |window, cx| Tooltip::new(tip.clone()).build(window, cx))
@@ -974,7 +976,7 @@ pub fn state_color(state: AgentState) -> Hsla {
 }
 
 fn status_dot(state: AgentState) -> impl IntoElement {
-    div().size(px(8.)).flex_none().rounded_full().bg(state_color(state))
+    div().size(px(saturn_design::size::DOT_LARGE)).flex_none().rounded_full().bg(state_color(state))
 }
 
 /// Moves the divider after `index` to `at` (0–1 across the container), keeping both neighbours
@@ -3794,7 +3796,7 @@ impl Workspace {
                 .font_weight(FontWeight::MEDIUM)
                 .text_color(theme::color(color::INK_MUTED))
                 .hover(|s| s.bg(theme::fill_hover()))
-                .child(chrome::icon("message-square", 13., theme::color(color::INK_MUTED)))
+                .child(chrome::icon("message-square", icon::SM, theme::color(color::INK_MUTED)))
                 .child(count.to_string())
                 .tooltip(move |window, cx| Tooltip::new(tip.clone()).build(window, cx))
                 .on_click(cx.listener(move |this, _, window, cx| this.send_review_notes(tab, window, cx)))
@@ -4213,12 +4215,14 @@ impl Workspace {
                 .text_scale(text::LABEL)
                 .text_color(theme::color(color::INK_MUTED))
                 .when_some(worktree.clone(), |place, worktree| {
-                    place.child(chrome::icon("folder-git", 13., faint)).child(worktree)
+                    place.child(chrome::icon("folder-git", icon::SM, faint)).child(worktree)
                 })
                 .when(worktree.is_some() && branch.is_some(), |place| {
                     place.child(div().px(len(space::SPACE_1)).text_color(faint).child("/"))
                 })
-                .when_some(branch, |place, branch| place.child(chrome::icon("git-branch", 13., faint)).child(branch))
+                .when_some(branch, |place, branch| {
+                    place.child(chrome::icon("git-branch", icon::SM, faint)).child(branch)
+                })
                 .into_any_element(),
         )
     }
@@ -4315,12 +4319,12 @@ impl Workspace {
             .rounded_r(theme::corner(radius::RADIUS_MD))
             .when(open, |part| {
                 part.bg(if chrome::look().buttons == saturn_design::Buttons::Outline {
-                    theme::overlay(0.1)
+                    theme::tone(tone::SEPARATOR)
                 } else {
                     gpui_kit::white().opacity(0.1)
                 })
             })
-            .child(chrome::icon("chevron-down", 14., chrome::primary_ink()))
+            .child(chrome::icon("chevron-down", icon::MD, chrome::primary_ink()))
             .on_click(cx.listener(|this, _, _, cx| this.toggle_menu(OpenMenu::NewAgent, cx)));
         chrome::primary_surface_cut(div(), chrome::Cut::TopRight)
             .flex()
@@ -4437,7 +4441,7 @@ impl Workspace {
                                 .rounded(theme::corner(radius::RADIUS_XS))
                                 .bg(theme::color(color::SURFACE))
                                 .shadow(vec![gpui_kit::BoxShadow {
-                                    color: theme::overlay(0.12),
+                                    color: theme::tone(tone::PRESSED),
                                     offset: gpui_kit::point(px(0.), px(0.)),
                                     blur_radius: px(0.),
                                     spread_radius: px(1.),
@@ -4445,7 +4449,7 @@ impl Workspace {
                                 }])
                                 .invisible()
                                 .group_hover(group, gpui_kit::Styled::visible)
-                                .child(chrome::icon("x", 11., theme::color(color::INK_MUTED)))
+                                .child(chrome::icon("x", icon::XS, theme::color(color::INK_MUTED)))
                                 .tooltip(chrome::tip("Close this repo here (its terminals move to the one showing)"))
                                 .on_click(cx.listener(move |this, _, window, cx| {
                                     cx.stop_propagation();
@@ -4462,7 +4466,7 @@ impl Workspace {
             chrome::track_item("add-repo", false)
                 .size(len(titlebar_control()))
                 .min_w(len(titlebar_control()))
-                .child(chrome::icon("plus", 13., theme::color(color::INK_MUTED)))
+                .child(chrome::icon("plus", icon::SM, theme::color(color::INK_MUTED)))
                 .tooltip(chrome::tip_for("Add repo", OpenProject))
                 .on_click(cx.listener(|_, _, window, cx| Self::open_project(window, cx))),
         )

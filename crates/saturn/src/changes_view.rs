@@ -20,7 +20,9 @@ use saturn_design::{color, radius, space};
 use crate::chrome;
 use crate::theme::TypeScale as _;
 use crate::theme::{self, len};
+use saturn_design::icon;
 use saturn_design::text;
+use saturn_design::tone;
 
 const ROW_HEIGHT: f32 = 26.0;
 
@@ -238,7 +240,7 @@ impl ChangesView {
             .text_color(theme::color(color::INK_MUTED))
             .child(chrome::icon(
                 if collapsed { "chevron-right" } else { "chevron-down" },
-                14.,
+                icon::MD,
                 theme::color(color::INK_FAINT),
             ))
             .child(div().flex_1().child(group.label()))
@@ -297,7 +299,7 @@ impl ChangesView {
             .text_scale(text::LABEL)
             .when(selected, |row| row.bg(theme::fill_pressed()))
             .when(!selected, |row| row.hover(|s| s.bg(theme::fill_hover())))
-            .child(chrome::icon(icon, 14., theme::color(icon_color)))
+            .child(chrome::icon(icon, icon::MD, theme::color(icon_color)))
             .child(
                 div()
                     .flex()
@@ -332,7 +334,7 @@ impl ChangesView {
             .pl(len(space::SPACE_3))
             .border_t_1()
             .border_color(theme::separator())
-            .child(chrome::icon("git-branch", 14., theme::color(color::INK_FAINT)))
+            .child(chrome::icon("git-branch", icon::MD, theme::color(color::INK_FAINT)))
             .child(
                 div()
                     .flex_1()
@@ -390,8 +392,8 @@ pub fn checkbox(id: impl Into<ElementId>, staged: Staged) -> gpui_kit::Stateful<
         .when(!on, |box_| {
             box_.bg(theme::overlay(0.04))
                 .border_1()
-                .border_color(theme::overlay(0.24))
-                .hover(|s| s.border_color(theme::overlay(0.4)))
+                .border_color(theme::tone(tone::STRONG))
+                .hover(|s| s.border_color(theme::tone(tone::OUTLINE_STRONG)))
         })
         .children(match staged {
             Staged::Yes => Some(chrome::icon("check", 10., gpui_kit::white())),

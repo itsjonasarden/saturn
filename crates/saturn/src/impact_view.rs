@@ -22,9 +22,10 @@ use crate::chrome;
 use crate::editor_view::EditorView;
 use crate::theme::TypeScale as _;
 use crate::theme::{self, len};
+use saturn_design::icon;
 use saturn_design::text;
 
-const ROW_HEIGHT: f32 = 28.;
+const ROW_HEIGHT: f32 = saturn_design::size::ROW;
 
 pub struct ImpactView {
     repo: PathBuf,
@@ -290,7 +291,7 @@ impl ImpactView {
             .rounded(theme::corner(radius::RADIUS_SM))
             .text_scale(text::LABEL)
             .when(file.is_some(), |row| row.cursor_pointer().hover(|s| s.bg(theme::fill_hover())))
-            .child(chrome::icon(icon, 13., theme::color(color::INK_FAINT)))
+            .child(chrome::icon(icon, icon::SM, theme::color(color::INK_FAINT)))
             .child(div().flex_1().min_w_0().truncate().text_color(theme::color(color::INK_BODY)).child(name.to_owned()))
             .child(div().flex_none().text_scale(text::META).text_color(theme::color(color::INK_MUTED)).child(note))
             .on_click(cx.listener(move |this, _, window, cx| {
@@ -319,7 +320,7 @@ impl ImpactView {
             .text_scale(text::LABEL)
             .when(selected, |row| row.bg(theme::fill_pressed()))
             .when(!selected, |row| row.hover(|s| s.bg(theme::fill_hover())))
-            .child(chrome::icon("file-code", 13., theme::color(color::INK_FAINT)))
+            .child(chrome::icon("file-code", icon::SM, theme::color(color::INK_FAINT)))
             .child(div().flex_none().text_color(theme::color(color::INK_BODY)).child(name(file)))
             .child(div().flex_1().min_w_0().truncate().text_color(theme::color(color::INK_FAINT)).child(folder(file)))
             .children(via.map(|via| {

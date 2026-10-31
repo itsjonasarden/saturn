@@ -16,6 +16,7 @@ use crate::settings::{AgentCommands, AppearanceSetting, Settings, TEXT_SIZES};
 use crate::theme::TypeScale as _;
 use crate::theme::{self, len};
 use saturn_core::agents::Agent;
+use saturn_design::icon;
 use saturn_design::text;
 
 use crate::workspace::Workspace;
@@ -829,7 +830,7 @@ impl SettingsView {
                     .px(len(space::SPACE_2))
                     .child(chrome::icon(
                         section.icon(),
-                        14.,
+                        icon::MD,
                         theme::color(if selected { color::INK } else { color::INK_MUTED }),
                     ))
                     .child(section.name())
@@ -945,7 +946,7 @@ impl Render for SettingsView {
             .px(len(space::SPACE_2))
             .rounded(theme::corner(radius::RADIUS_SM))
             .bg(theme::fill_control())
-            .child(chrome::icon("search", 13., theme::color(color::INK_FAINT)))
+            .child(chrome::icon("search", icon::SM, theme::color(color::INK_FAINT)))
             .child(div().flex_1().child(Input::new(&self.search).appearance(false)));
         div()
             .flex()
@@ -983,7 +984,7 @@ pub fn open(
             .title("Settings")
             .entrance(gpui_kit::component::dialog::DialogEntrance::None)
             .bg(chrome::dialog_surface())
-            .w(px(820.))
+            .w(px(saturn_design::size::DIALOG_LARGE))
             .child(view.clone())
     });
 }

@@ -222,7 +222,7 @@ pub fn open(workspace: WeakEntity<Workspace>, open: Vec<(String, TabId)>, window
             .title("Search sessions")
             .entrance(gpui_kit::component::dialog::DialogEntrance::None)
             .bg(chrome::dialog_surface())
-            .w(px(820.))
+            .w(px(saturn_design::size::DIALOG_LARGE))
             .child(view.clone())
     });
 }
