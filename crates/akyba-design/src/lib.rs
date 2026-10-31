@@ -159,8 +159,8 @@ pub enum Meters {
 pub enum EmptyAreas {
     /// A faint dot grid, brightest in the middle.
     Dots,
-    /// Faint crosshairs on a wider grid, like a technical sheet; Akyba's mark above the words.
-    Crosshairs,
+    /// Nothing behind; Akyba's mark above the words.
+    Mark,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

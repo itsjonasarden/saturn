@@ -830,45 +830,9 @@ pub fn dot_grid() -> impl IntoElement {
     .left_0()
 }
 
-/// The crosshair grid: small "+" marks where a 48px grid's lines would cross, only inside empty
-/// areas, fading out from the middle like the dot grid.
-pub fn crosshair_grid() -> impl IntoElement {
-    canvas(
-        |_, _, _| (),
-        |bounds: Bounds<Pixels>, (), window: &mut Window, _: &mut App| {
-            const PITCH: f32 = 48.;
-            const ARM: f32 = 5.;
-            let width = f32::from(bounds.size.width);
-            let height = f32::from(bounds.size.height);
-            // Centred, so the middle mark sits behind the words whatever the area's size.
-            let mut y = (height / 2.) % PITCH;
-            while y < height {
-                let mut x = (width / 2.) % PITCH;
-                while x < width {
-                    let across = ((x / width - 0.5) * 2.).hypot((y / height - 0.5) * 2.);
-                    let strength = (1. - across / std::f32::consts::SQRT_2).clamp(0., 1.).powf(1.5);
-                    let line = theme::overlay(tone::STRONG.get() * strength);
-                    let at = |dx: f32, dy: f32| point(bounds.origin.x + px(x + dx), bounds.origin.y + px(y + dy));
-                    window.paint_quad(fill(Bounds::new(at(-ARM, -0.5), size(px(ARM * 2.), px(1.))), line));
-                    window.paint_quad(fill(Bounds::new(at(-0.5, -ARM), size(px(1.), px(ARM * 2.))), line));
-                    x += PITCH;
-                }
-                y += PITCH;
-            }
-        },
-    )
-    .size_full()
-    .absolute()
-    .top_0()
-    .left_0()
-}
-
-/// What an empty area shows behind its words, as the theme draws it.
-pub fn empty_backdrop() -> AnyElement {
-    match look().empty_areas {
-        akyba_design::EmptyAreas::Dots => dot_grid().into_any_element(),
-        akyba_design::EmptyAreas::Crosshairs => crosshair_grid().into_any_element(),
-    }
+/// What an empty area shows behind its words, as the theme draws it: the dot grid, or nothing.
+pub fn empty_backdrop() -> Option<AnyElement> {
+    (look().empty_areas == akyba_design::EmptyAreas::Dots).then(|| dot_grid().into_any_element())
 }
 
 /// The sidebar: its header (the folder it shows), the Files/Changes switch, the tab's content, and
@@ -939,10 +903,10 @@ pub fn sidebar_header(name: &str, detail: &str, action: impl IntoElement) -> imp
 /// What the grid shows with no terminal open: a headline in two weights, one sentence and the
 /// action, over the theme's empty backdrop, with Akyba's mark above them where the theme has it.
 pub fn empty_grid(new_terminal: impl Fn(&gpui_kit::ClickEvent, &mut Window, &mut App) + 'static) -> AnyElement {
-    let marked = look().empty_areas == akyba_design::EmptyAreas::Crosshairs;
+    let marked = look().empty_areas == akyba_design::EmptyAreas::Mark;
     card()
         .child(
-            div().relative().flex_1().min_h_0().child(empty_backdrop()).child(
+            div().relative().flex_1().min_h_0().children(empty_backdrop()).child(
                 div().absolute().size_full().flex().items_center().justify_center().child(
                     div()
                         .flex()
