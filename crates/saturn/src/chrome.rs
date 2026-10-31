@@ -554,6 +554,11 @@ pub fn icon_button(id: impl Into<ElementId>, name: &str, quiet: bool) -> gpui_ki
         .child(icon(name, 14., theme::color(if quiet { color::INK_MUTED } else { color::INK })))
 }
 
+/// The cut of a button inset `SPACE_1` into a panel's cut corner, so the gap along the diagonal is
+/// as wide as along the top and the side: the panel's cut, less the inset on both edges, plus the
+/// inset measured across the diagonal.
+const CORNER_BUTTON_CUT: f32 = PANEL_CUT - (2. - std::f32::consts::SQRT_2) * space::SPACE_1;
+
 /// A quiet icon button in a panel's top right corner, the last of its strip. In Cyberdeck the
 /// panel's corner is cut, so the button's fill (under the pointer, or `pressed` while its menu is
 /// open) has its top right corner cut along the same diagonal instead of poking past it.
@@ -579,7 +584,7 @@ pub fn corner_button(id: impl Into<ElementId>, name: &str, pressed: bool) -> gpu
                 .left_0()
                 .size_full()
                 .when(!pressed, |under| under.invisible().group_hover("corner-button", gpui_kit::Styled::visible))
-                .child(cut_surface(gpui_kit::transparent_black(), fill, 0., SELECTION_CUT, Cut::TopRight)),
+                .child(cut_surface(gpui_kit::transparent_black(), fill, 0., CORNER_BUTTON_CUT, Cut::TopRight)),
         )
         .child(icon(name, 14., theme::color(color::INK_MUTED)))
 }
