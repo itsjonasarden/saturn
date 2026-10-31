@@ -205,7 +205,9 @@ impl StatusBar {
                 .items_center()
                 .gap(len(space::SPACE_1))
                 .child(chrome::icon(icon, icon::SM, theme::color(tint)))
-                .child(count.to_string())
+                // The interface face's numerals sit high in their line; half a point down puts
+                // their middle on the icon's.
+                .child(div().pt(px(0.5)).child(count.to_string())) // off-scale: an optical nudge, not a space
         };
         Self::item("status-problems")
             .cursor_pointer()
