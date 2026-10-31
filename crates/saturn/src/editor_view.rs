@@ -656,7 +656,7 @@ impl EditorView {
         self.problems_view.as_ref()?;
         let in_front = self.front == Front::Problems;
         Some(
-            chrome::track_item("problems-tab", in_front)
+            chrome::tab("problems-tab", in_front)
                 .group("problems-tab")
                 .pl(len(space::SPACE_3))
                 .pr(len(space::SPACE_1))
@@ -878,7 +878,7 @@ impl EditorView {
         self.preview.as_ref()?;
         let in_front = self.front == Front::Preview;
         Some(
-            chrome::track_item("preview-tab", in_front)
+            chrome::tab("preview-tab", in_front)
                 .group("preview-tab")
                 .pl(len(space::SPACE_3))
                 .pr(len(space::SPACE_1))
@@ -1100,7 +1100,7 @@ impl EditorView {
         let label = review.label.clone();
         let in_front = self.front == Front::Review;
         Some(
-            chrome::track_item("review-tab", in_front)
+            chrome::tab("review-tab", in_front)
                 .group("review-tab")
                 .pl(len(space::SPACE_3))
                 .pr(len(space::SPACE_1))
@@ -1137,7 +1137,7 @@ impl EditorView {
         self.schema.as_ref()?;
         let in_front = self.front == Front::Schema;
         Some(
-            chrome::track_item("schema-tab", in_front)
+            chrome::tab("schema-tab", in_front)
                 .group("schema-tab")
                 .pl(len(space::SPACE_3))
                 .pr(len(space::SPACE_1))
@@ -1174,7 +1174,7 @@ impl EditorView {
         self.lineage.as_ref()?;
         let in_front = self.front == Front::Lineage;
         Some(
-            chrome::track_item("lineage-tab", in_front)
+            chrome::tab("lineage-tab", in_front)
                 .group("lineage-tab")
                 .pl(len(space::SPACE_3))
                 .pr(len(space::SPACE_1))
@@ -1211,7 +1211,7 @@ impl EditorView {
         self.impact.as_ref()?;
         let in_front = self.front == Front::Impact;
         Some(
-            chrome::track_item("impact-tab", in_front)
+            chrome::tab("impact-tab", in_front)
                 .group("impact-tab")
                 .pl(len(space::SPACE_3))
                 .pr(len(space::SPACE_1))
@@ -1265,7 +1265,7 @@ impl EditorView {
         self.references.as_ref()?;
         let in_front = self.front == Front::References;
         Some(
-            chrome::track_item("references-tab", in_front)
+            chrome::tab("references-tab", in_front)
                 .group("references-tab")
                 .pl(len(space::SPACE_3))
                 .pr(len(space::SPACE_1))
@@ -1304,7 +1304,7 @@ impl EditorView {
         self.history.as_ref()?;
         let in_front = self.front == Front::History;
         Some(
-            chrome::track_item("history-tab", in_front)
+            chrome::tab("history-tab", in_front)
                 .group("history-tab")
                 .pl(len(space::SPACE_3))
                 .pr(len(space::SPACE_1))
@@ -1376,7 +1376,7 @@ impl EditorView {
         let file = &self.files[index];
         let selected = index == self.active && self.front == Front::File;
         let dirty = file.dirty(cx);
-        chrome::track_item(("editor-tab", index), selected)
+        chrome::tab(("editor-tab", index), selected)
             .group("editor-tab")
             .pl(len(space::SPACE_3))
             .pr(len(space::SPACE_1))

@@ -341,15 +341,18 @@ impl ChangesView {
                     .child(self.branch.clone().unwrap_or_else(|| "No branch".to_owned())),
             )
             .child(
-                chrome::button("impact", "Impact", None, false)
+                chrome::icon_button("impact", "waypoints", true)
+                    .tooltip(chrome::tip_for("Impact of the changes", crate::workspace::ShowImpact))
                     .on_click(cx.listener(|this, _, _, cx| cx.emit(ChangesEvent::Impact { repo: this.repo.clone() }))),
             )
             .child(
-                chrome::button("history", "History", None, false)
+                chrome::icon_button("history", "git-commit-horizontal", true)
+                    .tooltip(chrome::tip_for("History", crate::workspace::ShowHistory))
                     .on_click(cx.listener(|this, _, _, cx| cx.emit(ChangesEvent::History { repo: this.repo.clone() }))),
             )
             .child(
-                chrome::button("branch-diff", "Branch diff", None, false)
+                chrome::icon_button("branch-diff", "git-pull-request", true)
+                    .tooltip(chrome::tip("Review the whole branch's diff"))
                     .on_click(cx.listener(|this, _, _, cx| this.review_branch(cx))),
             )
             .child(

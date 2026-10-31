@@ -55,7 +55,8 @@ pub enum Cut {
 }
 
 /// `bounds` as a path with one corner cut `cut` pixels along each edge.
-fn cut_path(bounds: Bounds<Pixels>, cut: f32, corner: Cut) -> Option<gpui_kit::Path<Pixels>> {
+/// `stroke` draws its outline that many pixels wide instead of filling it.
+fn cut_path(bounds: Bounds<Pixels>, cut: f32, corner: Cut, stroke: Option<f32>) -> Option<gpui_kit::Path<Pixels>> {
     let (left, top) = (bounds.origin.x, bounds.origin.y);
     let (right, bottom) = (left + bounds.size.width, top + bounds.size.height);
     let cut = px(cut);
@@ -91,7 +92,7 @@ fn cut_path(bounds: Bounds<Pixels>, cut: f32, corner: Cut) -> Option<gpui_kit::P
             ]
         }
     };
-    let mut path = PathBuilder::fill();
+    let mut path = stroke.map_or_else(PathBuilder::fill, |width| PathBuilder::stroke(px(width)));
     path.move_to(points[0]);
     for to in &points[1..] {
         path.line_to(*to);
@@ -106,18 +107,20 @@ pub fn cut_surface(edge: gpui_kit::Hsla, fill: gpui_kit::Hsla, width: f32, cut: 
     canvas(
         |_, _, _| (),
         move |bounds: Bounds<Pixels>, (), window: &mut Window, _: &mut App| {
+            if let Some(path) = cut_path(bounds, cut, corner, None) {
+                window.paint_path(path, fill);
+            }
+            // The edge is stroked along a path inset by half its width, so it stays inside the
+            // bounds, and the fill under it can be translucent.
+            let half = width / 2.;
+            let inner = Bounds {
+                origin: point(bounds.origin.x + px(half), bounds.origin.y + px(half)),
+                size: size(bounds.size.width - px(width), bounds.size.height - px(width)),
+            };
             if width > 0.
-                && let Some(path) = cut_path(bounds, cut, corner)
+                && let Some(path) = cut_path(inner, (cut - half * 0.41).max(0.), corner, Some(width))
             {
                 window.paint_path(path, edge);
-            }
-            let inner = Bounds {
-                origin: point(bounds.origin.x + px(width), bounds.origin.y + px(width)),
-                size: size(bounds.size.width - px(width * 2.), bounds.size.height - px(width * 2.)),
-            };
-            // The diagonal moves in by less than the straight edges, so the edge is as thick there.
-            if let Some(path) = cut_path(inner, (cut - width * 0.41).max(0.), corner) {
-                window.paint_path(path, fill);
             }
         },
     )
@@ -307,8 +310,8 @@ pub fn track_item(id: impl Into<ElementId>, pressed: bool) -> gpui_kit::Stateful
         .map(|item| raised(item, pressed))
         .when(pressed && cyberdeck(), |item| item.relative().child(selection()))
         .map(|item| {
-            if pressed && cyberdeck() {
-                item.text_color(theme::color(color::INK_INVERSE))
+            if cyberdeck() && !pressed {
+                item.text_color(theme::color(color::INK_MUTED)).hover(|s| s.text_color(theme::color(color::INK)))
             } else if pressed {
                 item.text_color(theme::color(color::INK))
             } else {
@@ -317,37 +320,97 @@ pub fn track_item(id: impl Into<ElementId>, pressed: bool) -> gpui_kit::Stateful
         })
 }
 
-/// Cyberdeck's selection, under a selected item's children: a solid block of ink with its bottom
-/// right corner cut. The item's text turns `ink-inverse` on it.
+/// Cyberdeck's selection, under a selected item's children: an outline in ink round a faint fill,
+/// its bottom right corner cut, as a list marks the line you're on.
 pub fn selection() -> impl IntoElement {
-    let ink = theme::color(color::INK);
-    cut_surface(ink, ink, 0., SELECTION_CUT, Cut::BottomRight)
+    cut_surface(theme::color(color::INK), theme::overlay(0.07), 1., SELECTION_CUT, Cut::BottomRight)
 }
 
-/// An on/off switch. In Cyberdeck it is two segments, Off and On, with the current one selected.
+/// Cyberdeck's hover, under a clickable line's children: a quieter `selection`, shown only while
+/// the pointer is over the hover group `group`.
+pub fn hover_outline(group: &'static str) -> impl IntoElement {
+    div()
+        .absolute()
+        .top_0()
+        .left_0()
+        .size_full()
+        .invisible()
+        .group_hover(group, gpui_kit::Styled::visible)
+        .child(cut_surface(theme::overlay(0.4), theme::overlay(0.05), 1., SELECTION_CUT, Cut::BottomRight))
+}
+
+/// A tab: one of a few views of the same place (Files and Changes, open files, repos). In Saturn's
+/// theme a track item; in Cyberdeck words over a bar, the bar lit under the tab you're on.
+pub fn tab(id: impl Into<ElementId>, selected: bool) -> gpui_kit::Stateful<gpui_kit::Div> {
+    if !cyberdeck() {
+        return track_item(id, selected);
+    }
+    div()
+        .id(id)
+        .relative()
+        .flex()
+        .flex_none()
+        .items_center()
+        .justify_center()
+        .gap(len(space::SPACE_2))
+        .h(len(CONTROL_HEIGHT))
+        .min_w(len(CONTROL_HEIGHT))
+        .text_size(px(13.))
+        .font_weight(FontWeight::MEDIUM)
+        .cursor_pointer()
+        .text_color(theme::color(if selected { color::INK } else { color::INK_MUTED }))
+        .when(!selected, |tab| tab.hover(|s| s.text_color(theme::color(color::INK))))
+        .child(div().absolute().bottom_0().left_0().right_0().h(px(2.)).bg(if selected {
+            theme::color(color::INK)
+        } else {
+            theme::overlay(0.16)
+        }))
+}
+
+/// A row of tabs: a track in Saturn's theme, bare in Cyberdeck, where each tab carries its own bar.
+pub fn tab_row() -> gpui_kit::Div {
+    if cyberdeck() { div().flex().flex_none().items_center().gap(px(2.)) } else { track() }
+}
+
+/// An on/off switch. In Cyberdeck it is the word, then a cut box with a block that
+/// sits right and lit when on, left and dim when off.
 pub fn switch(id: &'static str, on: bool, toggle: impl Fn(&bool, &mut Window, &mut App) + 'static) -> AnyElement {
     if !cyberdeck() {
         return gpui_kit::component::switch::Switch::new(id).checked(on).on_click(toggle).into_any_element();
     }
-    let toggle = std::rc::Rc::new(toggle);
-    track()
-        .children([(false, "Off"), (true, "On")].map(|(value, label)| {
-            let toggle = toggle.clone();
-            track_item((id, usize::from(value)), on == value).px(len(space::SPACE_3)).child(label).on_click(
-                move |_, window, cx| {
-                    if value != on {
-                        toggle(&value, window, cx);
-                    }
-                },
-            )
-        }))
+    let block = div()
+        .absolute()
+        .top(px(3.))
+        .bottom(px(3.))
+        .w(px(22.))
+        .map(|block| if on { block.right(px(3.)) } else { block.left(px(3.)) })
+        .child(cut_surface(
+            gpui_kit::transparent_black(),
+            if on { theme::color(color::INK) } else { theme::overlay(0.22) },
+            0.,
+            5.,
+            Cut::BottomRight,
+        ));
+    div()
+        .id(id)
+        .flex()
+        .items_center()
+        .gap(len(space::SPACE_3))
+        .cursor_pointer()
+        .text_size(px(13.))
+        .font_weight(FontWeight::MEDIUM)
+        .text_color(theme::color(if on { color::INK } else { color::INK_MUTED }))
+        .child(if on { "On" } else { "Off" })
+        .child(
+            div()
+                .relative()
+                .w(px(52.))
+                .h(px(22.))
+                .child(cut_surface(theme::overlay(0.3), theme::color(color::SURFACE), 1., 6., Cut::BottomRight))
+                .child(block),
+        )
+        .on_click(move |_, window, cx| toggle(&!on, window, cx))
         .into_any_element()
-}
-
-/// The ink of a track item's icon or text: on a Cyberdeck selection, which is a block of ink, the
-/// inverse.
-pub fn item_ink(pressed: bool) -> saturn_design::Token {
-    if pressed && cyberdeck() { color::INK_INVERSE } else { color::INK }
 }
 
 /// A thin divider between groups in a track.
@@ -385,7 +448,7 @@ pub fn button(
     primary: bool,
 ) -> gpui_kit::Stateful<gpui_kit::Div> {
     let label = label.into();
-    let hint = if primary { theme::color(color::INK_ON_ACCENT).opacity(0.7) } else { theme::color(color::INK_FAINT) };
+    let hint = if primary { primary_ink().opacity(0.7) } else { theme::color(color::INK_FAINT) };
     div()
         .id(id)
         .flex()
@@ -401,6 +464,14 @@ pub fn button(
         .map(|button| {
             if primary {
                 primary_surface(button)
+            } else if cyberdeck() {
+                // Cyberdeck's button: an outline with its corner cut, lit under the pointer.
+                button
+                    .relative()
+                    .group("cyberdeck-button")
+                    .text_color(theme::color(color::INK))
+                    .child(cut_surface(theme::overlay(0.3), theme::overlay(0.03), 1., SELECTION_CUT, Cut::BottomRight))
+                    .child(hover_outline("cyberdeck-button"))
             } else {
                 button
                     .text_color(theme::color(color::INK))
@@ -414,14 +485,22 @@ pub fn button(
 
 /// The surface of the one primary action: the accent fill with a soft blue bloom beneath it. A
 /// split button lays its parts on one surface, so the gradient and the bloom run across both.
-pub fn primary_surface<E: gpui_kit::Styled>(element: E) -> E {
+pub fn primary_surface<E: gpui_kit::Styled + gpui_kit::ParentElement>(element: E) -> E {
     if cyberdeck() {
-        // Flat and square, with a lighter bar down its left edge.
+        // Cyberdeck's button, in blue: a blue outline round a faint blue fill, its corner cut, and a
+        // heavier bar down its left edge.
+        let blue = theme::color(color::BLUE);
         return element
-            .text_color(theme::color(color::INK_ON_ACCENT))
-            .bg(theme::color(color::BLUE_VIVID))
-            .border_l(px(3.))
-            .border_color(theme::color(color::BLUE));
+            .relative()
+            .text_color(theme::color(color::INK))
+            .child(cut_surface(
+                blue,
+                theme::color(color::BLUE_VIVID).opacity(0.16),
+                1.,
+                SELECTION_CUT,
+                Cut::BottomRight,
+            ))
+            .child(div().absolute().top_0().bottom_0().left_0().w(px(3.)).bg(blue));
     }
     element.text_color(theme::color(color::INK_ON_ACCENT)).bg(accent_fill()).shadow(vec![gpui_kit::BoxShadow {
         color: theme::color(color::BLUE_VIVID).opacity(0.35),
@@ -430,6 +509,11 @@ pub fn primary_surface<E: gpui_kit::Styled>(element: E) -> E {
         spread_radius: px(0.),
         inset: false,
     }])
+}
+
+/// The ink on the primary action: white on Saturn's blue fill, plain ink on Cyberdeck's outline.
+pub fn primary_ink() -> gpui_kit::Hsla {
+    theme::color(if cyberdeck() { color::INK } else { color::INK_ON_ACCENT })
 }
 
 /// A headline in two weights, the point in semibold: "No terminals **yet**".

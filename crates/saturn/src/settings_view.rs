@@ -810,7 +810,7 @@ impl SettingsView {
                     .child(chrome::icon(
                         section.icon(),
                         14.,
-                        theme::color(if selected { chrome::item_ink(selected) } else { color::INK_MUTED }),
+                        theme::color(if selected { color::INK } else { color::INK_MUTED }),
                     ))
                     .child(section.name())
                     .on_click(cx.listener(move |this, _, window, cx| {

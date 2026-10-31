@@ -86,11 +86,8 @@ fn lines(
                 .cursor_pointer()
                 .map(|line| {
                     if chrome::cyberdeck() {
-                        // A choice list: a rule down the left, lit in ink beside the line under the
-                        // pointer.
-                        line.border_l_2()
-                            .border_color(theme::overlay(0.14))
-                            .hover(|s| s.bg(theme::fill_hover()).border_color(theme::color(color::INK)))
+                        // As a choice list: the line under the pointer outlined, its corner cut.
+                        line.relative().group("menu-line").child(chrome::hover_outline("menu-line"))
                     } else {
                         line.hover(|s| s.bg(theme::fill_hover()))
                     }

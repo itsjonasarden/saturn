@@ -2898,16 +2898,14 @@ impl Workspace {
     /// Files / Changes, at the top of the sidebar.
     fn render_sidebar_switch(&self, cx: &mut Context<Self>) -> AnyElement {
         let tab = |label: &'static str, target: SidebarTab, cx: &mut Context<Self>| {
-            chrome::track_item(label, self.sidebar_tab == target)
-                .flex_1()
-                .px(len(space::SPACE_4))
-                .child(label)
-                .on_click(cx.listener(move |this, _, _, cx| {
+            chrome::tab(label, self.sidebar_tab == target).flex_1().px(len(space::SPACE_4)).child(label).on_click(
+                cx.listener(move |this, _, _, cx| {
                     this.sidebar_tab = target;
                     cx.notify();
-                }))
+                }),
+            )
         };
-        chrome::track()
+        chrome::tab_row()
             .child(tab("Files", SidebarTab::Files, cx))
             .child(tab("Changes", SidebarTab::Changes, cx))
             .into_any_element()
@@ -4180,7 +4178,7 @@ impl Workspace {
             chrome::track_item(id, on).size(len(TITLEBAR_CONTROL)).child(chrome::icon(
                 icon,
                 15.,
-                theme::color(if on { chrome::item_ink(on) } else { color::INK_MUTED }),
+                theme::color(if on { color::INK } else { color::INK_MUTED }),
             ))
         };
         chrome::track()
@@ -4293,8 +4291,10 @@ impl Workspace {
         let more = part("new-agent-more")
             .px(len(space::SPACE_2))
             .rounded_r(theme::corner(radius::RADIUS_MD))
-            .when(open, |part| part.bg(gpui_kit::white().opacity(0.1)))
-            .child(chrome::icon("chevron-down", 14., theme::color(color::INK_ON_ACCENT)))
+            .when(open, |part| {
+                part.bg(if chrome::cyberdeck() { theme::overlay(0.1) } else { gpui_kit::white().opacity(0.1) })
+            })
+            .child(chrome::icon("chevron-down", 14., chrome::primary_ink()))
             .tooltip(chrome::tip("More ways to start agents: Best of N, routines, past sessions"))
             .on_click(cx.listener(|this, _, _, cx| this.toggle_menu(OpenMenu::NewAgent, cx)));
         chrome::primary_surface(div())
@@ -4314,7 +4314,7 @@ impl Workspace {
                         ticket_picker::open(cx.weak_entity(), this.clickup.connected(), window, cx);
                     })),
             )
-            .child(div().flex_none().w(px(1.)).h(px(16.)).bg(theme::color(color::INK_ON_ACCENT).opacity(0.3)))
+            .child(div().flex_none().w(px(1.)).h(px(16.)).bg(chrome::primary_ink().opacity(0.3)))
             .child(self.with_menu(OpenMenu::NewAgent, more, cx))
     }
 
@@ -4385,12 +4385,12 @@ impl Workspace {
             // Each tab its own hover group, so only the one under the mouse shows its ✕.
             let group = gpui_kit::SharedString::from(format!("repo-{index}"));
             track = track.child(
-                chrome::track_item(("repo", index), selected)
+                chrome::tab(("repo", index), selected)
                     .h(len(TITLEBAR_CONTROL))
                     .relative()
                     .group(group.clone())
                     .px(len(space::SPACE_3))
-                    .text_color(theme::color(if selected { chrome::item_ink(selected) } else { color::INK_MUTED }))
+                    .text_color(theme::color(if selected { color::INK } else { color::INK_MUTED }))
                     .when_some(waiting, |item, state| item.child(status_dot(state)))
                     .child(name)
                     // On hover only, floating over the tab's end, so a hidden ✕ takes no room.
