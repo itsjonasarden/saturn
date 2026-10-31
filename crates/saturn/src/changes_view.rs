@@ -430,8 +430,8 @@ impl Render for ChangesView {
                     range.map(|index| this.render_item(this.items[index], cx)).collect::<Vec<_>>()
                 }),
             )
+            // Edge to edge in the card, which pads it already: its rows line up with the tabs.
             .flex_1()
-            .p(len(space::SPACE_1))
             .into_any_element()
         };
         div()

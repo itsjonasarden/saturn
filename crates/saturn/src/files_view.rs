@@ -502,8 +502,8 @@ impl Render for FilesView {
                         range.map(|index| this.render_row(index, cx)).collect::<Vec<_>>()
                     }),
                 )
-                .size_full()
-                .p(len(space::SPACE_1)),
+                // Edge to edge in the card, which pads it already: its rows line up with the tabs.
+                .size_full(),
             )
             .children(self.render_menu(cx))
     }
