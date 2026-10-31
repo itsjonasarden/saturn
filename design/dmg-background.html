@@ -1,0 +1,57 @@
+<!doctype html>
+<!-- The disk image's window background, 640×440 points. Rendered at 1× and 2× and joined into
+     crates/akyba/assets/app/dmg-background.tiff (see scripts/dmg.py for where the icons sit).
+     Finder writes the names under the icons in white in dark mode and in black in light mode, so
+     each name sits on a mid-grey tag where both read. -->
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        width: 640px;
+        height: 440px;
+        background: #0b0c0e;
+        overflow: hidden;
+        font-family:
+          'Rajdhani',
+          -apple-system,
+          sans-serif;
+      }
+      svg {
+        position: absolute;
+        inset: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <svg width="640" height="440" viewBox="0 0 640 440">
+      <!-- A thin frame round each item, top right corner cut, and under each name a mid-grey tag. -->
+      <g fill="none" stroke="#2c3036" stroke-width="2">
+        <path d="M90 60 H232 L250 78 V250 H90 Z" />
+        <path d="M390 60 H532 L550 78 V250 H390 Z" />
+        <path d="M225 286 H403 L415 298 V424 H225 Z" />
+      </g>
+      <g fill="#6f737a">
+        <path d="M120 189 H212 L220 197 V217 H120 Z" />
+        <path d="M420 189 H512 L520 197 V217 H420 Z" />
+        <path d="M240 391 H392 L400 399 V419 H240 Z" />
+      </g>
+      <!-- Drag from one to the other. -->
+      <path d="M272 150 H352" stroke="#3d9bff" stroke-width="3" />
+      <path d="M352 142 L366 150 L352 158 Z" fill="#3d9bff" />
+      <text
+        x="320"
+        y="186"
+        text-anchor="middle"
+        fill="#9aa0a8"
+        font-size="13"
+        font-weight="500"
+        letter-spacing="0.4"
+      >
+        Drag to install
+      </text>
+    </svg>
+  </body>
+</html>

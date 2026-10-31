@@ -77,11 +77,17 @@ if [ "$mode" = "--dmg" ]; then
   rm -rf "$stage"
   mkdir -p "$stage"
   cp -R "$app" "$stage/Akyba.app"
-  ln -s /Applications "$stage/Applications"
   cp scripts/how-to-open.txt "$stage/How to open Akyba.txt"
   dmg="target/Akyba-$version.dmg"
   rm -f "$dmg"
-  hdiutil create -quiet -volname "Akyba $version" -srcfolder "$stage" -format UDZO "$dmg"
+  if command -v uvx >/dev/null 2>&1; then
+    # Laid out with a background and Akyba's icon on the disk (scripts/dmg.py).
+    uvx --quiet --from dmgbuild==1.6.7 dmgbuild -s scripts/dmg.py -D stage="$stage" "Akyba $version" "$dmg"
+  else
+    # Without uv, a plain image: the same files, in Finder's default window.
+    ln -s /Applications "$stage/Applications"
+    hdiutil create -quiet -volname "Akyba $version" -srcfolder "$stage" -format UDZO "$dmg"
+  fi
   rm -rf "$stage"
   echo "Built $dmg"
 fi

@@ -126,6 +126,10 @@ pnpm dist:dmg         # a disk image for Apple Silicon and Intel, to share
 pnpm release 0.2.0    # publish a version: installed copies offer it within a day
 ```
 
+The disk image's window (a background and Akyba's icon on the disk) is laid out by dmgbuild, run
+through `uv`, so no Finder window opens while it builds; without `uv` the image is a plain one.
+Its sources are `design/dmg-background.html` and `scripts/dmg.py`.
+
 Releasing needs the Sparkle signing key in the publisher's keychain; updates signed with any other
 key are refused by every installed Akyba.
 
