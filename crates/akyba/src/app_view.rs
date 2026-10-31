@@ -150,6 +150,7 @@ impl AppView {
                                 .flex()
                                 .flex_col()
                                 .gap(len(space::SPACE_2))
+                                .child(div().pb(len(space::SPACE_4)).child(chrome::mark(text::HEADLINE.size)))
                                 .child(chrome::headline("Open a", "project", text::HEADLINE.size))
                                 .child(div().text_scale(text::BODY).text_color(theme::color(color::INK_MUTED)).child(
                                     if recent.is_empty() {

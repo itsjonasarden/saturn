@@ -1,6 +1,7 @@
-//! Akyba's item in the macOS menu bar: a small Akyba, and next to it how many agents are waiting
-//! for you across every window, so you see it while Akyba is hidden. Clicking it opens a menu:
-//! how many need you, a way to the next one, Akyba itself, and Quit. Settings can turn it off.
+//! Akyba's item in the macOS menu bar: Akyba's mark, which lights when an agent needs you, and
+//! next to it how many agents are waiting for you across every window, so you see it while Akyba
+//! is hidden. Clicking it opens a menu: how many need you, a way to the next one, Akyba itself,
+//! and Quit. Settings can turn it off.
 
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -10,10 +11,9 @@ use objc2::rc::Retained;
 use objc2::runtime::{AnyObject, Bool};
 use objc2::{MainThreadMarker, MainThreadOnly, define_class, msg_send, sel};
 use objc2_app_kit::{
-    NSBezierPath, NSColor, NSCompositingOperation, NSGraphicsContext, NSImage, NSMenu, NSMenuItem, NSStatusBar,
-    NSStatusItem, NSVariableStatusItemLength, NSWindingRule,
+    NSBezierPath, NSColor, NSImage, NSMenu, NSMenuItem, NSStatusBar, NSStatusItem, NSVariableStatusItemLength,
 };
-use objc2_foundation::{NSAffineTransform, NSObject, NSObjectProtocol, NSPoint, NSRect, NSSize, NSString};
+use objc2_foundation::{NSObject, NSObjectProtocol, NSPoint, NSRect, NSSize, NSString};
 
 thread_local! {
     static STATE: RefCell<State> = RefCell::new(State::default());
@@ -93,9 +93,7 @@ pub fn set_shown(shown: bool) {
         if shown && state.item.is_none() {
             let item = NSStatusBar::systemStatusBar().statusItemWithLength(NSVariableStatusItemLength);
             let target = ClickTarget::new(main_thread);
-            if let Some(button) = item.button(main_thread) {
-                button.setImage(Some(&glyph()));
-            }
+            // `show_count` gives the button its mark, lit or not.
             state.item = Some(item);
             state.target = Some(target);
             show_count(state, main_thread);
@@ -127,6 +125,7 @@ fn show_count(state: &State, main_thread: MainThreadMarker) {
         1 => (" 1".to_owned(), "1 agent needs you".to_owned()),
         n => (format!(" {n}"), format!("{n} agents need you")),
     };
+    button.setImage(Some(&glyph(total > 0)));
     button.setTitle(&NSString::from_str(&title));
     button.setToolTip(Some(&NSString::from_str(&format!("Akyba: {summary}"))));
     if let (Some(item), Some(target)) = (&state.item, &state.target) {
@@ -163,61 +162,35 @@ fn menu(summary: &str, waiting: bool, target: &ClickTarget, main_thread: MainThr
     menu
 }
 
-/// Akyba's mark at menu bar size, drawn like the app icon (`design/app-icon.html`) so the two
-/// read as one: a planet, and a ring rising to the right that passes behind it and comes back in
-/// front, with a gap either side. It is a template image, so macOS draws it black or white to
-/// match the menu bar; the gaps are cut out because one colour can't overlap itself. The
-/// proportions are the icon's, with the ring and the gaps thicker so they stay legible.
-fn glyph() -> Retained<NSImage> {
-    const CENTER: f64 = 9.;
-    const PLANET: f64 = 5.;
-    const RING_HALF_WIDTH: f64 = 8.4;
-    const RING_HALF_HEIGHT: f64 = 2.2;
-    const RING_STROKE: f64 = 1.3;
-    const GAP: f64 = 0.8;
-    let draw = RcBlock::new(|_rect: NSRect| -> Bool {
-        let Some(context) = NSGraphicsContext::currentContext() else { return Bool::NO };
-        let tilt = NSAffineTransform::new();
-        tilt.translateXBy_yBy(CENTER, CENTER);
-        tilt.rotateByDegrees(18.);
-        tilt.translateXBy_yBy(-CENTER, -CENTER);
-        let ring = NSBezierPath::bezierPathWithOvalInRect(NSRect::new(
-            NSPoint::new(CENTER - RING_HALF_WIDTH, CENTER - RING_HALF_HEIGHT),
-            NSSize::new(RING_HALF_WIDTH * 2., RING_HALF_HEIGHT * 2.),
-        ));
-        ring.transformUsingAffineTransform(&tilt);
-        // The half of the ring nearer the viewer, below the planet's centre in the ring's frame.
-        let front = NSBezierPath::bezierPathWithRect(NSRect::new(NSPoint::new(-9., -9.), NSSize::new(36., 18.)));
-        front.transformUsingAffineTransform(&tilt);
-        let disc = |radius: f64| {
-            NSBezierPath::bezierPathWithOvalInRect(NSRect::new(
-                NSPoint::new(CENTER - radius, CENTER - radius),
-                NSSize::new(radius * 2., radius * 2.),
-            ))
-        };
-
+/// Akyba's mark at menu bar size, the app icon's two slabs (`design/app-icon.html`) scaled into
+/// 18 points: a white slab leaning in, and a second one set down a step. It is a template image,
+/// so macOS draws it black or white to match the menu bar, and the second slab's alpha carries the
+/// state: faint while nothing waits, solid when an agent needs you.
+fn glyph(waiting: bool) -> Retained<NSImage> {
+    // The icon's slabs, in its 1024 grid, top-left origin.
+    const LEADING: [(f64, f64); 4] = [(262., 760.), (452., 264.), (572., 264.), (382., 760.)];
+    const STEPPED: [(f64, f64); 4] = [(527., 460.), (647., 460.), (762., 760.), (642., 760.)];
+    // The mark spans x 262–762 and y 264–760 there; this fits that into 2–16 points, flipped
+    // because AppKit's y runs up.
+    const SCALE: f64 = 14. / 500.;
+    let slab = |corners: [(f64, f64); 4]| {
+        let path = NSBezierPath::bezierPath();
+        for (index, (x, y)) in corners.into_iter().enumerate() {
+            let point = NSPoint::new(2. + (x - 262.) * SCALE, 16. - (y - 264.) * SCALE);
+            if index == 0 {
+                path.moveToPoint(point);
+            } else {
+                path.lineToPoint(point);
+            }
+        }
+        path.closePath();
+        path
+    };
+    let draw = RcBlock::new(move |_rect: NSRect| -> Bool {
         NSColor::blackColor().set();
-        disc(PLANET).fill();
-        // In front, the ring cuts a gap through the planet and is drawn in it. The clip reaches a
-        // little past the gap so this and the far side overlap rather than meet in a seam.
-        context.saveGraphicsState();
-        front.addClip();
-        context.setCompositingOperation(NSCompositingOperation::Clear);
-        ring.setLineWidth(RING_STROKE + GAP * 2.);
-        ring.stroke();
-        context.setCompositingOperation(NSCompositingOperation::SourceOver);
-        disc(PLANET + GAP + RING_STROKE).addClip();
-        ring.setLineWidth(RING_STROKE);
-        ring.stroke();
-        context.restoreGraphicsState();
-        // Everywhere else the ring stops a gap short of the planet: behind it, it's hidden.
-        context.saveGraphicsState();
-        let outside = NSBezierPath::bezierPathWithRect(NSRect::new(NSPoint::new(0., 0.), NSSize::new(18., 18.)));
-        outside.appendBezierPath(&disc(PLANET + GAP));
-        outside.setWindingRule(NSWindingRule::EvenOdd);
-        outside.addClip();
-        ring.stroke();
-        context.restoreGraphicsState();
+        slab(LEADING).fill();
+        NSColor::blackColor().colorWithAlphaComponent(if waiting { 1. } else { 0.45 }).set();
+        slab(STEPPED).fill();
         Bool::YES
     });
     let image = NSImage::imageWithSize_flipped_drawingHandler(NSSize::new(18., 18.), false, &draw);

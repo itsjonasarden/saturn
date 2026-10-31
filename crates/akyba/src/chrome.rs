@@ -728,6 +728,18 @@ pub fn primary_ink() -> gpui_kit::Hsla {
 }
 
 /// A headline in two weights, the point in semibold: "No terminals **yet**".
+/// Akyba's mark, the app icon's two slabs, `height` tall in the ink colour. The second slab is
+/// drawn at half strength in the file itself, so the mark keeps the icon's white and grey.
+pub fn mark(height: f32) -> impl IntoElement {
+    // The drawing is 500 by 496.
+    svg()
+        .path("brand/akyba.svg")
+        .w(px(height * 500. / 496.))
+        .h(px(height))
+        .flex_none()
+        .text_color(theme::color(color::INK))
+}
+
 pub fn headline(light: &str, bold: &str, size: f32) -> impl IntoElement {
     div()
         .flex()

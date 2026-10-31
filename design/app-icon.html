@@ -1,7 +1,10 @@
 <!doctype html>
 <!-- Akyba's app icon. Rendered at 1024×1024 with a transparent background, then turned into
      crates/akyba/assets/app/Akyba.icns with sips and iconutil. The tile follows Apple's icon grid
-     (824 px squircle in a 1024 px canvas). -->
+     (824 px squircle in a 1024 px canvas). The mark is two slabs leaning in, the second set down a
+     step: an A suggested rather than drawn. One white, one grey, no colour, like the tools it sits
+     beside in the Dock. The menu bar mark (`menu_bar.rs`) and the welcome mark
+     (`assets/brand/akyba.svg`) are the same two slabs. -->
 <html>
   <head>
     <meta charset="utf-8" />
@@ -13,27 +16,6 @@
         height: 1024px;
         background: transparent;
       }
-      .tile {
-        position: absolute;
-        left: 100px;
-        top: 100px;
-        width: 824px;
-        height: 824px;
-        border-radius: 185px;
-        overflow: hidden;
-        background: radial-gradient(120% 100% at 50% 0%, #1c1c1f 0%, #0b0b0c 60%, #060606 100%);
-        box-shadow:
-          inset 0 0 0 2px rgba(255, 255, 255, 0.06),
-          0 24px 48px rgba(0, 0, 0, 0.35);
-      }
-      .dots {
-        position: absolute;
-        inset: 0;
-        background-image: radial-gradient(rgba(255, 255, 255, 0.06) 2px, transparent 2.6px);
-        background-size: 36px 36px;
-        -webkit-mask-image: radial-gradient(60% 60% at 50% 50%, transparent 40%, #000 100%);
-        mask-image: radial-gradient(60% 60% at 50% 50%, transparent 40%, #000 100%);
-      }
       svg {
         position: absolute;
         left: 0;
@@ -42,55 +24,44 @@
     </style>
   </head>
   <body>
-    <div class="tile">
-      <div class="dots"></div>
-      <svg width="824" height="824" viewBox="0 0 824 824">
-        <defs>
-          <radialGradient id="planet" cx="34%" cy="70%" r="85%">
-            <stop offset="0" stop-color="#5aa2ff" />
-            <stop offset="0.35" stop-color="#1c69e3" />
-            <stop offset="0.8" stop-color="#072869" />
-            <stop offset="1" stop-color="#03081a" />
-          </radialGradient>
-          <filter id="grain">
-            <feTurbulence
-              type="fractalNoise"
-              baseFrequency=".9"
-              numOctaves="2"
-              stitchTiles="stitch"
-            />
-            <feColorMatrix values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .10 0" />
-            <feComposite in2="SourceGraphic" operator="in" />
-          </filter>
-          <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur stdDeviation="28" />
-          </filter>
-          <!-- The ring is one solid stroke. This mask hides only the part that passes behind the
-               planet: the planet's disc, upper half in the ring's tilted frame, with a small gap
-               so the ring reads as going around it. -->
-          <mask id="behind" maskUnits="userSpaceOnUse" x="0" y="0" width="824" height="824">
-            <rect width="824" height="824" fill="#fff" />
-            <g transform="rotate(-18 412 412)">
-              <path d="M 202 412 A 210 210 0 0 1 622 412 Z" fill="#000" />
-            </g>
-          </mask>
-        </defs>
-        <circle cx="412" cy="412" r="196" fill="#1c69e3" opacity=".45" filter="url(#glow)" />
-        <circle cx="412" cy="412" r="196" fill="url(#planet)" />
-        <circle cx="412" cy="412" r="196" fill="#fff" filter="url(#grain)" />
-        <g mask="url(#behind)">
-          <ellipse
-            cx="412"
-            cy="412"
-            rx="330"
-            ry="86"
-            transform="rotate(-18 412 412)"
-            fill="none"
-            stroke="#e4e4e4"
-            stroke-width="18"
-          />
-        </g>
-      </svg>
-    </div>
+    <svg width="1024" height="1024" viewBox="0 0 1024 1024">
+      <defs>
+        <linearGradient id="ground" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#26282c" />
+          <stop offset="1" stop-color="#08090a" />
+        </linearGradient>
+        <!-- A soft light from above, fading out by the middle, the way macOS tiles catch it. -->
+        <linearGradient id="sheen" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#fff" stop-opacity="0.10" />
+          <stop offset="0.5" stop-color="#fff" stop-opacity="0" />
+        </linearGradient>
+        <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="24" stdDeviation="24" flood-color="#000" flood-opacity="0.35" />
+        </filter>
+      </defs>
+      <rect
+        x="100"
+        y="100"
+        width="824"
+        height="824"
+        rx="185"
+        fill="url(#ground)"
+        filter="url(#shadow)"
+      />
+      <rect x="100" y="100" width="824" height="824" rx="185" fill="url(#sheen)" />
+      <path d="M262 760 L452 264 H572 L382 760 Z" fill="#f4f5f7" />
+      <path d="M527 460 H647 L762 760 H642 Z" fill="#7c828b" />
+      <rect
+        x="101.5"
+        y="101.5"
+        width="821"
+        height="821"
+        rx="183.5"
+        fill="none"
+        stroke="#fff"
+        stroke-opacity="0.10"
+        stroke-width="3"
+      />
+    </svg>
   </body>
 </html>

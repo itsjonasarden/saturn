@@ -1,5 +1,5 @@
-//! The app's assets: the few Lucide icons Akyba uses beyond gpui-kit's default set (ISC, see
-//! `assets/icons/LICENSE-LUCIDE`), falling back to gpui-kit's bundled assets for the rest, and the
+//! The app's assets: Akyba's mark, the few Lucide icons Akyba uses beyond gpui-kit's default set
+//! (ISC, see `assets/icons/LICENSE-LUCIDE`), falling back to gpui-kit's bundled assets for the rest, and the
 //! sharp version of every icon, made from it as it loads.
 
 use std::borrow::Cow;
@@ -95,6 +95,8 @@ const ICONS: &[(&str, &[u8])] = &[
     ("icons/file-plus.svg", include_bytes!("../assets/icons/file-plus.svg")),
     ("icons/folder-plus.svg", include_bytes!("../assets/icons/folder-plus.svg")),
     ("icons/pencil.svg", include_bytes!("../assets/icons/pencil.svg")),
+    // Akyba's own mark, outside `icons/` so no theme sharpens it.
+    ("brand/akyba.svg", include_bytes!("../assets/brand/akyba.svg")),
 ];
 
 pub struct Assets;
