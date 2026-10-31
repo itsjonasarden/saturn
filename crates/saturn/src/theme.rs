@@ -114,13 +114,16 @@ fn component_theme(appearance: Appearance) -> gpui_kit::component::ThemeConfig {
         // Dark mode's red is light: dark ink on it, as on green.
         "danger.foreground": hex(if appearance == Appearance::Dark { c::INK_ON_SIGNAL } else { c::INK_ON_ACCENT }),
     });
+    let cyberdeck = saturn_design::theme() == saturn_design::Theme::Cyberdeck;
     let highlight = serde_json::json!({
         // The editor sits in a well, which draws the glass; its own background stays clear.
         "editor.background": "#00000000",
         "editor.foreground": hex(c::INK_BODY),
-        "editor.active_line.background": hex(c::SURFACE_RAISED),
+        // The kit paints the current line's fill across the line numbers too; Cyberdeck has none,
+        // and marks the line by its number in full ink instead.
+        "editor.active_line.background": if cyberdeck { "#00000000".to_owned() } else { hex(c::SURFACE_RAISED) },
         "editor.line_number": hex(c::INK_FAINT),
-        "editor.active_line_number": hex(c::INK_MUTED),
+        "editor.active_line_number": hex(if cyberdeck { c::INK } else { c::INK_MUTED }),
         "editor.invisible": hex(c::LINE_STRONG),
         "editor.gutter.background": "#00000000",
         // Language server underlines, in the palette: errors red, warnings the warm text colour
