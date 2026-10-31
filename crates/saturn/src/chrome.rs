@@ -643,6 +643,12 @@ pub fn button(
 /// The surface of the one primary action: the accent fill with a soft blue bloom beneath it. A
 /// split button lays its parts on one surface, so the gradient and the bloom run across both.
 pub fn primary_surface<E: gpui_kit::Styled + gpui_kit::ParentElement>(element: E) -> E {
+    primary_surface_cut(element, Cut::BottomRight)
+}
+
+/// `primary_surface` with Cyberdeck's cut on `corner`: the top right for New agent, which sits in
+/// the window's top right corner, above panels cut there too.
+pub fn primary_surface_cut<E: gpui_kit::Styled + gpui_kit::ParentElement>(element: E, corner: Cut) -> E {
     if cyberdeck() {
         // Cyberdeck's button, in blue: a blue outline round a faint blue fill, its corner cut.
         return element.relative().text_color(theme::color(color::INK)).child(cut_surface(
@@ -650,7 +656,7 @@ pub fn primary_surface<E: gpui_kit::Styled + gpui_kit::ParentElement>(element: E
             theme::color(color::BLUE_VIVID).opacity(0.16),
             1.,
             SELECTION_CUT,
-            Cut::BottomRight,
+            corner,
         ));
     }
     element.text_color(theme::color(color::INK_ON_ACCENT)).bg(accent_fill()).shadow(vec![gpui_kit::BoxShadow {

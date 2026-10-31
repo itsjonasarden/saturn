@@ -4299,9 +4299,8 @@ impl Workspace {
                 part.bg(if chrome::cyberdeck() { theme::overlay(0.1) } else { gpui_kit::white().opacity(0.1) })
             })
             .child(chrome::icon("chevron-down", 14., chrome::primary_ink()))
-            .tooltip(chrome::tip("More ways to start agents: Best of N, routines, past sessions"))
             .on_click(cx.listener(|this, _, _, cx| this.toggle_menu(OpenMenu::NewAgent, cx)));
-        chrome::primary_surface(div())
+        chrome::primary_surface_cut(div(), chrome::Cut::TopRight)
             .flex()
             .items_center()
             .h(height)
@@ -4313,7 +4312,6 @@ impl Workspace {
                     .px(len(space::SPACE_4))
                     .rounded_l(theme::corner(radius::RADIUS_MD))
                     .child("New agent")
-                    .tooltip(chrome::tip_for("New agent, in a worktree of its own", OpenTicketPicker))
                     .on_click(cx.listener(|this, _, window, cx| {
                         ticket_picker::open(cx.weak_entity(), this.clickup.connected(), window, cx);
                     })),
