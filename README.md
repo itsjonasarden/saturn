@@ -50,6 +50,8 @@ keeps the files and diffs they touch one click away. It isn't an IDE; it's where
 - **A light editor.** Files, search, language servers and the project's own formatter.
 - **Your plans' limits**, Claude's and Codex's, at the foot of the sidebar.
 - **Routines and search.** Agents on a schedule, and every past session found by what you asked.
+- **Two looks.** Cyberdeck, square panels with cut corners and neon signals on near-black, and
+  Saturn, glass between rounded cards. Each in light and dark.
 
 <img src="docs/images/best-of.png" alt="Compare attempts: Claude Code and Codex take on the same task side by side, with the files each changed" />
 
@@ -72,6 +74,10 @@ and Intel, with [Claude Code](https://claude.com/claude-code),
 
 Akyba updates itself: once a day it checks for a new release and offers it. To build it from the
 code, see [Develop](docs/develop.md).
+
+**Coming from Saturn?** Akyba was called Saturn until 0.2.0. Install Akyba and open it: your repos,
+windows, sessions, routines and settings come over by themselves, and Claude Code's status line
+follows. Then delete Saturn from Applications.
 
 ## The shortcuts that matter
 

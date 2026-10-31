@@ -184,6 +184,8 @@ tracker, New agent starts work you name, and the rest doesn't show up.
 
 ## Looks
 
-Panes, the sidebar and the editor are cards on Saturn's own blue backdrop: deep navy in dark mode,
-soft periwinkle in light. It follows macOS's appearance, or you pick one. Terminals tell programs
+Two themes (Settings → Appearance). Cyberdeck, the default: square panels with cut corners on a
+near-black ground, true greys, neon signals and sharp icons. Saturn: cards on a deep navy backdrop
+(soft periwinkle in light), with rounded corners and glass. Each follows macOS's appearance, or you
+pick light or dark. Terminals tell programs
 which it is when they ask, so an agent's "Auto" theme matches, and switches with it.

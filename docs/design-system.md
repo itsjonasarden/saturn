@@ -1,6 +1,6 @@
 # Design system
 
-Akyba follows the Quarn workflow-automation design (Behance, 2026) with blue in place of its green: near-black and grey almost everywhere, colour only where it has a job, and depth from light and blur instead of decoration.
+Akyba has two themes, made from one set of tokens and components. **Cyberdeck**, the default: square panels with cut corners on an opaque near-black ground, true greys, neon signals, Rajdhani. **Saturn**, after the Quarn workflow-automation design (Behance, 2026) with blue in place of its green: glass between rounded cards, depth from light and blur instead of decoration. In both, grey almost everywhere and colour only where it has a job.
 
 - **Browsable reference:** the Akyba Design System artifact, https://claude.ai/artifact/RC4SBXYReNJprpjxDNapf3: brand book, tokens in both themes, every component with a live preview, and the full main window.
 - **In this repo:** `design/tokens.json` (the tokens, same file as the artifact) and `design/components.css` (the component classes the previews use). `crates/akyba-design` compiles the tokens into Rust constants with a dark and a light value each, so a token changes in one place.
@@ -54,7 +54,13 @@ A new version of a control (a third kind of tab, say) is a new option in `themes
 
 Orange and green split "come back" in two: orange is waiting on you, green is done and safe to read.
 
-## Glass and cards
+## Cyberdeck, the default theme
+
+The second theme. Its own true-grey neutrals on an opaque near-black ground (near-white in light mode); its signal colours are its own, saturated: neon on the dark ground, deep on the light, meaning what Akyba's mean (blue working, orange needs you, green your turn, red errors). Square panels, their top-right corner cut, with a 1px edge that takes the status ring's colour; cards 4px apart. A selection is an ink outline round a faint fill, its bottom-right corner cut, and buttons are the same outline (the primary one blue, its words blue too). Tabs are words over a bar; a choice is a selector, the value between two arrows; a switch is the word and a cut box. Focus is ink, not blue; the editor's current line is marked by its number alone. Each setting is its own notched slab, agent and usage cards are grey slabs, usage meters are rows of square dots. Its icons are Akyba's own Lucide icons drawn sharp: square line ends, mitred joins, square corners and square dots, made from the same drawings as they load (`akyba_core::sharp_icon`). Where Lucide has an angular icon that means the same as a round one, Cyberdeck draws that instead (`iconSwaps`): the square key, the stacked server for a table, square checks and crosses, the bracketed magnifier, and brackets for Follow. Its dots, badges and handles are square too (`chrome::pill`). Its dialogs are Akyba's own frame with the top right corner cut and a sharp close (`chrome::dialog`); every dialog opens through it, so the frame follows the theme. Rajdhani (500, 600, 700, OFL 1.1, no Reserved Font Name) for the interface; code stays in JetBrains Mono.
+
+## Saturn, the glass theme
+
+### Glass and cards
 
 Akyba layers its window the way macOS apps do (Finder, Xcode, Mail):
 
@@ -68,7 +74,7 @@ Akyba layers its window the way macOS apps do (Finder, Xcode, Mail):
 
 The research behind this, with Apple's measured material values, is summarised in the commit that introduced it.
 
-## Corners, from the window inward
+### Corners, from the window inward
 
 Inner radius = outer radius − inset. The scale starts at the one corner Akyba does not draw, the macOS window (about 16):
 
@@ -89,7 +95,3 @@ Development tools need room for content, so controls and list rows are 28px tall
 Weights: 400 for running text, 500 for every control and name, 300 for big headlines with their point in 600 ("No terminals **yet**"). Nothing else is semibold.
 
 Urbanist for the interface and JetBrains Mono for terminals and code, bundled so Akyba never loads fonts from the network. GPUI draws a variable font only at its default weight, so `crates/akyba/assets/fonts` holds one static file per weight in use (Urbanist 300, 400, 500, 600; JetBrains Mono 400, 700), instanced from the variable fonts with fontTools. Both are OFL 1.1 with no Reserved Font Name.
-
-### Cyberdeck
-
-The second theme. Its own true-grey neutrals on an opaque near-black ground (near-white in light mode); its signal colours are its own, saturated: neon on the dark ground, deep on the light, meaning what Akyba's mean (blue working, orange needs you, green your turn, red errors). Square panels, their top-right corner cut, with a 1px edge that takes the status ring's colour; cards 4px apart. A selection is an ink outline round a faint fill, its bottom-right corner cut, and buttons are the same outline (the primary one blue, its words blue too). Tabs are words over a bar; a choice is a selector, the value between two arrows; a switch is the word and a cut box. Focus is ink, not blue; the editor's current line is marked by its number alone. Each setting is its own notched slab, agent and usage cards are grey slabs, usage meters are rows of square dots. Its icons are Akyba's own Lucide icons drawn sharp: square line ends, mitred joins, square corners and square dots, made from the same drawings as they load (`akyba_core::sharp_icon`). Where Lucide has an angular icon that means the same as a round one, Cyberdeck draws that instead (`iconSwaps`): the square key, the stacked server for a table, square checks and crosses, the bracketed magnifier, and brackets for Follow. Its dots, badges and handles are square too (`chrome::pill`). Its dialogs are Akyba's own frame with the top right corner cut and a sharp close (`chrome::dialog`); every dialog opens through it, so the frame follows the theme. Rajdhani (500, 600, 700, OFL 1.1, no Reserved Font Name) for the interface; code stays in JetBrains Mono.

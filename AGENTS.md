@@ -58,12 +58,14 @@ Akyba has a design system, and the code follows it. Full rules in
   mode, white in dark, at a low alpha.
 - **Colour has a job or it isn't there.** Blue: working, focus, the primary action. Orange: needs
   you. Green: your turn. Red: errors, always with words. Everything else is neutral.
-- **Glass and cards.** The title bar and the gaps are glass; the sidebar, panes and editor are
-  opaque cards (`chrome::panel`, `chrome::card`). Controls that belong together sit in a
-  `chrome::track`.
-- **Corners nest:** inner radius = outer radius − inset, starting from the macOS window (about 16).
-  Cards 10, controls 6, chips 4. Nothing is rounder than what holds it.
-- **Density:** controls are 28px tall (`chrome::CONTROL_HEIGHT`), cards 6px apart, padded 4px.
+- **Two themes, one set of components.** Cyberdeck (the default: square, cut corners, opaque) and
+  Saturn (glass between rounded cards). The sidebar, panes and editor are cards (`chrome::panel`,
+  `chrome::card`); controls that belong together sit in a `chrome::track`. A component draws the
+  version its theme asks for; see the design system.
+- **Corners nest** (in Saturn): inner radius = outer radius − inset, starting from the macOS window
+  (about 16). Cards 10, controls 6, chips 4. Nothing is rounder than what holds it.
+- **Density:** controls are 28px tall (`chrome::CONTROL_HEIGHT`), cards 6px apart (4 in
+  Cyberdeck), padded 4px.
   Weights 400 for text, 500 for controls and names; semibold only in headlines.
 - **Icon buttons have a tooltip** saying what they do: `chrome::tip(..)`, or `chrome::tip_for(..,
 Action)` when a shortcut does the same, so the shortcut shows. A button that says what it does
@@ -73,7 +75,7 @@ Action)` when a shortcut does the same, so the shortcut shows. A button that say
   applies (the arrow beside New agent, a pane's ⋯, the repo's ⋯, a chip) and its line in the menu
   bar (`set_menus` in `main.rs`). A feature found only by typing its name is a feature nobody finds.
 - **Words:** sentence case, no emoji, buttons say what happens ("Add repo", not "OK").
-- Both themes, always: check light and dark.
+- Both themes, in both appearances, always: Cyberdeck and Saturn, light and dark (`pnpm gallery`).
 
 - **Sizes, spacing, corners, tones and icons come from the scales**: `.text_scale(text::LABEL)`,
   `len(space::SPACE_3)`, `theme::corner(radius::RADIUS_SM)`, `theme::tone(tone::HOVER)`, `icon::SM`,
