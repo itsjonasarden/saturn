@@ -1,5 +1,6 @@
 //! The app's assets: the few Lucide icons Saturn uses beyond gpui-kit's default set (ISC, see
-//! `assets/icons/LICENSE-LUCIDE`), falling back to gpui-kit's bundled assets for the rest.
+//! `assets/icons/LICENSE-LUCIDE`), falling back to gpui-kit's bundled assets for the rest, and the
+//! sharp version of every icon, made from it as it loads.
 
 use std::borrow::Cow;
 
@@ -95,6 +96,13 @@ pub struct Assets;
 
 impl AssetSource for Assets {
     fn load(&self, path: &str) -> Result<Option<Cow<'static, [u8]>>> {
+        // `icons-sharp/x.svg` is `icons/x.svg` with its corners squared, for a theme with sharp
+        // icons: one set of drawings, two looks.
+        if let Some(name) = path.strip_prefix("icons-sharp/") {
+            let Some(round) = self.load(&format!("icons/{name}"))? else { return Ok(None) };
+            let sharp = saturn_core::sharp_icon::sharpen(&String::from_utf8_lossy(&round));
+            return Ok(Some(Cow::Owned(sharp.into_bytes())));
+        }
         if let Some((_, bytes)) = ICONS.iter().find(|(name, _)| *name == path) {
             return Ok(Some(Cow::Borrowed(bytes)));
         }

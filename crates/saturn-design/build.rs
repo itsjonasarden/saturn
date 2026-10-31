@@ -246,6 +246,7 @@ fn looks(tokens: &Value, themes: &[Value]) -> String {
             ("meters", "Meters"),
             ("agentCards", "AgentCards"),
             ("currentLine", "CurrentLine"),
+            ("icons", "Icons"),
         ]
         .iter()
         .map(|(key, kind)| {

@@ -9,7 +9,7 @@ use gpui_kit::{
     ParentElement as _, PathBuilder, Pixels, SharedString, StatefulInteractiveElement as _, Styled as _, Window,
     canvas, div, fill, linear_color_stop, linear_gradient, point, prelude::FluentBuilder as _, px, size, svg,
 };
-use saturn_design::{Buttons, Choices, Corners, Look, Selection, Switch, Tabs, color, radius, space};
+use saturn_design::{Buttons, Choices, Corners, Icons, Look, Selection, Switch, Tabs, color, radius, space};
 
 use crate::theme::TypeScale as _;
 use crate::theme::{self, len};
@@ -43,7 +43,12 @@ pub const CONTROL_HEIGHT: f32 = saturn_design::size::CONTROL;
 /// A Lucide icon from gpui-kit's bundled set, e.g. `panel-left`. SVGs don't inherit the text
 /// colour, so it is given here.
 pub fn icon(name: &str, size: f32, color: gpui_kit::Hsla) -> impl IntoElement {
-    svg().path(SharedString::from(format!("icons/{name}.svg"))).size(px(size)).flex_none().text_color(color)
+    // A theme with sharp icons draws the same ones squared off (see `assets`).
+    let folder = match look().icons {
+        Icons::Round => "icons",
+        Icons::Sharp => "icons-sharp",
+    };
+    svg().path(SharedString::from(format!("{folder}/{name}.svg"))).size(px(size)).flex_none().text_color(color)
 }
 
 /// The theme: what every component here draws by. Components ask it which version of themselves

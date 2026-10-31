@@ -162,6 +162,15 @@ pub enum AgentCards {
     Slab,
 }
 
+/// How a theme's icons are drawn.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Icons {
+    /// Lucide as drawn: round line ends and joins, rounded corners.
+    Round,
+    /// The same icons with square ends, mitred joins and square corners.
+    Sharp,
+}
+
 /// How the editor marks the line the cursor is on.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum CurrentLine {
@@ -203,6 +212,7 @@ pub struct Look {
     pub meters: Meters,
     pub agent_cards: AgentCards,
     pub current_line: CurrentLine,
+    pub icons: Icons,
 }
 
 static LIGHT: AtomicBool = AtomicBool::new(false);
@@ -287,8 +297,8 @@ impl Shadows {
 #[allow(clippy::unreadable_literal, clippy::doc_markdown)]
 mod generated {
     use super::{
-        AgentCards, Buttons, Choices, Color, Corners, CurrentLine, Look, Menus, Meters, Selection, SettingRows, Shadow,
-        Shadows, Surfaces, Switch, Tabs, TextStyle, TitleBar, Token, Tone,
+        AgentCards, Buttons, Choices, Color, Corners, CurrentLine, Icons, Look, Menus, Meters, Selection, SettingRows,
+        Shadow, Shadows, Surfaces, Switch, Tabs, TextStyle, TitleBar, Token, Tone,
     };
     include!(concat!(env!("OUT_DIR"), "/tokens.rs"));
 }

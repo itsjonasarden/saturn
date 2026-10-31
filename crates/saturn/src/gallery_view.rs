@@ -157,6 +157,45 @@ fn icons() -> impl IntoElement {
     }))
 }
 
+/// The icons the app shows most, at the size they are drawn in a control, to see the set's style.
+fn icon_set() -> impl IntoElement {
+    let names = [
+        "folder",
+        "folder-git",
+        "file-code",
+        "file-plus",
+        "folder-plus",
+        "git-branch",
+        "git-compare",
+        "git-pull-request",
+        "git-merge",
+        "waypoints",
+        "settings",
+        "panel-left",
+        "panel-top",
+        "panel-right",
+        "ellipsis",
+        "x",
+        "plus",
+        "chevron-down",
+        "search",
+        "trash",
+        "calendar-clock",
+        "send",
+        "users",
+        "bot",
+        "circle-check",
+        "circle-x",
+        "square-terminal",
+        "locate",
+        "maximize-2",
+        "message-square",
+        "database",
+        "globe",
+    ];
+    row().children(names.map(|name| chrome::icon(name, icon::LG, theme::color(color::INK))))
+}
+
 fn buttons() -> impl IntoElement {
     row()
         .child(chrome::button("plain", "Check now", None, false))
@@ -259,7 +298,8 @@ impl Render for GalleryView {
                             .child(section("Spacing", spacing()))
                             .child(section("Colours", colours()))
                             .child(section("Tones", tones()))
-                            .child(section("Icons", icons())),
+                            .child(section("Icons", icons()))
+                            .child(section("Icon set", icon_set())),
                     )
                     .child(
                         column()
