@@ -365,7 +365,7 @@ fn render_icon(icon: FileIcon) -> AnyElement {
             .flex()
             .items_center()
             .justify_center()
-            .rounded(px(3.))
+            .rounded(theme::corner(3.))
             .font_family(saturn_design::font::MONO)
             .font_weight(gpui_kit::FontWeight::BOLD)
             .text_size(px(if text.len() > 1 { 7. } else { 9. }))

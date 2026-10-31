@@ -374,7 +374,7 @@ pub fn checkbox(id: impl Into<ElementId>, staged: Staged) -> gpui_kit::Stateful<
         .items_center()
         .justify_center()
         .size(px(14.))
-        .rounded(px(4.))
+        .rounded(theme::corner(4.))
         .cursor_pointer()
         .when(on, |box_| {
             box_.bg(theme::color(color::BLUE_VIVID)).shadow(vec![gpui_kit::BoxShadow {
