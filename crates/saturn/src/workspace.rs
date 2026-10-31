@@ -4089,8 +4089,8 @@ impl Workspace {
         div()
             .id(id)
             .flex_none()
-            .when(vertical, |d| d.w(len(space::SPACE_2)).h_full().cursor(CursorStyle::ResizeLeftRight))
-            .when(!vertical, |d| d.h(len(space::SPACE_2)).w_full().cursor(CursorStyle::ResizeUpDown))
+            .when(vertical, |d| d.w(len(chrome::pane_gap())).h_full().cursor(CursorStyle::ResizeLeftRight))
+            .when(!vertical, |d| d.h(len(chrome::pane_gap())).w_full().cursor(CursorStyle::ResizeUpDown))
             .on_drag(divider, |_, _, _, cx| cx.new(|_| DividerPreview))
             .on_click(cx.listener(move |this, event: &ClickEvent, _, cx| {
                 if event.click_count() != 2 {
@@ -4447,7 +4447,7 @@ impl Workspace {
     fn render_workbench(&self, cx: &mut Context<Self>) -> impl IntoElement {
         let panels = self.panels.on_screen(self.layout.maximized.is_some());
         let editor_maximized = self.editor.read(cx).maximized();
-        let half_gap = len(space::SPACE_2 / 2.);
+        let half_gap = len(chrome::pane_gap() / 2.);
         let grid = if self.layout.is_empty() {
             chrome::empty_grid(cx.listener(|this, _, window, cx| {
                 this.open_terminal(Placement::New, window, cx);
@@ -4660,7 +4660,7 @@ impl Render for Workspace {
             .size_full()
             .flex()
             .flex_col()
-            .px(len(space::SPACE_2))
+            .px(len(chrome::pane_gap()))
             // No fill: the title bar and the gaps are the window's glass (theme::overlay). The
             // status bar's card sets the space below.
             .text_color(theme::color(color::INK))

@@ -30,6 +30,13 @@ pub fn tip_for<A: Action + Clone>(
 /// Width of Cyberdeck's selectors and switches, the same for both so a column of settings lines up.
 const CHOICE_WIDTH: f32 = 136.;
 
+/// The gap between cards (panes, the sidebar, the editor, the status bar) and round the window's
+/// edge: Saturn's glass shows through 8px; Cyberdeck has no glass to show, so its cards sit 4px
+/// apart.
+pub fn pane_gap() -> f32 {
+    if cyberdeck() { space::SPACE_1 } else { space::SPACE_2 }
+}
+
 /// Height of every control: tabs, buttons, track items, segments. Dense, as development tools are.
 pub const CONTROL_HEIGHT: f32 = 28.0;
 
