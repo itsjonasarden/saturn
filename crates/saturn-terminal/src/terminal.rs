@@ -279,10 +279,10 @@ impl Terminal {
             // A marked link can run on over the next rows; it ends where the marking does.
             let same = |at: &Point| grid[*at].hyperlink().is_some_and(|link| link.uri() == target);
             let (mut start, mut end) = (point, point);
-            while let Some(previous) = self.neighbour(start, false).filter(same) {
+            while let Some(previous) = self.continues(start, false, same) {
                 start = previous;
             }
-            while let Some(next) = self.neighbour(end, true).filter(same) {
+            while let Some(next) = self.continues(end, true, same) {
                 end = next;
             }
             return can_open(&target).then_some(Link { start, end, target });
@@ -304,6 +304,22 @@ impl Terminal {
         let (range, target) = url_at(&text, index)?;
         let at = |index: usize| Some(Point::new(first + i32::try_from(index / columns).ok()?, Column(index % columns)));
         Some(Link { start: at(range.start)?, end: at(range.end - 1)?, target })
+    }
+
+    /// The next cell (or the one before) that is still the link `same` tells, from `at`: the very
+    /// next one, or one on the next row past blank cells. A program that lays out its own text,
+    /// as Claude Code does, breaks a long link's words onto a new row itself, leaving the rest of
+    /// the row blank and perhaps indenting the next.
+    fn continues(&self, at: Point, forward: bool, same: impl Fn(&Point) -> bool) -> Option<Point> {
+        let grid = self.term.grid();
+        let blank = |point: &Point| grid[*point].hyperlink().is_none() && matches!(grid[*point].c, ' ' | '\0');
+        let mut cursor = self.neighbour(at, forward)?;
+        while blank(&cursor) && (cursor.line.0 - at.line.0).abs() <= 1 {
+            cursor = self.neighbour(cursor, forward)?;
+        }
+        // Blanks are skipped only to reach another row: within a row they end the link.
+        let reached = cursor == self.neighbour(at, forward)? || cursor.line != at.line;
+        (reached && (cursor.line.0 - at.line.0).abs() <= 1 && same(&cursor)).then_some(cursor)
     }
 
     /// The cell after (or before) a point, reading left to right and on to the next row.
@@ -376,6 +392,21 @@ mod tests {
         assert_eq!(marked.target, "https://acme.dev/docs");
         assert_eq!((marked.start, marked.end), (Point::new(Line(2), Column(0)), Point::new(Line(2), Column(7))));
         assert_eq!(terminal.link_at(2, 10), None);
+    }
+
+    #[test]
+    fn a_marked_link_broken_onto_a_new_row_is_one_link() {
+        let size = GridSize { cols: 20, rows: 5 };
+        let (mut terminal, _output) = Terminal::spawn(Path::new("/tmp"), size, &[]).expect("a shell starts");
+        // As Claude Code writes a long link's words: the row ends early, the next is indented.
+        terminal.advance(b"\x1b[2J\x1b[H\x1b]8;;https://acme.dev/plan\x1b\\Manufacturing plan\x1b]8;;\x1b\\\r\n");
+        terminal.advance(b"  \x1b]8;;https://acme.dev/plan\x1b\\upload\x1b]8;;\x1b\\ done");
+
+        for (row, col) in [(0, 2), (1, 4)] {
+            let link = terminal.link_at(row, col).expect("the link, from either row");
+            assert_eq!((link.start, link.end), (Point::new(Line(0), Column(0)), Point::new(Line(1), Column(7))));
+        }
+        assert_eq!(terminal.link_at(1, 10), None);
     }
 
     #[test]
