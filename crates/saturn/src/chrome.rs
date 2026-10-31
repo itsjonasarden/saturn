@@ -490,10 +490,10 @@ pub fn switch(id: &'static str, on: bool, toggle: impl Fn(&bool, &mut Window, &m
     }
     let block = div()
         .absolute()
-        .top(px(4.))
-        .bottom(px(4.))
-        .w(px(40.))
-        .map(|block| if on { block.right(px(4.)) } else { block.left(px(4.)) })
+        .top(px(3.))
+        .bottom(px(3.))
+        .w(px(22.))
+        .map(|block| if on { block.right(px(3.)) } else { block.left(px(3.)) })
         .child(cut_surface(
             gpui_kit::transparent_black(),
             if on { theme::color(color::INK) } else { theme::overlay(0.22) },
@@ -505,18 +505,21 @@ pub fn switch(id: &'static str, on: bool, toggle: impl Fn(&bool, &mut Window, &m
         .id(id)
         .flex()
         .items_center()
-        .gap(len(space::SPACE_2))
+        .justify_end()
+        .gap(len(space::SPACE_3))
+        // As wide as a selector, the switch at its right end, so every setting's words wrap at the
+        // same place.
         .w(px(CHOICE_WIDTH))
         .cursor_pointer()
         .text_size(px(13.))
         .font_weight(FontWeight::MEDIUM)
         .text_color(theme::color(if on { color::INK } else { color::INK_MUTED }))
-        .child(div().flex_none().w(px(24.)).child(if on { "On" } else { "Off" }))
+        .child(if on { "On" } else { "Off" })
         .child(
             div()
                 .relative()
-                .flex_1()
-                .h(len(CONTROL_HEIGHT))
+                .w(px(52.))
+                .h(px(22.))
                 .child(cut_surface(theme::overlay(0.3), theme::color(color::SURFACE), 1., 6., Cut::BottomRight))
                 .child(block),
         )
