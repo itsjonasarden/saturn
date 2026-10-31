@@ -14,8 +14,8 @@ use akyba_core::usage::{self, Limit};
 use akyba_design::space;
 use gpui_kit::prelude::FluentBuilder as _;
 use gpui_kit::{
-    App, AppContext as _, FontWeight, Global, Hsla, IntoElement, ParentElement as _, StatefulInteractiveElement as _,
-    Styled as _, div, px,
+    App, AppContext as _, Bounds, FontWeight, Global, Hsla, IntoElement, ParentElement as _, PathBuilder, Pixels,
+    StatefulInteractiveElement as _, Styled as _, Window, canvas, div, point, px,
 };
 
 use crate::theme::TypeScale as _;
@@ -198,22 +198,47 @@ fn white(alpha: f32) -> Hsla {
     crate::theme::color(akyba_design::color::INK_ON_ACCENT).opacity(alpha)
 }
 
-/// The dotted meter: a row of square dots, the used ones filled, orange from 80%.
-fn dots(percent: f64) -> gpui_kit::Div {
-    const DOTS: u8 = 25;
-    #[expect(clippy::cast_possible_truncation, clippy::cast_sign_loss, reason = "a share of 25 dots")]
-    let lit = ((percent / 100.).clamp(0., 1.) * f64::from(DOTS)).round() as u8;
-    let fill = crate::theme::color(if percent >= 80. { akyba_design::color::ORANGE } else { akyba_design::color::INK });
-    div().flex().gap(len(space::SPACE_0)).children((0..DOTS).map(|index| {
-        let dot = div().flex_1().h(px(4.));
-        if index < lit { dot.bg(fill) } else { dot.bg(crate::theme::tone(tone::RULE)) }
-    }))
+/// The slanted meter: twenty low segments leaning like a run of slashes, the used ones lit,
+/// orange from 80%. Drawn, since GPUI's boxes can't lean.
+fn slants(percent: f64) -> gpui_kit::AnyElement {
+    const SEGMENTS: u8 = 20;
+    const HEIGHT: f32 = 4.;
+    const GAP: f32 = 2.;
+    // How far a segment's top sits right of its foot: a lean of about 30 degrees.
+    const LEAN: f32 = HEIGHT * 0.58;
+    #[expect(clippy::cast_possible_truncation, clippy::cast_sign_loss, reason = "a share of 20 segments")]
+    let lit = ((percent / 100.).clamp(0., 1.) * f64::from(SEGMENTS)).round() as u8;
+    let on = crate::theme::color(if percent >= 80. { akyba_design::color::ORANGE } else { akyba_design::color::INK });
+    let off = crate::theme::tone(tone::RULE);
+    canvas(
+        |_, _, _| (),
+        move |bounds: Bounds<Pixels>, (), window: &mut Window, _: &mut App| {
+            let step = (f32::from(bounds.size.width) - LEAN) / f32::from(SEGMENTS);
+            let (top, bottom) = (bounds.origin.y, bounds.origin.y + px(HEIGHT));
+            let x = |at: f32| bounds.origin.x + px(at);
+            for index in 0..SEGMENTS {
+                let left = f32::from(index) * step;
+                let mut path = PathBuilder::fill();
+                path.move_to(point(x(left + LEAN), top));
+                path.line_to(point(x(left + step - GAP + LEAN), top));
+                path.line_to(point(x(left + step - GAP), bottom));
+                path.line_to(point(x(left), bottom));
+                path.close();
+                if let Ok(path) = path.build() {
+                    window.paint_path(path, if index < lit { on } else { off });
+                }
+            }
+        },
+    )
+    .w_full()
+    .h(px(HEIGHT))
+    .into_any_element()
 }
 
 /// A hairline meter on the gradient, white with a soft glow; orange from 80%.
 fn meter(percent: f64) -> gpui_kit::AnyElement {
-    if crate::chrome::look().meters == akyba_design::Meters::Dots {
-        return dots(percent).into_any_element();
+    if crate::chrome::look().meters == akyba_design::Meters::Slants {
+        return slants(percent);
     }
     #[expect(clippy::cast_possible_truncation, reason = "a share between 0 and 1")]
     let width = (percent / 100.).clamp(0., 1.) as f32;

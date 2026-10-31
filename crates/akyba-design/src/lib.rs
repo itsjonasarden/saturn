@@ -150,8 +150,17 @@ pub enum SettingRows {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Meters {
     Bars,
-    /// Rows of square dots.
+    /// Rows of low slanted segments, like a run of slashes.
+    Slants,
+}
+
+/// What an empty area (the grid with no terminal) shows behind its words.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum EmptyAreas {
+    /// A faint dot grid, brightest in the middle.
     Dots,
+    /// Faint crosshairs on a wider grid, like a technical sheet; Akyba's mark above the words.
+    Crosshairs,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -210,6 +219,7 @@ pub struct Look {
     pub menus: Menus,
     pub setting_rows: SettingRows,
     pub meters: Meters,
+    pub empty_areas: EmptyAreas,
     pub agent_cards: AgentCards,
     pub current_line: CurrentLine,
     pub icons: Icons,
@@ -300,8 +310,8 @@ impl Shadows {
 #[allow(clippy::unreadable_literal, clippy::doc_markdown)]
 mod generated {
     use super::{
-        AgentCards, Buttons, Choices, Color, Corners, CurrentLine, Icons, Look, Menus, Meters, Selection, SettingRows,
-        Shadow, Shadows, Surfaces, Switch, Tabs, TextStyle, TitleBar, Token, Tone,
+        AgentCards, Buttons, Choices, Color, Corners, CurrentLine, EmptyAreas, Icons, Look, Menus, Meters, Selection,
+        SettingRows, Shadow, Shadows, Surfaces, Switch, Tabs, TextStyle, TitleBar, Token, Tone,
     };
     include!(concat!(env!("OUT_DIR"), "/tokens.rs"));
 }

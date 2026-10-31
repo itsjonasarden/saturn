@@ -138,31 +138,44 @@ impl AppView {
                 }
             }))
             .child(
-                // A little above centre, where the eye takes the middle to be.
-                div().flex_1().flex().items_center().justify_center().pb(len(2. * space::SPACE_6)).child(
-                    div()
-                        .w(px(akyba_design::size::DIALOG_SMALL))
-                        .flex()
-                        .flex_col()
-                        .gap(len(space::SPACE_6))
-                        .child(
-                            div()
-                                .flex()
-                                .flex_col()
-                                .gap(len(space::SPACE_2))
-                                .child(div().pb(len(space::SPACE_4)).child(chrome::mark(text::HEADLINE.size)))
-                                .child(chrome::headline("Open a", "project", text::HEADLINE.size))
-                                .child(div().text_scale(text::BODY).text_color(theme::color(color::INK_MUTED)).child(
-                                    if recent.is_empty() {
-                                        "Pick the folder you want your agents to work in."
-                                    } else {
-                                        "Pick up where you left off, or open another folder."
-                                    },
-                                )),
-                        )
-                        .children((!recent.is_empty()).then(|| chrome::card().child(Self::render_recent(&recent, cx))))
-                        .child(div().flex().child(open)),
-                ),
+                // A little above centre, where the eye takes the middle to be, over the theme's
+                // empty backdrop.
+                div()
+                    .relative()
+                    .flex_1()
+                    .flex()
+                    .items_center()
+                    .justify_center()
+                    .pb(len(2. * space::SPACE_6))
+                    .child(chrome::empty_backdrop())
+                    .child(
+                        div()
+                            .w(px(akyba_design::size::DIALOG_SMALL))
+                            .flex()
+                            .flex_col()
+                            .gap(len(space::SPACE_6))
+                            .child(
+                                div()
+                                    .flex()
+                                    .flex_col()
+                                    .gap(len(space::SPACE_2))
+                                    .child(div().pb(len(space::SPACE_4)).child(chrome::mark(text::HEADLINE.size)))
+                                    .child(chrome::headline("Open a", "project", text::HEADLINE.size))
+                                    .child(
+                                        div().text_scale(text::BODY).text_color(theme::color(color::INK_MUTED)).child(
+                                            if recent.is_empty() {
+                                                "Pick the folder you want your agents to work in."
+                                            } else {
+                                                "Pick up where you left off, or open another folder."
+                                            },
+                                        ),
+                                    ),
+                            )
+                            .children(
+                                (!recent.is_empty()).then(|| chrome::card().child(Self::render_recent(&recent, cx))),
+                            )
+                            .child(div().flex().child(open)),
+                    ),
             )
     }
 }

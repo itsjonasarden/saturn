@@ -244,6 +244,7 @@ fn looks(tokens: &Value, themes: &[Value]) -> String {
             ("menus", "Menus"),
             ("settingRows", "SettingRows"),
             ("meters", "Meters"),
+            ("emptyAreas", "EmptyAreas"),
             ("agentCards", "AgentCards"),
             ("currentLine", "CurrentLine"),
             ("icons", "Icons"),
