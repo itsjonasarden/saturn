@@ -261,7 +261,7 @@ fn looks(tokens: &Value, themes: &[Value]) -> String {
         })
         .collect();
         looks.push(format!(
-            "Look {{ id: {:?}, name: {:?}, description: {:?}, sans: font::{}, panel_cut: {:?}, control_cut: {:?}, card_gap: {:?}, control_column: {:?}, focus: color::{}, {} }}",
+            "Look {{ id: {:?}, name: {:?}, description: {:?}, sans: font::{}, panel_cut: {:?}, control_cut: {:?}, card_gap: {:?}, control_column: {:?}, icon_swaps: &[{}], focus: color::{}, {} }}",
             text("id"),
             text("name"),
             text("description"),
@@ -270,6 +270,10 @@ fn looks(tokens: &Value, themes: &[Value]) -> String {
             number("controlCut"),
             spacing[text("cardGap")],
             number("controlColumn"),
+            theme["iconSwaps"]
+                .as_object()
+                .map(|swaps| swaps.iter().map(|(from, to)| format!("({from:?}, {:?})", to.as_str().expect("an icon name"))).collect::<Vec<_>>().join(", "))
+                .unwrap_or_default(),
             const_name(text("focus")),
             options.join(", ")
         ));

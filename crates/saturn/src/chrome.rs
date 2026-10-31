@@ -43,7 +43,9 @@ pub const CONTROL_HEIGHT: f32 = saturn_design::size::CONTROL;
 /// A Lucide icon from gpui-kit's bundled set, e.g. `panel-left`. SVGs don't inherit the text
 /// colour, so it is given here.
 pub fn icon(name: &str, size: f32, color: gpui_kit::Hsla) -> impl IntoElement {
-    // A theme with sharp icons draws the same ones squared off (see `assets`).
+    // A theme may draw an angular icon in place of a round one, and with sharp icons draws them
+    // squared off (see `assets`).
+    let name = look().icon_swaps.iter().find(|(from, _)| *from == name).map_or(name, |(_, to)| *to);
     let folder = match look().icons {
         Icons::Round => "icons",
         Icons::Sharp => "icons-sharp",

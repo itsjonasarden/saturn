@@ -213,6 +213,8 @@ pub struct Look {
     pub agent_cards: AgentCards,
     pub current_line: CurrentLine,
     pub icons: Icons,
+    /// Icons drawn as another: a Lucide icon in place of one too round for the theme.
+    pub icon_swaps: &'static [(&'static str, &'static str)],
 }
 
 static LIGHT: AtomicBool = AtomicBool::new(false);
