@@ -75,7 +75,6 @@ actions!(
         ToggleSidebar,
         ToggleEditor,
         OpenProject,
-        CloseRepo,
         OpenSettings,
         SaveFile,
         OpenTicketPicker,
@@ -196,7 +195,6 @@ pub fn commands() -> Vec<(&'static str, &'static str, Box<dyn gpui_kit::Action>)
         ("Problems", "circle-x", Box::new(ShowProblems)),
         ("Save the file", "file-code", Box::new(SaveFile)),
         ("Add a repo", "folder", Box::new(OpenProject)),
-        ("Close this repo in the window", "x", Box::new(CloseRepo)),
         ("Settings", "settings", Box::new(OpenSettings)),
         ("Check for updates", "square-arrow-right", Box::new(crate::CheckForUpdates)),
     ]
@@ -431,8 +429,6 @@ enum OpenMenu {
     NewAgent,
     Pane(CellId),
     Repo,
-    /// A repo's tab, by its place among the tabs.
-    RepoTab(usize),
 }
 
 /// More ways to start agents, under New agent's arrow.
@@ -492,40 +488,7 @@ fn repo_menu() -> Vec<menu::Item> {
         Some(("git-branch", "History", Box::new(ShowHistory))),
         Some(("waypoints", "Impact of the changes", Box::new(ShowImpact))),
         Some(("git-compare", "Compare with a branch or commit", Box::new(CompareWith))),
-        None,
-        Some(("x", "Close this repo in the window", Box::new(CloseRepo))),
     ]
-}
-
-/// A repo's tab, right-clicked.
-fn repo_tab_menu() -> Vec<menu::Item> {
-    vec![Some(("x", "Close this repo in the window", Box::new(CloseRepo)))]
-}
-
-/// A repo's tab being dragged to another place among the tabs.
-#[derive(Clone)]
-struct DraggedRepo {
-    index: usize,
-    name: String,
-}
-
-impl Render for DraggedRepo {
-    fn render(&mut self, _: &mut Window, _: &mut Context<Self>) -> impl IntoElement {
-        div()
-            .px(len(space::SPACE_3))
-            .h(len(TITLEBAR_CONTROL))
-            .flex()
-            .items_center()
-            .rounded(theme::corner(radius::RADIUS_SM))
-            .bg(theme::fill_pressed())
-            .border_1()
-            .border_color(theme::overlay(0.3))
-            .text_size(px(13.))
-            .font_weight(FontWeight::MEDIUM)
-            .text_color(theme::color(color::INK))
-            .font_family(saturn_design::sans())
-            .child(self.name.clone())
-    }
 }
 
 /// A branch checked out in a repository (or worktree), named by its top folder.
@@ -1474,24 +1437,6 @@ impl Workspace {
     }
 
     /// Takes a repo out of the window's list. Its panes join the grid showing, still running.
-    /// Moves the repo tab at `from` to `to`, as a browser's tabs move. The first is the window's
-    /// home, which it reopens with.
-    fn move_project(&mut self, from: usize, to: usize, cx: &mut Context<Self>) {
-        if from == to || from >= self.projects.len() || to >= self.projects.len() {
-            return;
-        }
-        let project = self.projects.remove(from);
-        self.projects.insert(to, project);
-        self.save_session(cx);
-        cx.notify();
-    }
-
-    /// Closes the repo showing in this window (Close this repo, in its ⋯ and the menu bar).
-    fn close_repo(&mut self, _: &CloseRepo, window: &mut Window, cx: &mut Context<Self>) {
-        let page = self.page.clone();
-        self.remove_project(&page, window, cx);
-    }
-
     fn remove_project(&mut self, project: &Path, window: &mut Window, cx: &mut Context<Self>) {
         if self.projects.len() < 2 {
             return;
@@ -4009,15 +3954,6 @@ impl Workspace {
         cx: &mut Context<Self>,
     ) {
         self.open_menu = None;
-        // A tab's menu acts on its own repo, which needn't be the one showing.
-        if let OpenMenu::RepoTab(index) = which
-            && action.as_any().is::<CloseRepo>()
-        {
-            if let Some(project) = self.projects.get(index).cloned() {
-                self.remove_project(&project, window, cx);
-            }
-            return;
-        }
         if let OpenMenu::Pane(cell) = which {
             self.update_layout(window, cx, |layout| layout.focus_cell(cell));
         }
@@ -4041,7 +3977,6 @@ impl Workspace {
             OpenMenu::NewAgent => new_agent_menu(),
             OpenMenu::Pane(cell) => self.menu_for_pane(cell),
             OpenMenu::Repo => repo_menu(),
-            OpenMenu::RepoTab(_) => repo_tab_menu(),
         };
         if let Some(action) = pick.and_then(|index| items.into_iter().flatten().nth(index)).map(|(_, _, action)| action)
         {
@@ -4056,7 +3991,6 @@ impl Workspace {
                 OpenMenu::NewAgent => new_agent_menu(),
                 OpenMenu::Pane(cell) => self.menu_for_pane(cell),
                 OpenMenu::Repo => repo_menu(),
-                OpenMenu::RepoTab(_) => repo_tab_menu(),
             };
             let workspace = cx.weak_entity();
             let pick = move |action: Box<dyn Action>, window: &mut Window, cx: &mut gpui_kit::App| {
@@ -4437,9 +4371,9 @@ impl Workspace {
         .into_any_element()
     }
 
-    /// The window's repos, as tabs in the title bar: the selected one raised. Dragged, a tab moves
-    /// among the others; right-clicked it offers to close, and middle-clicked it closes (its panes
-    /// join the one showing). The ＋ after them adds one.
+    /// The window's repos, after the panel toggles in the title bar's one toolbar: the selected
+    /// one raised, ✕ on hover to take one out (its panes join the one showing). The ＋ after them
+    /// adds one.
     fn render_repo_tabs(&self, mut track: gpui_kit::Div, cx: &mut Context<Self>) -> gpui_kit::Div {
         let removable = self.projects.len() > 1;
         for (index, project) in self.projects.iter().enumerate() {
@@ -4451,36 +4385,51 @@ impl Workspace {
             });
             let name = project.file_name().map_or_else(|| "/".to_owned(), |name| name.to_string_lossy().into_owned());
             let picked = project.clone();
-            let closed = project.clone();
-            let tab = chrome::tab(("repo", index), selected)
-                .h(len(TITLEBAR_CONTROL))
-                .px(len(space::SPACE_3))
-                .text_color(theme::color(if selected { color::INK } else { color::INK_MUTED }))
-                .when_some(waiting, |item, state| item.child(status_dot(state)))
-                .child(name.clone())
-                .tooltip(chrome::tip("Drag to reorder; right-click or middle-click to close"))
-                // Closing is on the right button and the middle one, as browsers do, so no ✕ comes
-                // and goes under the pointer.
-                .when(removable, |item| {
-                    item.on_mouse_down(
-                        MouseButton::Right,
-                        cx.listener(move |this, _, _, cx| {
-                            this.open_menu = Some(OpenMenu::RepoTab(index));
-                            cx.notify();
-                        }),
-                    )
-                    .on_mouse_down(
-                        MouseButton::Middle,
-                        cx.listener(move |this, _, window, cx| this.remove_project(&closed, window, cx)),
-                    )
-                })
-                .on_drag(DraggedRepo { index, name }, |dragged, _, _, cx| cx.new(|_| dragged.clone()))
-                .drag_over::<DraggedRepo>(|style, _, _, _| style.bg(theme::fill_hover()))
-                .on_drop(
-                    cx.listener(move |this, dragged: &DraggedRepo, _, cx| this.move_project(dragged.index, index, cx)),
-                )
-                .on_click(cx.listener(move |this, _, window, cx| this.select_project(picked.clone(), window, cx)));
-            track = track.child(self.with_menu(OpenMenu::RepoTab(index), tab, cx));
+            let removed = project.clone();
+            // Each tab its own hover group, so only the one under the mouse shows its ✕.
+            let group = gpui_kit::SharedString::from(format!("repo-{index}"));
+            track = track.child(
+                chrome::tab(("repo", index), selected)
+                    .h(len(TITLEBAR_CONTROL))
+                    .relative()
+                    .group(group.clone())
+                    .px(len(space::SPACE_3))
+                    .text_color(theme::color(if selected { color::INK } else { color::INK_MUTED }))
+                    .when_some(waiting, |item, state| item.child(status_dot(state)))
+                    .child(name)
+                    // On hover only, floating over the tab's end, so a hidden ✕ takes no room.
+                    .when(removable, |item| {
+                        item.child(
+                            div()
+                                .id(("remove-repo", index))
+                                .absolute()
+                                .top(px(3.))
+                                .right(px(3.))
+                                .flex()
+                                .items_center()
+                                .justify_center()
+                                .size(px(18.))
+                                .rounded(theme::corner(radius::RADIUS_XS))
+                                .bg(theme::color(color::SURFACE))
+                                .shadow(vec![gpui_kit::BoxShadow {
+                                    color: theme::overlay(0.12),
+                                    offset: gpui_kit::point(px(0.), px(0.)),
+                                    blur_radius: px(0.),
+                                    spread_radius: px(1.),
+                                    inset: false,
+                                }])
+                                .invisible()
+                                .group_hover(group, gpui_kit::Styled::visible)
+                                .child(chrome::icon("x", 11., theme::color(color::INK_MUTED)))
+                                .tooltip(chrome::tip("Close this repo here (its terminals move to the one showing)"))
+                                .on_click(cx.listener(move |this, _, window, cx| {
+                                    cx.stop_propagation();
+                                    this.remove_project(&removed, window, cx);
+                                })),
+                        )
+                    })
+                    .on_click(cx.listener(move |this, _, window, cx| this.select_project(picked.clone(), window, cx))),
+            );
         }
         // Adding a repo belongs with the repos, set apart so it doesn't read as one. Square: a
         // track item is otherwise at least a full control wide.
@@ -4763,7 +4712,6 @@ impl Render for Workspace {
             .on_action(cx.listener(|this, _: &ToggleSidebar, _, cx| this.toggle_sidebar(cx)))
             .on_action(cx.listener(|this, _: &ToggleEditor, _, cx| this.toggle_editor(cx)))
             .on_action(cx.listener(|_, _: &OpenProject, window, cx| Self::open_project(window, cx)))
-            .on_action(cx.listener(Self::close_repo))
             .on_action(cx.listener(|this, _: &OpenSettings, window, cx| this.open_settings(window, cx)))
             .on_action(cx.listener(|this, _: &SaveFile, _, cx| this.save_file(cx)))
             .on_action(cx.listener(|this, _: &OpenTicketPicker, window, cx| {
