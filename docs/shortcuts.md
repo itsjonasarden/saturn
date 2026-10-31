@@ -23,5 +23,15 @@
 | ⌘,           | Settings                                             |
 | ⌘⇧N          | New agent, in a worktree of its own                  |
 | ⌘⌥B          | Show or hide your tickets (ClickUp)                  |
+| ⌘⇧B          | Best of N: one task, several agents                  |
+| ⌘⌥S          | Send to several agents                               |
+| ⌘⌥C          | Compare attempts                                     |
+| ⌘⇧R          | Search sessions and resume one                       |
+| ⌘⌥R          | Routines: agents on a schedule                       |
+| ⌘⌥W          | Worktrees                                            |
+| ⌘⌥E          | Create a worktree recipe                             |
+| ⌘⇧H          | History                                              |
+| ⌘⇧I          | Impact of the changes                                |
+| ⌘⇧C          | Compare with a branch or commit                      |
 
 Every shortcut but copy, paste and quit can be changed in Settings → Keyboard shortcuts.

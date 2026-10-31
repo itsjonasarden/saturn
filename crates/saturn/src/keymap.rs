@@ -8,10 +8,12 @@ use gpui_kit::{Action, App, KeyBinding, Keystroke, SharedString, Unbind};
 
 use crate::files_view::{NewFile, NewFolder};
 use crate::workspace::{
-    CloseTab, CommandPalette, EvenOutPanes, FocusDown, FocusLeft, FocusPane1, FocusPane2, FocusPane3, FocusPane4,
-    FocusPane5, FocusPane6, FocusPane7, FocusPane8, FocusPane9, FocusRight, FocusUp, GoToFile, NewTab, NextAttention,
-    NextTab, OpenProject, OpenSettings, OpenTicketPicker, PreviousTab, SaveFile, SplitDown, SplitRight, TextBigger,
-    TextReset, TextSmaller, ToggleEditor, ToggleMaximize, ToggleSidebar, ToggleTickets,
+    BestOfN, CloseTab, CommandPalette, CompareAttempts, CompareWith, CreateRecipe, EvenOutPanes, FocusDown, FocusLeft,
+    FocusPane1, FocusPane2, FocusPane3, FocusPane4, FocusPane5, FocusPane6, FocusPane7, FocusPane8, FocusPane9,
+    FocusRight, FocusUp, GoToFile, NewTab, NextAttention, NextTab, OpenProject, OpenSettings, OpenTicketPicker,
+    PreviousTab, SaveFile, SearchSessions, SendToSeveral, ShowHistory, ShowImpact, ShowRoutines, ShowWorktrees,
+    SplitDown, SplitRight, TextBigger, TextReset, TextSmaller, ToggleEditor, ToggleMaximize, ToggleSidebar,
+    ToggleTickets,
 };
 
 /// One shortcut a user can change.
@@ -58,6 +60,16 @@ pub const SHORTCUTS: &[Shortcut] = &[
     shortcut!("focus-7", "Pane 7", "Moving around", ["cmd-7"], FocusPane7),
     shortcut!("focus-8", "Pane 8", "Moving around", ["cmd-8"], FocusPane8),
     shortcut!("focus-9", "Pane 9", "Moving around", ["cmd-9"], FocusPane9),
+    shortcut!("best-of-n", "Best of N: one task, several agents", "Agents", ["cmd-shift-b"], BestOfN),
+    shortcut!("send-to-several", "Send to several agents", "Agents", ["cmd-alt-s"], SendToSeveral),
+    shortcut!("compare-attempts", "Compare attempts", "Agents", ["cmd-alt-c"], CompareAttempts),
+    shortcut!("search-sessions", "Search sessions and resume one", "Agents", ["cmd-shift-r"], SearchSessions),
+    shortcut!("routines", "Routines: agents on a schedule", "Agents", ["cmd-alt-r"], ShowRoutines),
+    shortcut!("worktrees", "Worktrees", "The repo", ["cmd-alt-w"], ShowWorktrees),
+    shortcut!("worktree-recipe", "Create worktree recipe", "The repo", ["cmd-alt-e"], CreateRecipe),
+    shortcut!("history", "History", "The repo", ["cmd-shift-h"], ShowHistory),
+    shortcut!("impact", "Impact of the changes", "The repo", ["cmd-shift-i"], ShowImpact),
+    shortcut!("compare-with", "Compare with a branch or commit", "The repo", ["cmd-shift-c"], CompareWith),
     shortcut!("go-to-file", "Go to file", "Files and views", ["cmd-p"], GoToFile),
     shortcut!("command-palette", "Command palette", "Files and views", ["cmd-shift-p"], CommandPalette),
     shortcut!("save", "Save the file", "Files and views", ["cmd-s"], SaveFile),
