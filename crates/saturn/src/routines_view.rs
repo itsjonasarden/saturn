@@ -441,11 +441,6 @@ fn folder_name(path: &Path) -> String {
 pub fn open(workspace: WeakEntity<Workspace>, folder: PathBuf, window: &mut Window, cx: &mut App) {
     let view = cx.new(|cx| RoutinesView::new(workspace, folder, window, cx));
     window.open_dialog(cx, move |dialog, _, _| {
-        dialog
-            .title("Routines")
-            .entrance(gpui_kit::component::dialog::DialogEntrance::None)
-            .bg(chrome::dialog_surface())
-            .w(px(saturn_design::size::DIALOG_LARGE))
-            .child(view.clone())
+        chrome::dialog(dialog, "Routines", saturn_design::size::DIALOG_LARGE, view.clone())
     });
 }

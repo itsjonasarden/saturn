@@ -418,6 +418,15 @@ pub fn tab_row() -> gpui_kit::Div {
     }
 }
 
+/// A small button that empties `field`: Saturn's own, so it is drawn in the theme's icons.
+pub fn clear_button(field: &gpui_kit::Entity<gpui_kit::component::input::InputState>) -> impl IntoElement {
+    let field = field.clone();
+    icon_button("clear-field", "x", true)
+        .size(px(saturn_design::size::CONTROL_SMALL))
+        .tooltip(tip("Clear"))
+        .on_click(move |_, window, cx| field.update(cx, |field, cx| field.set_value("", window, cx)))
+}
+
 /// A text field as tall as every control, so it lines up with the button beside it.
 pub fn input(state: &gpui_kit::Entity<gpui_kit::component::input::InputState>) -> gpui_kit::component::input::Input {
     // The style's height: `Input::h` sets only a multi-line field's.
@@ -733,6 +742,49 @@ pub fn headline(light: &str, bold: &str, size: f32) -> impl IntoElement {
 /// A dialog's own surface: solid, since the theme's background is clear for the glass.
 pub fn dialog_surface() -> gpui_kit::Hsla {
     theme::color(color::SURFACE_RAISED)
+}
+
+/// A dialog, `width` wide, titled `title`, holding `content`. Where the theme rounds corners it is
+/// gpui-kit's own; where it cuts them Saturn draws the frame itself (gpui-kit's can only round):
+/// an edge with its top right corner cut, the title, and a close button in that corner.
+pub fn dialog(
+    dialog: gpui_kit::component::dialog::Dialog,
+    title: impl Into<SharedString>,
+    width: f32,
+    content: impl IntoElement,
+) -> gpui_kit::component::dialog::Dialog {
+    use gpui_kit::component::WindowExt as _;
+    let dialog = dialog.entrance(gpui_kit::component::dialog::DialogEntrance::None).w(px(width));
+    if !cut_corners() {
+        return dialog.title(title.into()).bg(dialog_surface()).child(content);
+    }
+    let frame = div()
+        .relative()
+        .flex()
+        .flex_col()
+        .gap(len(space::SPACE_3))
+        .p(len(space::SPACE_5))
+        .child(cut_surface(theme::tone(tone::OUTLINE), dialog_surface(), 1., panel_cut(), Cut::TopRight))
+        .child(
+            div()
+                .flex()
+                .items_center()
+                .justify_between()
+                .child(div().text_scale(text::SUBTITLE).font_weight(FontWeight::SEMIBOLD).child(title.into()))
+                .child(
+                    corner_button("dialog-close", "x", false)
+                        .tooltip(tip("Close"))
+                        .on_click(|_, window, cx| window.close_dialog(cx)),
+                ),
+        )
+        .child(content);
+    // gpui-kit's frame stays, bare: its padding, fill and edge give way to Saturn's.
+    dialog
+        .close_button(false)
+        .p_0()
+        .bg(gpui_kit::transparent_black())
+        .border_color(gpui_kit::transparent_black())
+        .child(frame)
 }
 
 /// The dot grid: faint dots on an 18px pitch, only inside empty areas.

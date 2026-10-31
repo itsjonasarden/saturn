@@ -165,11 +165,6 @@ fn quiet(text: &str) -> impl IntoElement {
 pub fn open(workspace: WeakEntity<Workspace>, tab: TabId, title: String, window: &mut Window, cx: &mut App) {
     let view = cx.new(|cx| TeamView::new(workspace, tab, cx));
     window.open_dialog(cx, move |dialog, _, _| {
-        dialog
-            .title(format!("Agent team {title}"))
-            .entrance(gpui_kit::component::dialog::DialogEntrance::None)
-            .bg(chrome::dialog_surface())
-            .w(px(saturn_design::size::DIALOG_MEDIUM))
-            .child(view.clone())
+        chrome::dialog(dialog, format!("Agent team {title}"), saturn_design::size::DIALOG_MEDIUM, view.clone())
     });
 }

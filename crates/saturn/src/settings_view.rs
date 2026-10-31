@@ -991,11 +991,6 @@ pub fn open(
 ) {
     let view = cx.new(|cx| SettingsView::new(workspace, commands, agent_commands, window, cx));
     window.open_dialog(cx, move |dialog, _, _| {
-        dialog
-            .title("Settings")
-            .entrance(gpui_kit::component::dialog::DialogEntrance::None)
-            .bg(chrome::dialog_surface())
-            .w(px(saturn_design::size::DIALOG_LARGE))
-            .child(view.clone())
+        chrome::dialog(dialog, "Settings", saturn_design::size::DIALOG_LARGE, view.clone())
     });
 }

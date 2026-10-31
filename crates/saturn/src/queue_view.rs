@@ -48,12 +48,7 @@ pub fn open(workspace: WeakEntity<Workspace>, window: &mut Window, cx: &mut App)
             }
             list.into_any_element()
         };
-        dialog
-            .title("Waiting for you")
-            .entrance(gpui_kit::component::dialog::DialogEntrance::None)
-            .bg(chrome::dialog_surface())
-            .w(px(saturn_design::size::DIALOG_MEDIUM))
-            .child(list)
+        chrome::dialog(dialog, "Waiting for you", saturn_design::size::DIALOG_MEDIUM, list)
     });
 }
 

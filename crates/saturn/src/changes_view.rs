@@ -382,7 +382,7 @@ pub fn checkbox(id: impl Into<ElementId>, staged: Staged) -> gpui_kit::Stateful<
         .cursor_pointer()
         .when(on, |box_| {
             box_.bg(theme::color(color::BLUE_VIVID)).shadow(vec![gpui_kit::BoxShadow {
-                color: gpui_kit::hsla(0., 0., 1., 0.22),
+                color: theme::color(color::INK_ON_ACCENT).opacity(0.22),
                 offset: gpui_kit::point(px(0.), px(1.)),
                 blur_radius: px(0.),
                 spread_radius: px(0.),
@@ -396,8 +396,8 @@ pub fn checkbox(id: impl Into<ElementId>, staged: Staged) -> gpui_kit::Stateful<
                 .hover(|s| s.border_color(theme::tone(tone::OUTLINE_STRONG)))
         })
         .children(match staged {
-            Staged::Yes => Some(chrome::icon("check", icon::XS, gpui_kit::white())),
-            Staged::Partly => Some(chrome::icon("minus", icon::XS, gpui_kit::white())),
+            Staged::Yes => Some(chrome::icon("check", icon::XS, theme::color(color::INK_ON_ACCENT))),
+            Staged::Partly => Some(chrome::icon("minus", icon::XS, theme::color(color::INK_ON_ACCENT))),
             Staged::No => None,
         })
 }

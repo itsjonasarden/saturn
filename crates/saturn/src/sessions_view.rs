@@ -218,11 +218,6 @@ fn when(modified: std::time::SystemTime) -> String {
 pub fn open(workspace: WeakEntity<Workspace>, open: Vec<(String, TabId)>, window: &mut Window, cx: &mut gpui_kit::App) {
     let view = cx.new(|cx| SessionsView::new(workspace, open, window, cx));
     window.open_dialog(cx, move |dialog, _, _| {
-        dialog
-            .title("Search sessions")
-            .entrance(gpui_kit::component::dialog::DialogEntrance::None)
-            .bg(chrome::dialog_surface())
-            .w(px(saturn_design::size::DIALOG_LARGE))
-            .child(view.clone())
+        chrome::dialog(dialog, "Search sessions", saturn_design::size::DIALOG_LARGE, view.clone())
     });
 }

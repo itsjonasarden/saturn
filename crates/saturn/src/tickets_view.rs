@@ -272,7 +272,7 @@ impl TicketsView {
                         .flex()
                         .items_center()
                         .justify_center()
-                        .bg(theme::color(color::BLUE))
+                        .bg(theme::color(color::BLUE_VIVID))
                         .text_scale(text::BADGE)
                         .text_color(theme::color(color::INK_ON_ACCENT))
                         .child(count.to_string()),

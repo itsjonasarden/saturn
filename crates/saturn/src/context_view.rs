@@ -67,12 +67,7 @@ pub fn open(
                     .child("Nothing here tells the agent anything: no CLAUDE.md, AGENTS.md, rules or skills."),
             );
         }
-        dialog
-            .title("What the agent is told")
-            .entrance(gpui_kit::component::dialog::DialogEntrance::None)
-            .bg(chrome::dialog_surface())
-            .w(px(saturn_design::size::DIALOG_LARGE))
-            .child(list)
+        chrome::dialog(dialog, "What the agent is told", saturn_design::size::DIALOG_LARGE, list)
     });
 }
 

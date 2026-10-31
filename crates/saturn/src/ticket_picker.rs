@@ -50,23 +50,9 @@ pub fn open(workspace: WeakEntity<Workspace>, connected: bool, window: &mut Wind
         // Return is the dialog's OK: it starts the top row, so typing a name and pressing it is all
         // it takes; with nothing typed, the agent starts on its own.
         let confirm = (workspace.downgrade(), search.clone());
-        dialog
-            .on_ok(move |_, window, cx| {
-                let (workspace, search) = &confirm;
-                let Some(workspace) = workspace.upgrade() else { return true };
-                let query = search.read(cx).value().to_string();
-                if query.trim().is_empty() {
-                    start(&workspace, None, window, cx);
-                    return false;
-                }
-                let Some(pick) = picks(&workspace, &query, cx).into_iter().next() else { return false };
-                start(&workspace, Some(&pick), window, cx);
-                false
-            })
-            .title("New agent")
-            .entrance(gpui_kit::component::dialog::DialogEntrance::None)
-            .bg(crate::chrome::dialog_surface())
-            .w(px(saturn_design::size::DIALOG_MEDIUM))
+        let content = div()
+            .flex()
+            .flex_col()
             // Room around the field inside the dialog, which clips at its edge, so the focus ring is
             // whole.
             .child(div().px(px(3.)).child(crate::chrome::input(&search))) // off-scale: the focus ring, 3px outside the field
@@ -80,7 +66,21 @@ pub fn open(workspace: WeakEntity<Workspace>, connected: bool, window: &mut Wind
                     .child(note)
             }))
             .child(list(&workspace, &rows, cx))
-            .child(footer(&query, state.connected(), cx))
+            .child(footer(&query, state.connected(), cx));
+        crate::chrome::dialog(dialog, "New agent", saturn_design::size::DIALOG_MEDIUM, content).on_ok(
+            move |_, window, cx| {
+                let (workspace, search) = &confirm;
+                let Some(workspace) = workspace.upgrade() else { return true };
+                let query = search.read(cx).value().to_string();
+                if query.trim().is_empty() {
+                    start(&workspace, None, window, cx);
+                    return false;
+                }
+                let Some(pick) = picks(&workspace, &query, cx).into_iter().next() else { return false };
+                start(&workspace, Some(&pick), window, cx);
+                false
+            },
+        )
     });
 }
 

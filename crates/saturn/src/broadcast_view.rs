@@ -194,11 +194,6 @@ impl BroadcastView {
 pub fn open(workspace: WeakEntity<Workspace>, panes: Vec<Pane>, window: &mut Window, cx: &mut gpui_kit::App) {
     let view = cx.new(|cx| BroadcastView::new(workspace, panes, window, cx));
     window.open_dialog(cx, move |dialog, _, _| {
-        dialog
-            .title("Send to several agents")
-            .entrance(gpui_kit::component::dialog::DialogEntrance::None)
-            .bg(chrome::dialog_surface())
-            .w(px(saturn_design::size::DIALOG_MEDIUM))
-            .child(view.clone())
+        chrome::dialog(dialog, "Send to several agents", saturn_design::size::DIALOG_MEDIUM, view.clone())
     });
 }

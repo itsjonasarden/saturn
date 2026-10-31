@@ -267,12 +267,5 @@ impl Render for PicturesView {
 /// Opens the pictures of the app whose server `servers` the pane runs, kept in `root`.
 pub fn open(root: PathBuf, branch: String, servers: Vec<Server>, window: &mut Window, cx: &mut gpui_kit::App) {
     let view = cx.new(|cx| PicturesView::new(root, branch, servers, window, cx));
-    window.open_dialog(cx, move |dialog, _, _| {
-        dialog
-            .title("Pictures of the app")
-            .entrance(gpui_kit::component::dialog::DialogEntrance::None)
-            .bg(chrome::dialog_surface())
-            .w(px(1100.))
-            .child(view.clone())
-    });
+    window.open_dialog(cx, move |dialog, _, _| chrome::dialog(dialog, "Pictures of the app", 1100., view.clone()));
 }

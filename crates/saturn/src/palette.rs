@@ -8,7 +8,6 @@ use std::path::{Path, PathBuf};
 use std::rc::Rc;
 
 use gpui_kit::component::WindowExt as _;
-use gpui_kit::component::dialog::DialogEntrance;
 use gpui_kit::component::input::{Input, InputEvent, InputState};
 use gpui_kit::component::kbd::Kbd;
 use gpui_kit::{
@@ -288,12 +287,7 @@ fn open(title: &'static str, palette: Entity<Palette>, window: &mut Window, cx: 
     LAST.with_borrow_mut(|last| *last = Some(palette.downgrade()));
     window.defer(cx, move |window, cx| search.update(cx, |search, cx| search.focus(window, cx)));
     window.open_dialog(cx, move |dialog, _, _| {
-        dialog
-            .title(title)
-            .entrance(DialogEntrance::None)
-            .bg(chrome::dialog_surface())
-            .w(px(saturn_design::size::DIALOG_MEDIUM))
-            .child(palette.clone())
+        chrome::dialog(dialog, title, saturn_design::size::DIALOG_MEDIUM, palette.clone())
     });
 }
 

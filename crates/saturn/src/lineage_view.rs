@@ -610,7 +610,8 @@ impl Render for LineageView {
                 .items_center()
                 .gap(len(space::SPACE_2))
                 .child(chrome::icon("search", icon::MD, theme::color(color::INK_FAINT)))
-                .child(div().flex_1().child(Input::new(&search).appearance(false).cleanable(true)))
+                .child(div().flex_1().child(Input::new(&search).appearance(false)))
+                .when(!self.query.is_empty(), |row| row.child(chrome::clear_button(&search)))
                 .when(!self.query.trim().is_empty(), |row| {
                     row.child(
                         div().flex_none().text_scale(text::MICRO).text_color(theme::color(color::INK_FAINT)).child(

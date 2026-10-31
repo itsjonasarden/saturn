@@ -454,15 +454,9 @@ fn ask_name(
         };
         let on_ok = submit.clone();
         let wrong = problem.borrow().clone();
-        dialog
-            .title(title)
-            .entrance(gpui_kit::component::dialog::DialogEntrance::None)
-            .bg(chrome::dialog_surface())
-            .w(px(saturn_design::size::DIALOG_SMALL))
-            .on_ok(move |_, window, cx| {
-                on_ok(window, cx);
-                false
-            })
+        let content = div()
+            .flex()
+            .flex_col()
             .child(
                 div()
                     .pb(len(space::SPACE_2))
@@ -479,7 +473,11 @@ fn ask_name(
                     chrome::button(("ask-name", 0usize), button, None, true)
                         .on_click(move |_, window, cx| submit(window, cx)),
                 ),
-            )
+            );
+        chrome::dialog(dialog, title, saturn_design::size::DIALOG_SMALL, content).on_ok(move |_, window, cx| {
+            on_ok(window, cx);
+            false
+        })
     });
 }
 

@@ -104,7 +104,12 @@ fn component_theme(appearance: Appearance) -> gpui_kit::component::ThemeConfig {
         "popover.background": hex(c::SURFACE_RAISED),
         "popover.foreground": hex(c::INK),
         // A light dim under dialogs: the window stays sharp behind them.
-        "overlay": if appearance == Appearance::Dark { "#00000059" } else { "#1a10301f" },
+        "overlay": match (appearance, saturn_design::look().surfaces) {
+            (Appearance::Dark, _) => "#00000059",
+            // Saturn's glass dims toward its own violet-grey; an opaque theme dims to grey.
+            (Appearance::Light, saturn_design::Surfaces::Glass) => "#1a10301f",
+            (Appearance::Light, saturn_design::Surfaces::Opaque) => "#0000001f",
+        },
         "selection.background": format!("{}{}", hex(c::BLUE_VIVID), if appearance == Appearance::Dark { "73" } else { "40" }),
         "caret": hex(c::INK),
         "switch.background": hex(c::CONTROL_PRESSED),

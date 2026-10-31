@@ -4321,7 +4321,7 @@ impl Workspace {
                 part.bg(if chrome::look().buttons == saturn_design::Buttons::Outline {
                     theme::tone(tone::SEPARATOR)
                 } else {
-                    gpui_kit::white().opacity(0.1)
+                    theme::color(color::INK_ON_ACCENT).opacity(0.1)
                 })
             })
             .child(chrome::icon("chevron-down", icon::MD, chrome::primary_ink()))

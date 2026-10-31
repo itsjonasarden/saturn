@@ -162,12 +162,7 @@ impl Render for StartView {
 pub fn start(workspace: WeakEntity<Workspace>, repo: &Path, window: &mut Window, cx: &mut gpui_kit::App) {
     let view = cx.new(|cx| StartView::new(workspace, repo, window, cx));
     window.open_dialog(cx, move |dialog, _, _| {
-        dialog
-            .title("Best of N")
-            .entrance(gpui_kit::component::dialog::DialogEntrance::None)
-            .bg(chrome::dialog_surface())
-            .w(px(saturn_design::size::DIALOG_MEDIUM))
-            .child(view.clone())
+        chrome::dialog(dialog, "Best of N", saturn_design::size::DIALOG_MEDIUM, view.clone())
     });
 }
 
@@ -426,12 +421,5 @@ fn read_groups(repo: &Path) -> Vec<Read> {
 /// Opens Compare attempts for the main checkout `repo`.
 pub fn compare(workspace: WeakEntity<Workspace>, repo: PathBuf, window: &mut Window, cx: &mut gpui_kit::App) {
     let view = cx.new(|cx| CompareView::new(workspace, repo, window, cx));
-    window.open_dialog(cx, move |dialog, _, _| {
-        dialog
-            .title("Compare attempts")
-            .entrance(gpui_kit::component::dialog::DialogEntrance::None)
-            .bg(chrome::dialog_surface())
-            .w(px(1080.))
-            .child(view.clone())
-    });
+    window.open_dialog(cx, move |dialog, _, _| chrome::dialog(dialog, "Compare attempts", 1080., view.clone()));
 }

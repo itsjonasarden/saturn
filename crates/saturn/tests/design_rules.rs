@@ -101,6 +101,14 @@ fn fills_and_strokes_come_in_the_tones() {
 }
 
 #[test]
+fn colours_come_from_the_tokens() {
+    // White, black or a colour written out: a view says which token it means instead.
+    let raw = ["gpui_kit::white()", "gpui_kit::black()", "gpui_kit::hsla(", "gpui_kit::rgb(", "rgba(0x"];
+    let found = breaks(|file, line| !draws_shapes(file) && raw.iter().any(|colour| line.contains(colour)));
+    assert!(found.is_empty(), "write `theme::color(color::…)` or `theme::tone(tone::…)`:\n{}", found.join("\n"));
+}
+
+#[test]
 fn no_view_asks_which_theme_is_on() {
     // A component reads the theme's description (`chrome::look()`); it never compares names.
     let found =

@@ -195,7 +195,7 @@ fn white(alpha: f32) -> Hsla {
     if crate::chrome::look().agent_cards == saturn_design::AgentCards::Slab {
         return crate::theme::color(saturn_design::color::INK).opacity(alpha);
     }
-    gpui_kit::hsla(0., 0., 1., alpha)
+    crate::theme::color(saturn_design::color::INK_ON_ACCENT).opacity(alpha)
 }
 
 /// The dotted meter: a row of square dots, the used ones filled, orange from 80%.
@@ -218,7 +218,7 @@ fn meter(percent: f64) -> gpui_kit::AnyElement {
     }
     #[expect(clippy::cast_possible_truncation, reason = "a share between 0 and 1")]
     let width = (percent / 100.).clamp(0., 1.) as f32;
-    let fill = if percent >= 80. { gpui_kit::Hsla::from(gpui_kit::rgb(0xff_b3_7a)) } else { white(1.) };
+    let fill = if percent >= 80. { crate::theme::color(saturn_design::color::METER_HOT) } else { white(1.) };
     div()
         .relative()
         .h(px(2.))
