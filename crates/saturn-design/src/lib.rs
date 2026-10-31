@@ -393,16 +393,22 @@ mod tests {
     }
 
     #[test]
-    fn cyberdeck_is_monochrome_and_borrows_the_signals() {
+    fn cyberdeck_is_monochrome_but_its_signals_are_saturated() {
         // Its own neutrals, with no blue in them.
         assert_ne!(color::SURFACE.of("cyberdeck", Appearance::Dark), color::SURFACE.of("saturn", Appearance::Dark));
         let rgb = color::SURFACE.of("cyberdeck", Appearance::Dark).rgb;
         assert!((rgb >> 16) & 0xff <= (rgb & 0xff) + 1 && (rgb & 0xff) <= ((rgb >> 16) & 0xff) + 1);
-        // The signals mean the same in both themes.
-        assert_eq!(color::ORANGE.of("cyberdeck", Appearance::Dark), color::ORANGE.of("saturn", Appearance::Dark));
-        assert_eq!(
-            color::BLUE_VIVID.of("cyberdeck", Appearance::Light),
-            color::BLUE_VIVID.of("saturn", Appearance::Light)
-        );
+        // Its signals are more saturated than Saturn's soft ones on the dark ground.
+        let saturation = |rgb: u32| {
+            let channels = [(rgb >> 16) & 0xff, (rgb >> 8) & 0xff, rgb & 0xff];
+            let (most, least) =
+                (*channels.iter().max().expect("a channel"), *channels.iter().min().expect("a channel"));
+            f64::from(most - least) / f64::from(most.max(1))
+        };
+        for signal in [color::BLUE, color::ORANGE, color::RED, color::TERM_GREEN] {
+            let neon = saturation(signal.of("cyberdeck", Appearance::Dark).rgb);
+            assert!(neon > saturation(signal.of("saturn", Appearance::Dark).rgb), "{signal:?}");
+            assert!(neon > 0.75, "{signal:?}");
+        }
     }
 }
