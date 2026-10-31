@@ -27,6 +27,9 @@ pub fn tip_for<A: Action + Clone>(
     move |window, cx| Tooltip::new(text).action(&action, None).build(window, cx)
 }
 
+/// Width of Cyberdeck's selectors and switches, the same for both so a column of settings lines up.
+const CHOICE_WIDTH: f32 = 136.;
+
 /// Height of every control: tabs, buttons, track items, segments. Dense, as development tools are.
 pub const CONTROL_HEIGHT: f32 = 28.0;
 
@@ -407,7 +410,7 @@ pub fn selector(
             .flex_none()
             .items_center()
             .justify_center()
-            .w(len(CONTROL_HEIGHT))
+            .w(px(24.))
             .h_full()
             .when(to.is_some(), gpui_kit::Styled::cursor_pointer)
             .child(arrow(left, to.is_some()))
@@ -415,9 +418,15 @@ pub fn selector(
     };
     // A dash for each value, while there are few enough to count at a glance.
     let dashes = (labels.len() <= 8).then(|| {
-        div().absolute().bottom(px(3.)).flex().gap(px(3.)).children((0..labels.len()).map(|index| {
-            div().w(px(10.)).h(px(2.)).bg(if index == current { theme::color(color::INK) } else { theme::overlay(0.2) })
-        }))
+        div().absolute().bottom(px(3.)).left_0().right_0().flex().justify_center().gap(px(3.)).children(
+            (0..labels.len()).map(|index| {
+                div().w(px(10.)).h(px(2.)).bg(if index == current {
+                    theme::color(color::INK)
+                } else {
+                    theme::overlay(0.2)
+                })
+            }),
+        )
     });
     let next = pick.clone();
     div()
@@ -425,7 +434,7 @@ pub fn selector(
         .flex()
         .flex_none()
         .items_center()
-        .min_w(px(168.))
+        .w(px(CHOICE_WIDTH))
         .h(len(CONTROL_HEIGHT))
         .text_size(px(13.))
         .font_weight(FontWeight::MEDIUM)
@@ -481,10 +490,10 @@ pub fn switch(id: &'static str, on: bool, toggle: impl Fn(&bool, &mut Window, &m
     }
     let block = div()
         .absolute()
-        .top(px(3.))
-        .bottom(px(3.))
-        .w(px(22.))
-        .map(|block| if on { block.right(px(3.)) } else { block.left(px(3.)) })
+        .top(px(4.))
+        .bottom(px(4.))
+        .w(px(40.))
+        .map(|block| if on { block.right(px(4.)) } else { block.left(px(4.)) })
         .child(cut_surface(
             gpui_kit::transparent_black(),
             if on { theme::color(color::INK) } else { theme::overlay(0.22) },
@@ -496,17 +505,18 @@ pub fn switch(id: &'static str, on: bool, toggle: impl Fn(&bool, &mut Window, &m
         .id(id)
         .flex()
         .items_center()
-        .gap(len(space::SPACE_3))
+        .gap(len(space::SPACE_2))
+        .w(px(CHOICE_WIDTH))
         .cursor_pointer()
         .text_size(px(13.))
         .font_weight(FontWeight::MEDIUM)
         .text_color(theme::color(if on { color::INK } else { color::INK_MUTED }))
-        .child(if on { "On" } else { "Off" })
+        .child(div().flex_none().w(px(24.)).child(if on { "On" } else { "Off" }))
         .child(
             div()
                 .relative()
-                .w(px(52.))
-                .h(px(22.))
+                .flex_1()
+                .h(len(CONTROL_HEIGHT))
                 .child(cut_surface(theme::overlay(0.3), theme::color(color::SURFACE), 1., 6., Cut::BottomRight))
                 .child(block),
         )

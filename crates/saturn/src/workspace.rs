@@ -4269,7 +4269,12 @@ impl Workspace {
             .child(empty("titlebar-lights").flex_none().w(len(TRAFFIC_LIGHTS_WIDTH)))
             // The repos, as a browser's tabs, then where the one showing works. The panels'
             // toggles and Settings are in the status bar, at the window's foot.
-            .child(chrome::on_glass(self.render_repo_tabs(chrome::track(), cx)))
+            // In Cyberdeck the tabs stand bare, each over its own bar.
+            .child(if chrome::cyberdeck() {
+                self.render_repo_tabs(chrome::tab_row().gap(len(space::SPACE_2)), cx)
+            } else {
+                chrome::on_glass(self.render_repo_tabs(chrome::track(), cx))
+            })
             .children(self.render_place())
             .child(empty("titlebar-middle").flex_1())
             .children(activity)
@@ -4428,7 +4433,7 @@ impl Workspace {
         }
         // Adding a repo belongs with the repos, set apart so it doesn't read as one. Square: a
         // track item is otherwise at least a full control wide.
-        track.child(chrome::track_separator()).child(
+        track.when(!chrome::cyberdeck(), |track| track.child(chrome::track_separator())).child(
             chrome::track_item("add-repo", false)
                 .size(len(TITLEBAR_CONTROL))
                 .min_w(len(TITLEBAR_CONTROL))
