@@ -1,12 +1,12 @@
 name: Something's wrong
-description: Saturn crashed, or did something it shouldn't.
+description: Akyba crashed, or did something it shouldn't.
 labels: [bug]
 body:
   - type: textarea
     id: what
     attributes:
       label: What happened
-      description: What you did, what Saturn did, and what you expected. A screenshot helps.
+      description: What you did, what Akyba did, and what you expected. A screenshot helps.
     validations:
       required: true
   - type: textarea
@@ -19,8 +19,8 @@ body:
   - type: input
     id: version
     attributes:
-      label: Saturn version
-      description: Saturn → About Saturn.
+      label: Akyba version
+      description: Akyba → About Akyba.
       placeholder: '0.1.12'
     validations:
       required: true
@@ -33,5 +33,5 @@ body:
     id: crash
     attributes:
       label: Crash report
-      description: If Saturn quit, paste the report macOS showed (or the one in Console → Crash Reports).
+      description: If Akyba quit, paste the report macOS showed (or the one in Console → Crash Reports).
       render: text

@@ -1,9 +1,9 @@
 #!/bin/sh
-# Publishes a version of Saturn: `pnpm release 0.2.0`.
+# Publishes a version of Akyba: `pnpm release 0.2.0`.
 #
 # Sets the version, commits and tags it, builds the disk image for Apple Silicon and Intel, signs
 # it with the Sparkle key in this Mac's keychain, and publishes a GitHub release carrying the disk
-# image and `appcast.xml`, the feed every installed Saturn checks once a day. The newest release's
+# image and `appcast.xml`, the feed every installed Akyba checks once a day. The newest release's
 # feed is the one they read (releases/latest/download/appcast.xml).
 #
 # The signing key was made with Sparkle's `generate_keys`; back it up with
@@ -34,7 +34,7 @@ git commit -q -am "chore: release $version"
 git tag "$tag"
 
 pnpm dist:dmg
-dmg="target/Saturn-$version.dmg"
+dmg="target/Akyba-$version.dmg"
 
 # Sparkle's signature over the disk image, from the key in the keychain.
 sparkle=$(sh scripts/sparkle.sh)
@@ -47,15 +47,15 @@ notes=$(git log --format='%s' "$range" | grep -E '^(feat|fix)' | sed -E 's/^[a-z
 html=$(printf '%s\n' "$notes" | sed 's/&/\&amp;/g; s/</\&lt;/g; s/^/<li>/; s/$/<\/li>/' | tr -d '\n')
 markdown=$(printf '%s\n' "$notes" | sed 's/^/- /')
 
-url="https://github.com/itsjonasarden/saturn/releases/download/$tag/Saturn-$version.dmg"
+url="https://github.com/itsjonasarden/akyba/releases/download/$tag/Akyba-$version.dmg"
 date=$(LC_ALL=C date -u '+%a, %d %b %Y %H:%M:%S +0000')
 cat > target/appcast.xml <<XML
 <?xml version="1.0" encoding="utf-8"?>
 <rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
   <channel>
-    <title>Saturn</title>
+    <title>Akyba</title>
     <item>
-      <title>Saturn $version</title>
+      <title>Akyba $version</title>
       <pubDate>$date</pubDate>
       <sparkle:version>$version</sparkle:version>
       <sparkle:shortVersionString>$version</sparkle:shortVersionString>
@@ -68,9 +68,9 @@ cat > target/appcast.xml <<XML
 XML
 
 # The same disk image under a name without the version, so the README's download link
-# (releases/latest/download/Saturn.dmg) always gets the newest.
-cp "$dmg" target/Saturn.dmg
+# (releases/latest/download/Akyba.dmg) always gets the newest.
+cp "$dmg" target/Akyba.dmg
 
 git push -q origin main "$tag"
-gh release create "$tag" "$dmg" target/Saturn.dmg target/appcast.xml --title "Saturn $version" --notes "$markdown"
-echo "Released Saturn $version: every installed Saturn offers it within a day."
+gh release create "$tag" "$dmg" target/Akyba.dmg target/appcast.xml --title "Akyba $version" --notes "$markdown"
+echo "Released Akyba $version: every installed Akyba offers it within a day."

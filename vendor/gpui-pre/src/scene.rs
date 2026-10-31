@@ -159,7 +159,7 @@ impl Scene {
         self.quads.sort_by_key(|quad| quad.order);
         self.paths.sort_by_key(|path| path.order);
         self.underlines.sort_by_key(|underline| underline.order);
-        // Saturn's patch: sort compact keys/indices rather than repeatedly moving the
+        // Akyba's patch: sort compact keys/indices rather than repeatedly moving the
         // large glyph instances. Keep stable tie ordering and the already-sorted fast path.
         if !self.monochrome_sprites
             .is_sorted_by_key(|sprite| (sprite.order, sprite.tile.tile_id))
@@ -532,7 +532,7 @@ pub enum PrimitiveBatch {
         range: Range<usize>,
     },
     Surfaces(Range<usize>),
-    /// Blurs of what was drawn before them (Saturn's patch).
+    /// Blurs of what was drawn before them (Akyba's patch).
     BackdropBlurs(Range<usize>),
 }
 
@@ -634,7 +634,7 @@ impl From<Shadow> for Primitive {
 }
 
 /// A frosted area: what was drawn under `bounds` before it, blurred by `blur_radius` and tinted
-/// by `tint` (Saturn's patch).
+/// by `tint` (Akyba's patch).
 #[derive(Debug, Copy, Clone)]
 #[repr(C)]
 #[expect(missing_docs)]

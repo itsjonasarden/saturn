@@ -133,7 +133,7 @@ pub struct MetalRenderer {
     path_intermediate_texture: Option<metal::Texture>,
     path_intermediate_msaa_texture: Option<metal::Texture>,
     path_sample_count: u32,
-    /// What was drawn before a backdrop blur, mipmapped, for the blur to read (Saturn's patch).
+    /// What was drawn before a backdrop blur, mipmapped, for the blur to read (Akyba's patch).
     backdrop_texture: Option<metal::Texture>,
     /// Offscreen render target reused across `render_scene` calls when
     /// rendering headlessly without reading pixels back.
@@ -184,7 +184,7 @@ impl MetalRenderer {
         // https://developer.apple.com/documentation/metal/managing-your-game-window-for-metal-in-macos
         layer.set_opaque(!transparent);
         layer.set_maximum_drawable_count(3);
-        // Saturn's patch: backdrop blurs copy what's been drawn out of the drawable, so its
+        // Akyba's patch: backdrop blurs copy what's been drawn out of the drawable, so its
         // texture must be readable. (Upstream allowed this only in debug test builds.)
         layer.set_framebuffer_only(false);
         // metal-rs doesn't bind these setters, so view the same object through
@@ -944,7 +944,7 @@ impl MetalRenderer {
     }
 
     /// Copies `texture` into the backdrop texture and builds its mip levels, so backdrop blurs
-    /// can read what was drawn before them (Saturn's patch).
+    /// can read what was drawn before them (Akyba's patch).
     fn copy_to_backdrop(
         &mut self,
         texture: &metal::TextureRef,
@@ -1493,7 +1493,7 @@ fn build_pipeline_state(
     color_attachment.set_source_rgb_blend_factor(metal::MTLBlendFactor::SourceAlpha);
     color_attachment.set_source_alpha_blend_factor(metal::MTLBlendFactor::One);
     color_attachment.set_destination_rgb_blend_factor(metal::MTLBlendFactor::OneMinusSourceAlpha);
-    // Saturn's patch: layers stack ("over"), so a translucent window's coverage is what's drawn.
+    // Akyba's patch: layers stack ("over"), so a translucent window's coverage is what's drawn.
     // Upstream added them (`One`), which saturates overlapping translucent layers to opaque.
     color_attachment.set_destination_alpha_blend_factor(metal::MTLBlendFactor::OneMinusSourceAlpha);
 
@@ -1529,7 +1529,7 @@ fn build_path_sprite_pipeline_state(
     color_attachment.set_source_rgb_blend_factor(metal::MTLBlendFactor::One);
     color_attachment.set_source_alpha_blend_factor(metal::MTLBlendFactor::One);
     color_attachment.set_destination_rgb_blend_factor(metal::MTLBlendFactor::OneMinusSourceAlpha);
-    // Saturn's patch: layers stack ("over"), so a translucent window's coverage is what's drawn.
+    // Akyba's patch: layers stack ("over"), so a translucent window's coverage is what's drawn.
     // Upstream added them (`One`), which saturates overlapping translucent layers to opaque.
     color_attachment.set_destination_alpha_blend_factor(metal::MTLBlendFactor::OneMinusSourceAlpha);
 

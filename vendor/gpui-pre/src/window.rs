@@ -4673,7 +4673,7 @@ impl Window {
     }
 
     /// Paint a frosted area: whatever was painted under `bounds` before it, blurred by
-    /// `blur_radius` and tinted with `tint` (Saturn's patch). Paint it before the element's own
+    /// `blur_radius` and tinted with `tint` (Akyba's patch). Paint it before the element's own
     /// content, so the content stays sharp on top.
     ///
     /// This method should only be called as part of the paint phase of element drawing.

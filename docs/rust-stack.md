@@ -1,6 +1,6 @@
 # The Rust stack
 
-Decided 2026-10-18: Saturn is built entirely in native Rust, UI included. Electron and VS Code
+Decided 2026-10-18: Akyba is built entirely in native Rust, UI included. Electron and VS Code
 extensions are dropped. This document records what was researched (four parallel research tracks,
 crates.io and GitHub checked the same day) and what was chosen. It replaces the earlier Electron plan;
 the product, the features, the design system and the Claude Code findings all stay.
@@ -96,7 +96,7 @@ How the terminal works, following the patterns in the reference apps:
 
 ## Licences
 
-Saturn stays permissively licensed, so **no GPL code goes in**. That rules out copying:
+Akyba stays permissively licensed, so **no GPL code goes in**. That rules out copying:
 
 - **Zed's** `terminal`, `terminal_view`, `editor`, `git_ui` and sidebar crates (GPL-3.0); `gpui`
   itself is Apache-2.0.
@@ -116,7 +116,7 @@ We can read them for ideas. Code we may adapt, with attribution:
 | Project              | Licence    | What to learn                                                             |
 | -------------------- | ---------- | ------------------------------------------------------------------------- |
 | contember/okena      | MIT        | Tabs, splits, detachable panes, restoring a workspace, a Claude extension |
-| yicheng47/runner     | MIT        | Closest product to Saturn; same `gpui-pre` line; IME code                 |
+| yicheng47/runner     | MIT        | Closest product to Akyba; same `gpui-pre` line; IME code                  |
 | l0ng-ai/tty7         | Apache-2.0 | The most complete terminal element (IME, links)                           |
 | penso/herdr-gpui     | Apache-2.0 | App polish: dock badge, notifications, command palette, packaging         |
 | zortax/gpui-terminal | MIT/Apache | A small, readable terminal element to start from                          |
@@ -130,14 +130,14 @@ We can read them for ideas. Code we may adapt, with attribution:
 - **Syntax colours:** gpui-component's grammars come as cargo features; `src/languages.rs` registers
   about 20 more (Prisma, SCSS, Swift, XML and others), and a test compiles every highlight query.
   There's no `.env` grammar on crates.io, so `.env*` files are coloured as Bash.
-- **Language servers:** `saturn-core::lsp` starts the server a language uses (typescript-language-
+- **Language servers:** `akyba-core::lsp` starts the server a language uses (typescript-language-
   server with the project's own TypeScript, else TypeScript 7's `tsc --lsp`; rust-analyzer;
   pyright; gopls) and speaks JSON-RPC over its stdio. The editor component draws completions,
-  hover, diagnostics and the code-action menu; Saturn answers them from the server, ranks
+  hover, diagnostics and the code-action menu; Akyba answers them from the server, ranks
   completions itself, and applies rename and quick-fix edits across files.
-- **tree-sitter version:** Saturn must not depend on tree-sitter 0.27, because gpui-component uses
+- **tree-sitter version:** Akyba must not depend on tree-sitter 0.27, because gpui-component uses
   0.26 and Cargo allows only one.
-- **Diff:** gpui-component's diff view is read-only; Saturn feeds it `git diff` for the uncommitted
+- **Diff:** gpui-component's diff view is read-only; Akyba feeds it `git diff` for the uncommitted
   work, the branch since it left the default branch, or one commit.
 - **Tree:** gpui-component's `Tree` is virtualized, with rows drawn by us (git badges). Folders
   load when opened, walked one level at a time with `ignore::WalkBuilder`.
@@ -147,16 +147,16 @@ We can read them for ideas. Code we may adapt, with attribution:
   - Paths git ignores (`node_modules`, `target`) are filtered out afterwards, with `ignore`.
   - A burst is merged into one update: the first event waits a moment for the rest.
 - **Git:** the `git` CLI, always off the main thread: status, diffs, staging and `git log --all` for
-  the history graph, whose lanes `saturn-core::git_graph` lays out.
+  the history graph, whose lanes `akyba-core::git_graph` lays out.
 
 ## Build and tooling
 
 - **Workspace layout:**
-  - `crates/saturn` (the app)
-  - `saturn-core` (layout, agent state, title rules: pure and unit-tested; ported from the
+  - `crates/akyba` (the app)
+  - `akyba-core` (layout, agent state, title rules: pure and unit-tested; ported from the
     TypeScript versions and their tests)
-  - `saturn-terminal` (pty, engine, OSC parser, element)
-  - `saturn-design` (tokens)
+  - `akyba-terminal` (pty, engine, OSC parser, element)
+  - `akyba-design` (tokens)
 - **Checks, the usual setup in Rust form:**
   - `cargo fmt`
   - `cargo clippy` with warnings as errors (lint)
@@ -170,7 +170,7 @@ We can read them for ideas. Code we may adapt, with attribution:
 
 ## Spike results (2026-10-18)
 
-Measured with `SATURN_PANES=12 SATURN_COMMAND="node scripts/tui-load.mjs 30 14" SATURN_PERF=1`,
+Measured with `AKYBA_PANES=12 AKYBA_COMMAND="node scripts/tui-load.mjs 30 14" AKYBA_PERF=1`,
 in a release build: every pane redraws a full screen of coloured text 30 times a second, inside
 synchronized-output brackets. These are the same conditions as the earlier Electron spike.
 
@@ -185,9 +185,9 @@ synchronized-output brackets. These are the same conditions as the earlier Elect
 - **Room left:** caching shaped rows until they change, or switching on `gpui-fast`'s retained
   mode.
 - **Rendering checked:** colours, bold, Czech diacritics, emoji, the block cursor and the focus glow
-  all render correctly (screenshot taken with `SATURN_SCREENSHOT`, `capture` feature).
+  all render correctly (screenshot taken with `AKYBA_SCREENSHOT`, `capture` feature).
 - **One fix it found:** a shell started from the Dock has no `LANG`, and zsh then shows typed
-  non-ASCII as `<0001fa90>`. Saturn sets `LANG=en_US.UTF-8` when it's missing, as Terminal.app does.
+  non-ASCII as `<0001fa90>`. Akyba sets `LANG=en_US.UTF-8` when it's missing, as Terminal.app does.
 
 ## What happens to the Electron code
 

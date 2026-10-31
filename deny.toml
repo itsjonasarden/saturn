@@ -1,4 +1,4 @@
-# cargo deny: Saturn stays permissively licensed, so no copyleft dependency may come in.
+# cargo deny: Akyba stays permissively licensed, so no copyleft dependency may come in.
 [graph]
 all-features = true
 
@@ -30,7 +30,7 @@ allow-wildcard-paths = true
 
 [advisories]
 yanked = "warn"
-# Vulnerabilities fail everywhere. "Unmaintained" notices count only for crates Saturn depends on
+# Vulnerabilities fail everywhere. "Unmaintained" notices count only for crates Akyba depends on
 # directly: the deep ones come through GPUI (font parsing, Linux D-Bus) and are upstream's to replace.
 unmaintained = "workspace"
 

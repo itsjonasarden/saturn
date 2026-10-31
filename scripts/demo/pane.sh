@@ -1,8 +1,8 @@
 #!/bin/sh
-# What the first four demo panes show, by `SATURN_PANE_ID`: tests running, a question waiting for
+# What the first four demo panes show, by `AKYBA_PANE_ID`: tests running, a question waiting for
 # you, finished work, a migration. Made up, for `pnpm demo` and the screenshots.
 g='\033[32m'; r='\033[31m'; y='\033[33m'; b='\033[34m'; c='\033[36m'; d='\033[2m'; B='\033[1m'; n='\033[0m'
-case "$SATURN_PANE_ID" in
+case "$AKYBA_PANE_ID" in
 1)
 printf "${d}\$${n} pnpm test --filter @acme/money\n\n"
 printf " ${g}✓${n} src/format.test.ts ${d}(6 tests)${n} ${y}4ms${n}\n"

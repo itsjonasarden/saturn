@@ -132,6 +132,99 @@ dependencies = [
 ]
 
 [[package]]
+name = "akyba"
+version = "0.1.38"
+dependencies = [
+ "akyba-bridge",
+ "akyba-core",
+ "akyba-design",
+ "akyba-terminal",
+ "anyhow",
+ "async-channel",
+ "block2 0.6.2",
+ "gpui-component",
+ "gpui-kit",
+ "gpui-pre",
+ "gpui-pre-platform",
+ "ignore",
+ "image",
+ "lsp-types",
+ "notify",
+ "objc2 0.6.5",
+ "objc2-app-kit 0.3.2",
+ "objc2-foundation 0.3.2",
+ "objc2-user-notifications",
+ "security-framework",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "tree-sitter",
+ "tree-sitter-dart",
+ "tree-sitter-elm",
+ "tree-sitter-erlang",
+ "tree-sitter-fish",
+ "tree-sitter-gleam",
+ "tree-sitter-glsl",
+ "tree-sitter-haskell",
+ "tree-sitter-ini",
+ "tree-sitter-javascript",
+ "tree-sitter-nix",
+ "tree-sitter-objc",
+ "tree-sitter-powershell",
+ "tree-sitter-prisma",
+ "tree-sitter-r",
+ "tree-sitter-scss",
+ "tree-sitter-swift",
+ "tree-sitter-typescript",
+ "tree-sitter-vim",
+ "tree-sitter-xml",
+ "ureq",
+]
+
+[[package]]
+name = "akyba-bridge"
+version = "0.1.38"
+dependencies = [
+ "async-channel",
+ "serde_json",
+]
+
+[[package]]
+name = "akyba-core"
+version = "0.1.38"
+dependencies = [
+ "async-channel",
+ "base64 0.22.1",
+ "chrono",
+ "ignore",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "toml_edit 0.25.17+spec-1.1.0",
+]
+
+[[package]]
+name = "akyba-design"
+version = "0.1.38"
+dependencies = [
+ "serde_json",
+]
+
+[[package]]
+name = "akyba-terminal"
+version = "0.1.38"
+dependencies = [
+ "akyba-core",
+ "akyba-design",
+ "alacritty_terminal",
+ "anyhow",
+ "async-channel",
+ "gpui-kit",
+ "portable-pty",
+ "tempfile",
+]
+
+[[package]]
 name = "alacritty_terminal"
 version = "0.26.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5883,99 +5976,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "93fc1dc3aaa9bfed95e02e6eadabb4baf7e3078b0bd1b4d7b6b0b68378900502"
 dependencies = [
  "winapi-util",
-]
-
-[[package]]
-name = "saturn"
-version = "0.1.38"
-dependencies = [
- "anyhow",
- "async-channel",
- "block2 0.6.2",
- "gpui-component",
- "gpui-kit",
- "gpui-pre",
- "gpui-pre-platform",
- "ignore",
- "image",
- "lsp-types",
- "notify",
- "objc2 0.6.5",
- "objc2-app-kit 0.3.2",
- "objc2-foundation 0.3.2",
- "objc2-user-notifications",
- "saturn-bridge",
- "saturn-core",
- "saturn-design",
- "saturn-terminal",
- "security-framework",
- "serde",
- "serde_json",
- "tempfile",
- "tree-sitter",
- "tree-sitter-dart",
- "tree-sitter-elm",
- "tree-sitter-erlang",
- "tree-sitter-fish",
- "tree-sitter-gleam",
- "tree-sitter-glsl",
- "tree-sitter-haskell",
- "tree-sitter-ini",
- "tree-sitter-javascript",
- "tree-sitter-nix",
- "tree-sitter-objc",
- "tree-sitter-powershell",
- "tree-sitter-prisma",
- "tree-sitter-r",
- "tree-sitter-scss",
- "tree-sitter-swift",
- "tree-sitter-typescript",
- "tree-sitter-vim",
- "tree-sitter-xml",
- "ureq",
-]
-
-[[package]]
-name = "saturn-bridge"
-version = "0.1.38"
-dependencies = [
- "async-channel",
- "serde_json",
-]
-
-[[package]]
-name = "saturn-core"
-version = "0.1.38"
-dependencies = [
- "async-channel",
- "base64 0.22.1",
- "chrono",
- "ignore",
- "serde",
- "serde_json",
- "tempfile",
- "toml_edit 0.25.17+spec-1.1.0",
-]
-
-[[package]]
-name = "saturn-design"
-version = "0.1.38"
-dependencies = [
- "serde_json",
-]
-
-[[package]]
-name = "saturn-terminal"
-version = "0.1.38"
-dependencies = [
- "alacritty_terminal",
- "anyhow",
- "async-channel",
- "gpui-kit",
- "portable-pty",
- "saturn-core",
- "saturn-design",
- "tempfile",
 ]
 
 [[package]]

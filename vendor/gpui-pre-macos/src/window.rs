@@ -3821,7 +3821,7 @@ extern "C" fn blurred_view_init_with_frame(this: &Object, _: Sel, frame: NSRect)
 extern "C" fn blurred_view_update_layer(this: &Object, _: Sel) {
     unsafe {
         let _: () = msg_send![super(this, class!(NSVisualEffectView)), updateLayer];
-        // Saturn's patch: keep the material whole (its brightness clamp, desktop tint and
+        // Akyba's patch: keep the material whole (its brightness clamp, desktop tint and
         // saturation are what make the blur read as macOS's frosted glass rather than grey fog),
         // but thin its fill, so more of what's behind the window shows through. Set, not
         // multiplied, so each update lands on the same value.
@@ -3835,7 +3835,7 @@ extern "C" fn blurred_view_update_layer(this: &Object, _: Sel) {
 /// How much of the material's own fill stays: 1.0 is AppKit's sidebar, 0.0 a bare blur.
 const MATERIAL_FILL: f32 = 0.65;
 
-/// Saturn's patch: turns the material's fill layers (those with a background colour, other than
+/// Akyba's patch: turns the material's fill layers (those with a background colour, other than
 /// the backdrop that blurs) down to `MATERIAL_FILL`, and hides the layer that tints the glass
 /// with the desktop picture's colour, so the glass stays neutral whatever the wallpaper.
 unsafe fn soften_fill(layer: id) {

@@ -8,13 +8,13 @@ kept as the whole sidebar material (fill, clamp, tint, saturation) instead of a 
 lists that keep their items' heights as hints when their width changes, so a diff review scrolls;
 and glyphs sorted by small keys instead of moving each 112-byte glyph, which is cheaper on most
 frames.
-The root `Cargo.toml` points Saturn at these copies with `[patch.crates-io]`; the workspace
-excludes them, so Saturn's lints and formatter leave them alone. `gpui-pre`'s examples were left
+The root `Cargo.toml` points Akyba at these copies with `[patch.crates-io]`; the workspace
+excludes them, so Akyba's lints and formatter leave them alone. `gpui-pre`'s examples were left
 out.
 
 The idea and the shape of the API come from the
 [`gpui_rn` fork](https://github.com/rngpui/zed-react-native-gpui) (Apache-2.0); the code here is
-written against this version of GPUI. Every change is marked "Saturn's patch":
+written against this version of GPUI. Every change is marked "Akyba's patch":
 
 - `gpui-pre/src/scene.rs`: the `BackdropBlur` primitive, its list in `Scene`, and
   `PrimitiveBatch::BackdropBlurs`. The same file is copied to `gpui-pre-apple/vendor/gpui/src/`,

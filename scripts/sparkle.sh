@@ -1,5 +1,5 @@
 #!/bin/sh
-# Fetches Sparkle (the macOS updater Saturn ships with) once, into target/sparkle-<version>, and
+# Fetches Sparkle (the macOS updater Akyba ships with) once, into target/sparkle-<version>, and
 # checks it against the pinned checksum. Prints the folder.
 set -eu
 cd "$(dirname "$0")/.."

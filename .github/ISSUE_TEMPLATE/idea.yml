@@ -1,11 +1,11 @@
 name: An idea
-description: Something Saturn could do, or do better.
+description: Something Akyba could do, or do better.
 labels: [enhancement]
 body:
   - type: textarea
     id: idea
     attributes:
       label: What you'd like
-      description: What you're trying to do with your agents, and where Saturn gets in the way.
+      description: What you're trying to do with your agents, and where Akyba gets in the way.
     validations:
       required: true

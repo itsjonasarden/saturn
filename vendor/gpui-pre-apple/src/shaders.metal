@@ -550,7 +550,7 @@ fragment float4 shadow_fragment(ShadowFragmentInput input [[stage_in]],
                                       shadow.element_corner_radii);
     alpha *= saturate(0.5 - element_distance);
   } else {
-    // Saturn's patch: like CSS, a drop shadow is never drawn under its own element, so it stays
+    // Akyba's patch: like CSS, a drop shadow is never drawn under its own element, so it stays
     // outside translucent (glass) panels instead of tinting them.
     float element_distance = quad_sdf(input.position.xy, shadow.element_bounds,
                                       shadow.element_corner_radii);
@@ -1284,7 +1284,7 @@ float4 fill_color(Background background,
   return color;
 }
 
-// Saturn's patch: backdrop blur. The renderer copies what has been drawn so far into a
+// Akyba's patch: backdrop blur. The renderer copies what has been drawn so far into a
 // mipmapped texture; each fragment inside the blur's rounded bounds averages that copy on a
 // spiral of taps, reading from the mip level whose texels are about a quarter of the radius, so
 // large radii stay smooth at a fixed cost. The tint is laid over the result.

@@ -1,8 +1,8 @@
 #!/bin/sh
-# Sends one Claude Code hook event (its JSON on stdin) to the Saturn window this session runs in,
-# and prints Saturn's answer, if any, for Claude Code to read. Outside Saturn it does nothing.
-[ -n "$SATURN_SOCKET" ] && [ -S "$SATURN_SOCKET" ] || exit 0
-curl --silent --max-time 2 --unix-socket "$SATURN_SOCKET" \
+# Sends one Claude Code hook event (its JSON on stdin) to the Akyba window this session runs in,
+# and prints Akyba's answer, if any, for Claude Code to read. Outside Akyba it does nothing.
+[ -n "$AKYBA_SOCKET" ] && [ -S "$AKYBA_SOCKET" ] || exit 0
+curl --silent --max-time 2 --unix-socket "$AKYBA_SOCKET" \
   --header 'Content-Type: application/json' --data-binary @- \
-  "http://saturn/hook?pane=${SATURN_PANE_ID}" 2>/dev/null
+  "http://akyba/hook?pane=${AKYBA_PANE_ID}" 2>/dev/null
 exit 0

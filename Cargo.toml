@@ -1,7 +1,7 @@
 [workspace]
 resolver = "3"
 members = ["crates/*"]
-# GPUI with Saturn's patches (see vendor/README.md): built as dependencies, not linted as Saturn.
+# GPUI with Akyba's patches (see vendor/README.md): built as dependencies, not linted as Akyba.
 exclude = ["vendor"]
 
 [workspace.package]
@@ -11,10 +11,10 @@ license = "MIT"
 publish = false
 
 [workspace.dependencies]
-saturn-bridge = { path = "crates/saturn-bridge" }
-saturn-core = { path = "crates/saturn-core" }
-saturn-design = { path = "crates/saturn-design" }
-saturn-terminal = { path = "crates/saturn-terminal" }
+akyba-bridge = { path = "crates/akyba-bridge" }
+akyba-core = { path = "crates/akyba-core" }
+akyba-design = { path = "crates/akyba-design" }
+akyba-terminal = { path = "crates/akyba-terminal" }
 
 # GPUI moves weekly; versions are pinned exactly and upgraded on purpose (docs/rust-stack.md).
 gpui-kit = "=0.7.3"
@@ -47,7 +47,7 @@ missing_panics_doc = "allow"
 unwrap_used = "warn"
 
 # Unoptimised GPUI and layout make every frame slow; optimise dependencies even in dev builds while
-# keeping Saturn's own crates fast to rebuild.
+# keeping Akyba's own crates fast to rebuild.
 [profile.dev.package."*"]
 opt-level = 2
 

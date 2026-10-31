@@ -1,5 +1,5 @@
 {
-  "description": "Saturn: report session events to the Saturn window",
+  "description": "Akyba: report session events to the Akyba window",
   "hooks": {
     "SessionStart": [
       {

@@ -63,7 +63,7 @@ mod apple_build {
             "SurfaceInputIndex".into(),
             "SurfaceBounds".into(),
             "TransformationMatrix".into(),
-            // Saturn's patch.
+            // Akyba's patch.
             "BackdropBlurInputIndex".into(),
             "BackdropBlur".into(),
         ]);

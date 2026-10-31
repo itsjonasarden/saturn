@@ -1,15 +1,15 @@
-Saturn
+Akyba
 ======
 
-1. Drag Saturn into Applications.
+1. Drag Akyba into Applications.
 
-2. Open it once from Applications. macOS says it can't check Saturn for malicious
-   software, because Saturn isn't signed with a paid Apple Developer ID. Click Done.
+2. Open it once from Applications. macOS says it can't check Akyba for malicious
+   software, because Akyba isn't signed with a paid Apple Developer ID. Click Done.
 
 3. Open System Settings > Privacy & Security, scroll down, and click "Open Anyway"
-   next to the line about Saturn. Confirm with your password or Touch ID.
+   next to the line about Akyba. Confirm with your password or Touch ID.
 
-From then on Saturn opens like any other app.
+From then on Akyba opens like any other app.
 
-Saturn runs Claude Code in its terminals, so install that first:
+Akyba runs Claude Code in its terminals, so install that first:
 https://claude.com/claude-code

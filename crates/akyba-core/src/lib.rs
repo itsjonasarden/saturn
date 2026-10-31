@@ -1,0 +1,52 @@
+//! Akyba's logic without any UI: the terminal grid as data, the agents it runs (Claude Code, Codex)
+//! and what each is doing, how to read the signals they send to their terminals, and the file tree with its git state. Everything
+//! here is unit-tested.
+
+pub mod agent_activity;
+pub mod agent_state;
+pub mod agents;
+pub mod best_of;
+pub mod checks;
+pub mod clickup;
+pub mod codex_sessions;
+pub mod codex_usage;
+pub mod dbt;
+pub mod dbt_impact;
+pub mod file_icon;
+pub mod files;
+pub mod format;
+pub mod fuzzy;
+pub mod git;
+pub mod git_graph;
+pub mod hunks;
+pub mod imports;
+pub mod instructions;
+pub mod layout;
+pub mod links;
+pub mod lsp;
+pub mod multi_repo;
+pub mod overlap;
+pub mod past_sessions;
+pub mod pictures;
+pub mod ports;
+pub mod pr_body;
+pub mod program_status;
+pub mod prompts;
+pub mod pull_request;
+pub mod recipe;
+pub mod review;
+pub mod routines;
+pub mod schema;
+pub mod servers;
+pub mod session_name;
+pub mod session_usage;
+pub mod shared_env;
+pub mod sharp_icon;
+pub mod shell_env;
+pub mod snapshot;
+pub mod status_line;
+pub mod teams;
+pub mod usage;
+pub mod waiting;
+pub mod worktree_include;
+pub mod worktrees;

@@ -1,33 +1,33 @@
 #!/bin/sh
-# Builds Saturn.app (release build, icon, the Claude plugin inside) and signs it ad hoc.
-# `--install` also puts it in /Applications, replacing an older Saturn.app there.
+# Builds Akyba.app (release build, icon, the Claude plugin inside) and signs it ad hoc.
+# `--install` also puts it in /Applications, replacing an older Akyba.app there.
 # `--dmg` builds it for Apple Silicon and Intel and packs it into a disk image to share.
 set -eu
 cd "$(dirname "$0")/.."
 mode=${1:-}
 
 if [ "$mode" = "--dmg" ]; then
-  cargo build --release -p saturn --target aarch64-apple-darwin
-  cargo build --release -p saturn --target x86_64-apple-darwin
-  binary=target/release/saturn-universal
+  cargo build --release -p akyba --target aarch64-apple-darwin
+  cargo build --release -p akyba --target x86_64-apple-darwin
+  binary=target/release/akyba-universal
   mkdir -p target/release
   lipo -create -output "$binary" \
-    target/aarch64-apple-darwin/release/saturn target/x86_64-apple-darwin/release/saturn
+    target/aarch64-apple-darwin/release/akyba target/x86_64-apple-darwin/release/akyba
 else
-  cargo build --release -p saturn
-  binary=target/release/saturn
+  cargo build --release -p akyba
+  binary=target/release/akyba
 fi
 
 # A `.noindex` folder, so Spotlight doesn't list the build next to the installed app.
 out=target/bundle.noindex
-app=$out/Saturn.app
-rm -rf target/release/Saturn.app target/release/dmg
+app=$out/Akyba.app
+rm -rf target/release/Akyba.app target/release/dmg
 version=$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -1)
 rm -rf "$app"
 mkdir -p "$out" "$app/Contents/MacOS" "$app/Contents/Resources"
-cp "$binary" "$app/Contents/MacOS/saturn"
-cp crates/saturn/assets/app/Saturn.icns "$app/Contents/Resources/Saturn.icns"
-# Sparkle, which Saturn loads at launch to update itself from the GitHub releases.
+cp "$binary" "$app/Contents/MacOS/akyba"
+cp crates/akyba/assets/app/Akyba.icns "$app/Contents/Resources/Akyba.icns"
+# Sparkle, which Akyba loads at launch to update itself from the GitHub releases.
 sparkle=$(sh scripts/sparkle.sh)
 mkdir -p "$app/Contents/Frameworks"
 cp -R "$sparkle/Sparkle.framework" "$app/Contents/Frameworks/"
@@ -38,11 +38,11 @@ cat > "$app/Contents/Info.plist" <<PLIST
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-  <key>CFBundleName</key><string>Saturn</string>
-  <key>CFBundleDisplayName</key><string>Saturn</string>
-  <key>CFBundleIdentifier</key><string>local.saturn.workbench</string>
-  <key>CFBundleExecutable</key><string>saturn</string>
-  <key>CFBundleIconFile</key><string>Saturn</string>
+  <key>CFBundleName</key><string>Akyba</string>
+  <key>CFBundleDisplayName</key><string>Akyba</string>
+  <key>CFBundleIdentifier</key><string>dev.akyba.workbench</string>
+  <key>CFBundleExecutable</key><string>akyba</string>
+  <key>CFBundleIconFile</key><string>Akyba</string>
   <key>CFBundlePackageType</key><string>APPL</string>
   <key>CFBundleShortVersionString</key><string>$version</string>
   <key>CFBundleVersion</key><string>$version</string>
@@ -51,7 +51,7 @@ cat > "$app/Contents/Info.plist" <<PLIST
   <key>NSHighResolutionCapable</key><true/>
   <!-- Updates: the newest GitHub release's feed, signed with the key in the publisher's keychain;
        checked once a day, so an update put off with Remind me later comes back the next day. -->
-  <key>SUFeedURL</key><string>https://github.com/itsjonasarden/saturn/releases/latest/download/appcast.xml</string>
+  <key>SUFeedURL</key><string>https://github.com/itsjonasarden/akyba/releases/latest/download/appcast.xml</string>
   <key>SUPublicEDKey</key><string>L6qK9LpfH0C48mSjQNc4JAnNxO7rokEYbdIR5gemae0=</string>
   <key>SUEnableAutomaticChecks</key><true/>
   <key>SUScheduledCheckInterval</key><integer>86400</integer>
@@ -62,32 +62,32 @@ PLIST
 # Without an Apple Developer ID it isn't notarised, so a Mac that downloaded it asks once
 # (System Settings → Privacy & Security → Open Anyway).
 #
-# Signed with the publisher's own "Saturn Code Signing" certificate when it's in the keychain
+# Signed with the publisher's own "Akyba Code Signing" certificate when it's in the keychain
 # (self-signed: it needn't be trusted, so it's named by its fingerprint). Every version then
-# carries the same identity, and macOS keeps "Always Allow" for Saturn's Keychain items across
+# carries the same identity, and macOS keeps "Always Allow" for Akyba's Keychain items across
 # updates; an ad-hoc signature changes with every build, so each update asked again. Anyone
 # building without it gets the ad-hoc signature.
-identity=$(security find-identity -p codesigning 2>/dev/null | awk '/"Saturn Code Signing"/ { print $2; exit }')
+identity=$(security find-identity -p codesigning 2>/dev/null | awk '/"Akyba Code Signing"/ { print $2; exit }')
 codesign --force --deep --sign "${identity:--}" "$app"
-if [ -n "$identity" ]; then echo "Signed with Saturn Code Signing ($identity)"; fi
+if [ -n "$identity" ]; then echo "Signed with Akyba Code Signing ($identity)"; fi
 echo "Built $app ($version)"
 
 if [ "$mode" = "--dmg" ]; then
   stage=$out/dmg
   rm -rf "$stage"
   mkdir -p "$stage"
-  cp -R "$app" "$stage/Saturn.app"
+  cp -R "$app" "$stage/Akyba.app"
   ln -s /Applications "$stage/Applications"
-  cp scripts/how-to-open.txt "$stage/How to open Saturn.txt"
-  dmg="target/Saturn-$version.dmg"
+  cp scripts/how-to-open.txt "$stage/How to open Akyba.txt"
+  dmg="target/Akyba-$version.dmg"
   rm -f "$dmg"
-  hdiutil create -quiet -volname "Saturn $version" -srcfolder "$stage" -format UDZO "$dmg"
+  hdiutil create -quiet -volname "Akyba $version" -srcfolder "$stage" -format UDZO "$dmg"
   rm -rf "$stage"
   echo "Built $dmg"
 fi
 
 if [ "$mode" = "--install" ]; then
-  rm -rf /Applications/Saturn.app
-  cp -R "$app" /Applications/Saturn.app
-  echo "Installed /Applications/Saturn.app"
+  rm -rf /Applications/Akyba.app
+  cp -R "$app" /Applications/Akyba.app
+  echo "Installed /Applications/Akyba.app"
 fi

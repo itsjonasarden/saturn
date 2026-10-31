@@ -1,12 +1,12 @@
-# Working on Saturn
+# Working on Akyba
 
-Saturn is a native macOS workbench for running many Claude Code agents side by side: a grid of
+Akyba is a native macOS workbench for running many Claude Code agents side by side: a grid of
 terminals, a light editor, a diff review, and a clear signal when an agent needs you. It's Rust on
 GPUI, macOS only. Read the [README](README.md) for what it does, and
 [the design system](docs/design-system.md) and [the Rust stack](docs/rust-stack.md) before
 changing how it looks or what it's built on.
 
-These rules are for anyone changing Saturn, people and coding agents alike.
+These rules are for anyone changing Akyba, people and coding agents alike.
 
 ## Before you commit
 
@@ -25,35 +25,35 @@ pnpm health           # format check, clippy, tests, unused dependencies, licenc
 
 ## The code
 
-| Crate                    | What belongs there                                                           |
-| ------------------------ | ---------------------------------------------------------------------------- |
-| `crates/saturn-core`     | Logic without UI: layout, agent states, git, imports, schemas, LSP client    |
-| `crates/saturn`          | The app: window, views, editor panel, settings, everything GPUI              |
-| `crates/saturn-terminal` | Shells in ptys, alacritty's engine, Claude Code's signals, the terminal view |
-| `crates/saturn-design`   | Design tokens, compiled from `design/tokens.json`                            |
-| `crates/saturn-bridge`   | Where the Claude Code plugin's hooks reach Saturn                            |
+| Crate                   | What belongs there                                                           |
+| ----------------------- | ---------------------------------------------------------------------------- |
+| `crates/akyba-core`     | Logic without UI: layout, agent states, git, imports, schemas, LSP client    |
+| `crates/akyba`          | The app: window, views, editor panel, settings, everything GPUI              |
+| `crates/akyba-terminal` | Shells in ptys, alacritty's engine, Claude Code's signals, the terminal view |
+| `crates/akyba-design`   | Design tokens, compiled from `design/tokens.json`                            |
+| `crates/akyba-bridge`   | Where the Claude Code plugin's hooks reach Akyba                             |
 
-- **Logic goes in `saturn-core`, with tests.** If it can be tested without a window, it lives there.
+- **Logic goes in `akyba-core`, with tests.** If it can be tested without a window, it lives there.
 - **Clippy pedantic is on** and warnings fail the build. No `unwrap()`; an `expect()` says what
   must be true. `unsafe` is denied outside a few AppKit calls that say why.
 - **Nothing slow on the main thread.** Git, the file system, processes and language servers run in
   `cx.background_spawn`; the UI updates when they answer.
 - **Comments say why**, in plain sentences, on items and on anything surprising. Match the density
   and voice of the code around you. Names are words, not abbreviations.
-- **Stay generic.** Saturn is for anyone running agents: no company's workflow, ticket prefix or
+- **Stay generic.** Akyba is for anyone running agents: no company's workflow, ticket prefix or
   commands built in. Examples use `acme-web`, `ABC-123` and `/start`. Integrations (ClickUp, `gh`)
   are optional and invisible when unused.
 - **Learn from other editors, don't copy them.** Zed and other GPL code can be read for ideas,
   never pasted. New dependencies must pass `cargo deny` (see `deny.toml`).
-- **`vendor/` holds GPUI with Saturn's patches.** Change it only when there's no other way, mark the
-  change "Saturn's patch", and list it in `vendor/README.md`. Its formatting stays upstream's.
+- **`vendor/` holds GPUI with Akyba's patches.** Change it only when there's no other way, mark the
+  change "Akyba's patch", and list it in `vendor/README.md`. Its formatting stays upstream's.
 
 ## The design
 
-Saturn has a design system, and the code follows it. Full rules in
+Akyba has a design system, and the code follows it. Full rules in
 [docs/design-system.md](docs/design-system.md); the ones that matter most:
 
-- **Colours come from tokens** (`saturn_design::color`, through `theme::color`), never hex in code.
+- **Colours come from tokens** (`akyba_design::color`, through `theme::color`), never hex in code.
   Strokes and control fills are relative (`theme::overlay`, `separator`, `fill_*`): black in light
   mode, white in dark, at a low alpha.
 - **Colour has a job or it isn't there.** Blue: working, focus, the primary action. Orange: needs
@@ -79,7 +79,7 @@ Action)` when a shortcut does the same, so the shortcut shows. A button that say
   `len(space::SPACE_3)`, `theme::corner(radius::RADIUS_SM)`, `theme::tone(tone::HOVER)`, `icon::SM`,
   `size::ROW`. Views use the components in `chrome.rs`
   and never ask which theme is on; a component asks the theme (`chrome::look()`) which version to
-  draw. `crates/saturn/tests/design_rules.rs` checks this in `pnpm health`. `pnpm gallery` shows
+  draw. `crates/akyba/tests/design_rules.rs` checks this in `pnpm health`. `pnpm gallery` shows
   every component in the current theme.
 
 `design/tokens.json` is the single source of the tokens, the themes included. The browsable design system (an artifact
@@ -87,49 +87,49 @@ linked from the design doc) is kept in step with it.
 
 ## Trying a change
 
-Run it with `pnpm dev`. To see it without touching the screen, Saturn's spikes drive it from
+Run it with `pnpm dev`. To see it without touching the screen, Akyba's spikes drive it from
 environment variables and save what the window draws, offscreen
-(see the top of `crates/saturn/src/spike.rs` for the full list):
+(see the top of `crates/akyba/src/spike.rs` for the full list):
 
 ```sh
-cargo run -p saturn --features capture
+cargo run -p akyba --features capture
 # with, for example:
-SATURN_PROJECT=/path/to/repo SATURN_PANES=2 SATURN_HISTORY=1 \
-SATURN_SCREENSHOT=/tmp/shot.png SATURN_SCREENSHOT_AFTER=5 SATURN_QUIT_AFTER=7
+AKYBA_PROJECT=/path/to/repo AKYBA_PANES=2 AKYBA_HISTORY=1 \
+AKYBA_SCREENSHOT=/tmp/shot.png AKYBA_SCREENSHOT_AFTER=5 AKYBA_QUIT_AFTER=7
 ```
 
-- `SATURN_USER_DATA=<dir>` keeps a test's settings out of your own.
+- `AKYBA_USER_DATA=<dir>` keeps a test's settings out of your own.
 - Automated runs never bring a window forward or take the keyboard: whoever is at the Mac keeps
   typing into their own app. Don't add anything that activates a window in a spike.
 - Never capture the real screen (`screencapture`): it shows whatever else is open. Use
-  `SATURN_SCREENSHOT`, which renders Saturn's window alone.
-- Language servers: `SATURN_LSP_DEBUG=1` prints every message a server sends;
-  `SATURN_LSP_PROBE=line:col` asks the open file's server about a place and prints the answers.
+  `AKYBA_SCREENSHOT`, which renders Akyba's window alone.
+- Language servers: `AKYBA_LSP_DEBUG=1` prints every message a server sends;
+  `AKYBA_LSP_PROBE=line:col` asks the open file's server about a place and prints the answers.
 
 ## Docs
 
 A change people can see updates the docs in the same commit: [docs/features.md](docs/features.md),
 [shortcuts](docs/shortcuts.md) and [settings](docs/settings.md), and the [README](README.md) when it
-changes what Saturn is about. The README stays short: what Saturn is, a few lines per area, install. Screenshots in `docs/images` come from spikes over a made-up project, never
+changes what Akyba is about. The README stays short: what Akyba is, a few lines per area, install. Screenshots in `docs/images` come from spikes over a made-up project, never
 a real one. The README's animation, `docs/images/agents.gif`, is four
-such screenshots with `SATURN_FAKE_AGENTS=1` and `SATURN_FAKE_STATES` set to the panes' states, joined
+such screenshots with `AKYBA_FAKE_AGENTS=1` and `AKYBA_FAKE_STATES` set to the panes' states, joined
 with ffmpeg after the window buttons are drawn on (an offscreen render has none); `docs/images/social-preview.png` is the card GitHub shows when the repo is linked (set in
 the repo's settings).
 
 ## Building the app
 
 ```sh
-pnpm install-app      # Saturn.app in /Applications, for this Mac
+pnpm install-app      # Akyba.app in /Applications, for this Mac
 pnpm dist:dmg         # a disk image for Apple Silicon and Intel, to share
 pnpm release 0.2.0    # publish a version: installed copies offer it within a day
 ```
 
 Releasing needs the Sparkle signing key in the publisher's keychain; updates signed with any other
-key are refused by every installed Saturn.
+key are refused by every installed Akyba.
 
-The app is code-signed with the publisher's self-signed "Saturn Code Signing" certificate when
+The app is code-signed with the publisher's self-signed "Akyba Code Signing" certificate when
 it's in the keychain (`scripts/bundle.sh` finds it), so every version has the same identity. Without it, builds are
 signed ad hoc.
 
-Saturn isn't notarised (there's no Apple Developer ID), so a downloaded copy is opened once with
+Akyba isn't notarised (there's no Apple Developer ID), so a downloaded copy is opened once with
 Open Anyway; the disk image explains how.

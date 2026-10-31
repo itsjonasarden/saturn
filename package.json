@@ -1,19 +1,19 @@
 {
-  "name": "saturn-dev",
+  "name": "akyba-dev",
   "private": true,
-  "description": "Development tooling only (commit checks, Markdown/JSON formatting). Saturn itself is Rust: see Cargo.toml.",
+  "description": "Development tooling only (commit checks, Markdown/JSON formatting). Akyba itself is Rust: see Cargo.toml.",
   "engines": {
     "node": ">=24.2"
   },
   "scripts": {
     "fmt": "cargo fmt --all && oxfmt .",
     "fmt:check": "cargo fmt --all --check && oxfmt --check .",
-    "lint": "cargo clippy --workspace --all-targets --features saturn/capture -- -D warnings",
+    "lint": "cargo clippy --workspace --all-targets --features akyba/capture -- -D warnings",
     "test": "cargo test --workspace",
     "deps": "cargo machete && cargo deny check",
     "health": "pnpm run fmt:check && pnpm run lint && pnpm run test && pnpm run deps",
-    "dev": "cargo build -p saturn && sh scripts/sign-local.sh target/debug/saturn && target/debug/saturn",
-    "gallery": "cargo build -p saturn && sh scripts/sign-local.sh target/debug/saturn && SATURN_GALLERY=1 target/debug/saturn",
+    "dev": "cargo build -p akyba && sh scripts/sign-local.sh target/debug/akyba && target/debug/akyba",
+    "gallery": "cargo build -p akyba && sh scripts/sign-local.sh target/debug/akyba && AKYBA_GALLERY=1 target/debug/akyba",
     "prepare": "husky",
     "dist": "sh scripts/bundle.sh",
     "install-app": "sh scripts/bundle.sh --install",
