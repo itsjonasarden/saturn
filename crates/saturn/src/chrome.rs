@@ -651,7 +651,7 @@ pub fn primary_surface<E: gpui_kit::Styled + gpui_kit::ParentElement>(element: E
 pub fn primary_surface_cut<E: gpui_kit::Styled + gpui_kit::ParentElement>(element: E, corner: Cut) -> E {
     if cyberdeck() {
         // Cyberdeck's button, in blue: a blue outline round a faint blue fill, its corner cut.
-        return element.relative().text_color(theme::color(color::INK)).child(cut_surface(
+        return element.relative().text_color(primary_ink()).child(cut_surface(
             theme::color(color::BLUE),
             theme::color(color::BLUE_VIVID).opacity(0.16),
             1.,
@@ -668,9 +668,10 @@ pub fn primary_surface_cut<E: gpui_kit::Styled + gpui_kit::ParentElement>(elemen
     }])
 }
 
-/// The ink on the primary action: white on Saturn's blue fill, plain ink on Cyberdeck's outline.
+/// The ink on the primary action: white on Saturn's blue fill, blue in Cyberdeck's blue outline.
 pub fn primary_ink() -> gpui_kit::Hsla {
-    theme::color(if cyberdeck() { color::INK } else { color::INK_ON_ACCENT })
+    // Cyberdeck's buttons take their outline's colour for their words, as the game's do.
+    theme::color(if cyberdeck() { color::BLUE } else { color::INK_ON_ACCENT })
 }
 
 /// A headline in two weights, the point in semibold: "No terminals **yet**".

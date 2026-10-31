@@ -4312,14 +4312,20 @@ impl Workspace {
             .font_weight(FontWeight::MEDIUM)
             .child(
                 part("new-agent")
-                    .px(len(space::SPACE_4))
+                    .px(len(if chrome::cyberdeck() { space::SPACE_3 } else { space::SPACE_4 }))
                     .rounded_l(theme::corner(radius::RADIUS_MD))
                     .child("New agent")
                     .on_click(cx.listener(|this, _, window, cx| {
                         ticket_picker::open(cx.weak_entity(), this.clickup.connected(), window, cx);
                     })),
             )
-            .child(div().flex_none().w(px(1.)).h(px(16.)).bg(chrome::primary_ink().opacity(0.3)))
+            .child(
+                div()
+                    .flex_none()
+                    .w(px(1.))
+                    .h(px(if chrome::cyberdeck() { 12. } else { 16. }))
+                    .bg(chrome::primary_ink().opacity(0.3)),
+            )
             .child(self.with_menu(OpenMenu::NewAgent, more, cx))
     }
 
