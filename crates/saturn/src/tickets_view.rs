@@ -216,7 +216,7 @@ impl TicketsView {
                             .when(running, |line| {
                                 line.child(
                                     div()
-                                        .font_family(saturn_design::sans())
+                                        .font_family(saturn_design::look().sans)
                                         .text_color(theme::color(color::BLUE))
                                         .child("● agent running"),
                                 )

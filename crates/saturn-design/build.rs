@@ -8,9 +8,25 @@ use std::{env, fs};
 
 use serde_json::Value;
 
-/// The themes in design/tokens.json, in the order `Token` holds them: Saturn's own look in dark
-/// and light, then the Cyberdeck theme's.
-const THEMES: [&str; 4] = ["dark", "light", "cyberdeck-dark", "cyberdeck-light"];
+/// The keys a colour or shadow has for each theme in design/tokens.json, in the order `Token`
+/// holds them: each theme's dark, then its light. The first theme's are plain `dark` and `light`.
+fn variants(themes: &[Value]) -> Vec<String> {
+    themes
+        .iter()
+        .enumerate()
+        .flat_map(|(index, theme)| {
+            let id = theme["id"].as_str().expect("a theme id");
+            ["dark", "light"]
+                .map(|appearance| if index == 0 { appearance.to_owned() } else { format!("{id}-{appearance}") })
+        })
+        .collect()
+}
+
+/// `segments` as the enum variant `Segments`.
+fn variant(value: &Value) -> String {
+    let word = value.as_str().expect("a theme option");
+    word[..1].to_uppercase() + &word[1..]
+}
 
 fn const_name(name: &str) -> String {
     name.replace(['-', '.'], "_").to_uppercase()
@@ -30,14 +46,16 @@ fn parse_color(value: &str) -> (u32, f32) {
     (rgb, parts.get(3).copied().unwrap_or(1.0))
 }
 
-/// A token's value in `theme`: a plain string is every theme's. A missing Cyberdeck value borrows
-/// Saturn's in the same appearance, and a missing `light` borrows `dark`.
+/// A token's value in `theme` (`dark`, `light`, `cyberdeck-dark`…): a plain string is every
+/// theme's. A theme's missing value borrows the first theme's in the same appearance, and a missing
+/// `light` borrows `dark`.
 fn themed<'a>(value: &'a Value, theme: &str) -> &'a str {
+    let appearance = if theme.ends_with("light") { "light" } else { "dark" };
     match value {
         Value::String(text) => text,
         Value::Object(themes) => themes
             .get(theme)
-            .or_else(|| themes.get(theme.trim_start_matches("cyberdeck-")))
+            .or_else(|| themes.get(appearance))
             .or_else(|| themes.get("dark"))
             .and_then(Value::as_str)
             .expect("a theme value"),
@@ -106,18 +124,25 @@ fn main() {
         .map(|t| (t["name"].as_str().expect("name").to_owned(), t["value"].clone()))
         .collect();
 
+    let themes = tokens["themes"]["themes"].as_array().expect("themes");
+    let variants = variants(themes);
     let mut out = String::from("// Generated from design/tokens.json by crates/saturn-design/build.rs.\n\n");
+    writeln!(out, "/// How many themes there are.\npub const THEME_COUNT: usize = {};\n", themes.len()).ok();
     out.push_str("pub mod color {\n    use super::{Color, Token};\n");
     for token in tokens["color"]["tokens"].as_array().expect("colour tokens") {
-        let [dark, light, cyberdeck_dark, cyberdeck_light] = THEMES.map(|theme| {
-            let (rgb, alpha) = resolve_color(&colors, themed(&token["value"], theme), theme);
-            format!("Color {{ rgb: 0x{rgb:06x}, alpha: {alpha:?} }}")
-        });
+        let values: Vec<String> = variants
+            .iter()
+            .map(|theme| {
+                let (rgb, alpha) = resolve_color(&colors, themed(&token["value"], theme), theme);
+                format!("Color {{ rgb: 0x{rgb:06x}, alpha: {alpha:?} }}")
+            })
+            .collect();
         let usage = token["usage"].as_str().unwrap_or_default().replace('`', "");
         writeln!(
             out,
-            "    /// {usage}\n    pub const {}: Token = Token {{ dark: {dark}, light: {light}, cyberdeck_dark: {cyberdeck_dark}, cyberdeck_light: {cyberdeck_light} }};",
-            const_name(token["name"].as_str().expect("name"))
+            "    /// {usage}\n    pub const {}: Token = Token {{ values: [{}] }};",
+            const_name(token["name"].as_str().expect("name")),
+            values.join(", ")
         )
         .ok();
     }
@@ -140,13 +165,16 @@ fn main() {
 
     out.push_str("pub mod shadow {\n    use super::{Color, Shadow, Shadows};\n");
     for token in tokens["shadow"]["tokens"].as_array().expect("shadow tokens") {
-        let [dark, light, cyberdeck_dark, cyberdeck_light] =
-            THEMES.map(|theme| shadow_layers(themed(&token["value"], theme)).join(", "));
+        let values: Vec<String> = variants
+            .iter()
+            .map(|theme| format!("&[{}]", shadow_layers(themed(&token["value"], theme)).join(", ")))
+            .collect();
         let usage = token["usage"].as_str().unwrap_or_default().replace('`', "");
         writeln!(
             out,
-            "    /// {usage}\n    pub const {}: Shadows = Shadows {{ dark: &[{dark}], light: &[{light}], cyberdeck_dark: &[{cyberdeck_dark}], cyberdeck_light: &[{cyberdeck_light}] }};",
-            const_name(token["name"].as_str().expect("name"))
+            "    /// {usage}\n    pub const {}: Shadows = Shadows {{ values: [{}] }};",
+            const_name(token["name"].as_str().expect("name")),
+            values.join(", ")
         )
         .ok();
     }
@@ -157,7 +185,96 @@ fn main() {
         let first = stack.as_str().expect("stack").split(',').next().expect("a family").trim().trim_matches('"');
         writeln!(out, "    pub const {}: &str = {first:?};", const_name(key)).ok();
     }
-    out.push_str("}\n");
+    out.push_str("}\n\n");
+
+    out.push_str(&text_styles(&tokens));
+    out.push_str(&looks(&tokens, themes));
 
     fs::write(PathBuf::from(env::var("OUT_DIR").expect("out dir")).join("tokens.rs"), out).expect("write tokens.rs");
+}
+
+/// The type scale: every style of every group, by its name.
+fn text_styles(tokens: &Value) -> String {
+    let mut out = String::new();
+    out.push_str("pub mod text {\n    use super::TextStyle;\n");
+    for group in tokens["type"]["groups"].as_array().expect("type groups") {
+        for style in group["styles"].as_array().expect("styles") {
+            let usage = style["usage"].as_str().unwrap_or_default().replace('`', "");
+            writeln!(
+                out,
+                "    /// {usage}\n    pub const {}: TextStyle = TextStyle {{ size: {:?}, line_height: {:?}, weight: {} }};",
+                const_name(style["name"].as_str().expect("name")),
+                px(style["fontSize"].as_str().expect("size")),
+                px(style["lineHeight"].as_str().expect("line height")),
+                style["fontWeight"].as_u64().expect("weight")
+            )
+            .ok();
+        }
+    }
+    out.push_str("}\n\n");
+
+    out
+}
+
+/// The themes, each a description its components read.
+fn looks(tokens: &Value, themes: &[Value]) -> String {
+    let mut out = String::new();
+    let spacing: HashMap<&str, f32> = tokens["spacing"]["tokens"]
+        .as_array()
+        .expect("spacing")
+        .iter()
+        .map(|token| (token["name"].as_str().expect("name"), px(token["value"].as_str().expect("value"))))
+        .collect();
+    let mut looks = Vec::new();
+    for theme in themes {
+        let text = |key: &str| theme[key].as_str().unwrap_or_else(|| panic!("a theme's {key}"));
+        let number = |key: &str| theme[key].as_f64().unwrap_or_else(|| panic!("a theme's {key}"));
+        let options: Vec<String> = [
+            ("corners", "Corners"),
+            ("surfaces", "Surfaces"),
+            ("titleBar", "TitleBar"),
+            ("tabs", "Tabs"),
+            ("selection", "Selection"),
+            ("choices", "Choices"),
+            ("switch", "Switch"),
+            ("buttons", "Buttons"),
+            ("menus", "Menus"),
+            ("settingRows", "SettingRows"),
+            ("meters", "Meters"),
+            ("agentCards", "AgentCards"),
+            ("currentLine", "CurrentLine"),
+        ]
+        .iter()
+        .map(|(key, kind)| {
+            let field = key.chars().fold(String::new(), |mut field, c| {
+                if c.is_uppercase() {
+                    field.push('_');
+                }
+                field.push(c.to_ascii_lowercase());
+                field
+            });
+            format!("{field}: {kind}::{}", variant(&theme[*key]))
+        })
+        .collect();
+        looks.push(format!(
+            "Look {{ id: {:?}, name: {:?}, description: {:?}, sans: font::{}, panel_cut: {:?}, control_cut: {:?}, card_gap: {:?}, focus: color::{}, {} }}",
+            text("id"),
+            text("name"),
+            text("description"),
+            const_name(text("font")),
+            number("panelCut"),
+            number("controlCut"),
+            spacing[text("cardGap")],
+            const_name(text("focus")),
+            options.join(", ")
+        ));
+    }
+    writeln!(
+        out,
+        "/// Every theme, the default first.\npub const THEMES: [Look; THEME_COUNT] = [{}];",
+        looks.join(", ")
+    )
+    .ok();
+
+    out
 }

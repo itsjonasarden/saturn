@@ -1,14 +1,15 @@
 //! The Saturn design system's tokens as Rust constants, compiled from `design/tokens.json`.
 //!
-//! `color`, `space`, `radius`, `shadow` and `font` mirror the token families of the design system
-//! (<https://claude.ai/artifact/RC4SBXYReNJprpjxDNapf3>). Change a value in `design/tokens.json`, never
-//! here.
+//! `color`, `space`, `radius`, `shadow`, `font` and `text` mirror the token families of the design
+//! system (<https://claude.ai/artifact/RC4SBXYReNJprpjxDNapf3>). Change a value in
+//! `design/tokens.json`, never here.
 //!
-//! Colours and shadows come in a dark and a light version, for each of two themes: Saturn's own
-//! and Cyberdeck. [`set_appearance`] and [`set_theme`] pick which one [`Token::get`] and
-//! [`Shadows::get`] return, for the whole app at once.
+//! A theme ([`Look`], one of [`THEMES`]) is a description: its font, its corners, how far apart its
+//! cards sit and which version of each control it draws. Colours and shadows have a dark and a
+//! light value in every theme. [`set_theme`] and [`set_appearance`] pick which one the whole app
+//! draws with; components read [`look`] and never ask which theme is on.
 
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 
 /// An sRGB colour as `0xRRGGBB` plus opacity.
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -29,46 +30,179 @@ pub struct Shadow {
     pub color: Color,
 }
 
+/// A text style from the type scale: its size and line height in pixels, and its weight (400 is
+/// regular, 500 medium).
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct TextStyle {
+    pub size: f32,
+    pub line_height: f32,
+    pub weight: u16,
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Appearance {
     Dark,
     Light,
 }
 
-/// The look the whole app is drawn in: Saturn's own (glass, rounded cards, Urbanist), or Cyberdeck
-/// (an opaque near-black ground, square panels with cut corners, Rajdhani).
+/// How a theme draws its corners.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Theme {
-    Saturn,
-    Cyberdeck,
+pub enum Corners {
+    /// Rounded by the radius tokens, nested from the window inward.
+    Round,
+    /// Square, with a corner cut off panels, selections and buttons.
+    Cut,
+}
+
+/// What shows between the cards.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Surfaces {
+    /// The window's glass, between translucent cards.
+    Glass,
+    /// Opaque cards on an opaque ground.
+    Opaque,
+}
+
+/// How the title bar holds its controls.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum TitleBar {
+    /// In tracks on the cards' surface.
+    Tracks,
+    /// Bare, filling the bar but for the gap between cards.
+    Bare,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Tabs {
+    /// Track items, the chosen one raised.
+    Track,
+    /// Words over a bar, lit under the chosen one.
+    Underline,
+}
+
+/// How a chosen track item shows.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Selection {
+    /// Raised: white in light mode, lighter in dark.
+    Raised,
+    /// An ink outline round a faint fill, its corner cut.
+    Outline,
+}
+
+/// How a choice of a few values is drawn.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Choices {
+    /// A track of segments.
+    Segments,
+    /// The value between two arrows, over a dash for each value.
+    Selector,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Switch {
+    /// macOS's switch.
+    Toggle,
+    /// The word, then a box whose block sits right and lit, or left and dim.
+    Box,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Buttons {
+    /// Filled; the primary one in the accent gradient with a bloom.
+    Filled,
+    /// An outline with its corner cut; the primary one blue, its words blue too.
+    Outline,
+}
+
+/// How a menu marks the line under the pointer.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Menus {
+    Fill,
+    Outline,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SettingRows {
+    /// Rows between hairlines.
+    Lines,
+    /// Each setting its own slab, notched along its top.
+    Slabs,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Meters {
+    Bars,
+    /// Rows of square dots.
+    Dots,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum AgentCards {
+    /// A soft gradient.
+    Gradient,
+    /// A flat grey slab.
+    Slab,
+}
+
+/// How the editor marks the line the cursor is on.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CurrentLine {
+    /// The line is filled.
+    Fill,
+    /// Only its number is lit.
+    Number,
+}
+
+/// A theme, as `design/tokens.json` describes it.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct Look {
+    /// How settings.json names it.
+    pub id: &'static str,
+    pub name: &'static str,
+    pub description: &'static str,
+    /// The interface's font family; code stays in [`font::MONO`].
+    pub sans: &'static str,
+    pub corners: Corners,
+    /// How far along each edge a panel's corner is cut, and a selection's or a button's.
+    pub panel_cut: f32,
+    pub control_cut: f32,
+    /// The gap between cards, and round the window's edge.
+    pub card_gap: f32,
+    /// The colour of focus.
+    pub focus: Token,
+    pub surfaces: Surfaces,
+    pub title_bar: TitleBar,
+    pub tabs: Tabs,
+    pub selection: Selection,
+    pub choices: Choices,
+    pub switch: Switch,
+    pub buttons: Buttons,
+    pub menus: Menus,
+    pub setting_rows: SettingRows,
+    pub meters: Meters,
+    pub agent_cards: AgentCards,
+    pub current_line: CurrentLine,
 }
 
 static LIGHT: AtomicBool = AtomicBool::new(false);
-static CYBERDECK: AtomicBool = AtomicBool::new(false);
+static THEME: AtomicUsize = AtomicUsize::new(0);
 
-/// Which theme every token is drawn in.
-pub fn theme() -> Theme {
-    if CYBERDECK.load(Ordering::Relaxed) { Theme::Cyberdeck } else { Theme::Saturn }
+/// The theme everything is drawn in.
+pub fn look() -> &'static Look {
+    &THEMES[THEME.load(Ordering::Relaxed)]
 }
 
-pub fn set_theme(theme: Theme) {
-    CYBERDECK.store(theme == Theme::Cyberdeck, Ordering::Relaxed);
+/// Draws everything in the theme `id` names; an unknown one is the first, Saturn's own.
+pub fn set_theme(id: &str) {
+    THEME.store(THEMES.iter().position(|theme| theme.id == id).unwrap_or(0), Ordering::Relaxed);
 }
 
-/// The interface's font family in the current theme; code stays in [`font::MONO`] in both.
-pub fn sans() -> &'static str {
-    match theme() {
-        Theme::Saturn => font::SANS,
-        Theme::Cyberdeck => font::SANS_CYBERDECK,
-    }
-}
-
-/// A corner's radius in the current theme: Cyberdeck's corners are square (and some are cut, which
-/// the app draws itself).
+/// A corner's radius in the current theme: as the radius tokens give it where corners are round,
+/// square where they are cut (the app draws the cuts itself).
 pub fn corner(radius: f32) -> f32 {
-    match theme() {
-        Theme::Saturn => radius,
-        Theme::Cyberdeck => 0.0,
+    match look().corners {
+        Corners::Round => radius,
+        Corners::Cut => 0.0,
     }
 }
 
@@ -81,13 +215,15 @@ pub fn set_appearance(appearance: Appearance) {
     LIGHT.store(appearance == Appearance::Light, Ordering::Relaxed);
 }
 
+/// Where a theme's value sits among a token's: each theme's dark, then its light.
+fn slot(theme: usize, appearance: Appearance) -> usize {
+    theme * 2 + usize::from(appearance == Appearance::Light)
+}
+
 /// A colour token: its value in each theme and appearance.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Token {
-    pub dark: Color,
-    pub light: Color,
-    pub cyberdeck_dark: Color,
-    pub cyberdeck_light: Color,
+    values: [Color; THEME_COUNT * 2],
 }
 
 impl Token {
@@ -98,33 +234,30 @@ impl Token {
 
     /// The value in the current theme, in `appearance`.
     pub fn at(self, appearance: Appearance) -> Color {
-        match (theme(), appearance) {
-            (Theme::Saturn, Appearance::Dark) => self.dark,
-            (Theme::Saturn, Appearance::Light) => self.light,
-            (Theme::Cyberdeck, Appearance::Dark) => self.cyberdeck_dark,
-            (Theme::Cyberdeck, Appearance::Light) => self.cyberdeck_light,
-        }
+        self.values[slot(THEME.load(Ordering::Relaxed), appearance)]
+    }
+
+    /// The value in the theme `id` names, in `appearance`.
+    pub fn of(self, id: &str, appearance: Appearance) -> Color {
+        self.values[slot(THEMES.iter().position(|theme| theme.id == id).expect("a theme"), appearance)]
     }
 }
 
 /// A shadow token: its layers in each theme and appearance.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Shadows {
-    pub dark: &'static [Shadow],
-    pub light: &'static [Shadow],
-    pub cyberdeck_dark: &'static [Shadow],
-    pub cyberdeck_light: &'static [Shadow],
+    values: [&'static [Shadow]; THEME_COUNT * 2],
 }
 
 impl Shadows {
     /// The layers in the current theme and appearance.
     pub fn get(self) -> &'static [Shadow] {
-        match (theme(), appearance()) {
-            (Theme::Saturn, Appearance::Dark) => self.dark,
-            (Theme::Saturn, Appearance::Light) => self.light,
-            (Theme::Cyberdeck, Appearance::Dark) => self.cyberdeck_dark,
-            (Theme::Cyberdeck, Appearance::Light) => self.cyberdeck_light,
-        }
+        self.values[slot(THEME.load(Ordering::Relaxed), appearance())]
+    }
+
+    /// The layers in the theme `id` names, in `appearance`.
+    pub fn of(self, id: &str, appearance: Appearance) -> &'static [Shadow] {
+        self.values[slot(THEMES.iter().position(|theme| theme.id == id).expect("a theme"), appearance)]
     }
 }
 
@@ -132,7 +265,10 @@ impl Shadows {
 // notes, which name components (IconTile) as the design system writes them.
 #[allow(clippy::unreadable_literal, clippy::doc_markdown)]
 mod generated {
-    use super::{Color, Shadow, Shadows, Token};
+    use super::{
+        AgentCards, Buttons, Choices, Color, Corners, CurrentLine, Look, Menus, Meters, Selection, SettingRows, Shadow,
+        Shadows, Surfaces, Switch, Tabs, TextStyle, TitleBar, Token,
+    };
     include!(concat!(env!("OUT_DIR"), "/tokens.rs"));
 }
 pub use generated::*;
@@ -143,22 +279,31 @@ mod tests {
 
     #[test]
     fn brand_colours_come_from_the_tokens() {
-        assert_eq!(color::BLUE_VIVID.dark, Color { rgb: 0x001c_69e3, alpha: 1.0 });
-        assert_eq!(color::BLUE_VIVID.light, color::BLUE_VIVID.dark);
-        assert_eq!(color::STATUS_WORKING.dark, color::BLUE.dark);
+        assert_eq!(color::BLUE_VIVID.of("saturn", Appearance::Dark), Color { rgb: 0x001c_69e3, alpha: 1.0 });
+        assert_eq!(color::BLUE_VIVID.of("saturn", Appearance::Light), color::BLUE_VIVID.of("saturn", Appearance::Dark));
+        assert_eq!(color::STATUS_WORKING.of("saturn", Appearance::Dark), color::BLUE.of("saturn", Appearance::Dark));
     }
 
     #[test]
     fn light_mode_has_its_own_neutrals_and_signals() {
-        assert_ne!(color::SURFACE.light, color::SURFACE.dark);
+        assert_ne!(color::SURFACE.of("saturn", Appearance::Light), color::SURFACE.of("saturn", Appearance::Dark));
         // Amber text darkens in light mode; the amber fill stays, always with dark text on it.
-        assert_ne!(color::AMBER_TEXT.light, color::AMBER.light);
-        assert_eq!(color::AMBER.light, color::AMBER.dark);
+        assert_ne!(color::AMBER_TEXT.of("saturn", Appearance::Light), color::AMBER.of("saturn", Appearance::Light));
+        assert_eq!(color::AMBER.of("saturn", Appearance::Light), color::AMBER.of("saturn", Appearance::Dark));
         // Needs you is orange, darkened in light mode; your turn is the terminal's green.
-        assert_eq!(color::STATUS_NEEDS_YOU.light, color::ORANGE.light);
-        assert_ne!(color::ORANGE.light, color::ORANGE.dark);
-        assert_eq!(color::STATUS_YOUR_TURN.dark, color::TERM_GREEN.dark);
-        assert_eq!(color::INK_ON_ACCENT.light, color::INK_ON_ACCENT.dark);
+        assert_eq!(
+            color::STATUS_NEEDS_YOU.of("saturn", Appearance::Light),
+            color::ORANGE.of("saturn", Appearance::Light)
+        );
+        assert_ne!(color::ORANGE.of("saturn", Appearance::Light), color::ORANGE.of("saturn", Appearance::Dark));
+        assert_eq!(
+            color::STATUS_YOUR_TURN.of("saturn", Appearance::Dark),
+            color::TERM_GREEN.of("saturn", Appearance::Dark)
+        );
+        assert_eq!(
+            color::INK_ON_ACCENT.of("saturn", Appearance::Light),
+            color::INK_ON_ACCENT.of("saturn", Appearance::Dark)
+        );
     }
 
     /// Every row of the nesting table in the design system's README: inner = outer − padding.
@@ -178,12 +323,15 @@ mod tests {
 
     #[test]
     fn glows_have_a_ring_and_a_soft_halo() {
-        for glow in [shadow::GLOW_NEEDS_YOU.dark, shadow::GLOW_NEEDS_YOU.light] {
+        for glow in [
+            shadow::GLOW_NEEDS_YOU.of("saturn", Appearance::Dark),
+            shadow::GLOW_NEEDS_YOU.of("saturn", Appearance::Light),
+        ] {
             assert_eq!(glow.len(), 2);
             assert!((glow[0].spread - 1.0).abs() < f32::EPSILON);
             assert!(!glow[0].inset);
         }
-        assert!((shadow::GLOW_NEEDS_YOU.dark[1].blur - 12.0).abs() < f32::EPSILON);
+        assert!((shadow::GLOW_NEEDS_YOU.of("saturn", Appearance::Dark)[1].blur - 12.0).abs() < f32::EPSILON);
     }
 
     #[test]
@@ -194,13 +342,36 @@ mod tests {
     }
 
     #[test]
+    fn themes_are_described_in_full_and_the_first_is_saturns() {
+        assert_eq!(THEMES[0].id, "saturn");
+        set_theme("no such theme");
+        assert_eq!(look().id, "saturn");
+        let cyberdeck = THEMES.iter().find(|theme| theme.id == "cyberdeck").expect("cyberdeck");
+        assert_eq!(cyberdeck.sans, "Rajdhani");
+        assert_eq!(cyberdeck.corners, Corners::Cut);
+        assert!(cyberdeck.card_gap < THEMES[0].card_gap);
+        let ids: std::collections::HashSet<_> = THEMES.iter().map(|theme| theme.id).collect();
+        assert_eq!(ids.len(), THEMES.len(), "theme ids are unique");
+    }
+
+    #[test]
+    fn the_type_scale_comes_from_the_tokens() {
+        assert!((text::LABEL.size - 13.0).abs() < f32::EPSILON);
+        assert_eq!(text::LABEL.weight, 500);
+        const { assert!(text::META.size < text::BODY.size) };
+    }
+
+    #[test]
     fn cyberdeck_is_monochrome_and_borrows_the_signals() {
         // Its own neutrals, with no blue in them.
-        assert_ne!(color::SURFACE.cyberdeck_dark, color::SURFACE.dark);
-        let rgb = color::SURFACE.cyberdeck_dark.rgb;
+        assert_ne!(color::SURFACE.of("cyberdeck", Appearance::Dark), color::SURFACE.of("saturn", Appearance::Dark));
+        let rgb = color::SURFACE.of("cyberdeck", Appearance::Dark).rgb;
         assert!((rgb >> 16) & 0xff <= (rgb & 0xff) + 1 && (rgb & 0xff) <= ((rgb >> 16) & 0xff) + 1);
         // The signals mean the same in both themes.
-        assert_eq!(color::ORANGE.cyberdeck_dark, color::ORANGE.dark);
-        assert_eq!(color::BLUE_VIVID.cyberdeck_light, color::BLUE_VIVID.light);
+        assert_eq!(color::ORANGE.of("cyberdeck", Appearance::Dark), color::ORANGE.of("saturn", Appearance::Dark));
+        assert_eq!(
+            color::BLUE_VIVID.of("cyberdeck", Appearance::Light),
+            color::BLUE_VIVID.of("saturn", Appearance::Light)
+        );
     }
 }

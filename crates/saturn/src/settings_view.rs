@@ -12,7 +12,7 @@ use saturn_design::{color, radius, space};
 
 use crate::chrome;
 use crate::keymap::{self, SHORTCUTS, Shortcut};
-use crate::settings::{AgentCommands, AppearanceSetting, Settings, TEXT_SIZES, ThemeSetting};
+use crate::settings::{AgentCommands, AppearanceSetting, Settings, TEXT_SIZES};
 use crate::theme::{self, len};
 use saturn_core::agents::Agent;
 
@@ -313,12 +313,16 @@ impl SettingsView {
             Row::new(
                 Section::Appearance,
                 "Theme",
-                "Saturn's own look, or Cyberdeck: square panels with cut corners on a near-black ground, in a narrower face.",
+                saturn_design::look().description,
                 self.choice(
                     "theme",
-                    &[("Saturn", ThemeSetting::Saturn), ("Cyberdeck", ThemeSetting::Cyberdeck)],
-                    settings.theme,
-                    |settings, value| settings.theme = value,
+                    &saturn_design::THEMES
+                        .iter()
+                        .enumerate()
+                        .map(|(index, theme)| (theme.name, index))
+                        .collect::<Vec<_>>(),
+                    saturn_design::THEMES.iter().position(|theme| theme.id == settings.theme).unwrap_or(0),
+                    |settings, index| saturn_design::THEMES[index].id.clone_into(&mut settings.theme),
                 ),
             ),
             Row::new(
@@ -340,7 +344,7 @@ impl SettingsView {
                 Section::Appearance,
                 "Text size",
                 "Of terminals and files, in points; the rest of Saturn stays as it is. ⌘+ and ⌘− change it too, ⌘0 goes back to 13.",
-                if chrome::cyberdeck() {
+                if chrome::look().choices == saturn_design::Choices::Selector {
                     // Cyberdeck's selector, a step either way.
                     let sizes: Vec<SharedString> = TEXT_SIZES.map(|size| size.to_string().into()).collect();
                     let current = usize::from(size.saturating_sub(*TEXT_SIZES.start()));
@@ -780,7 +784,7 @@ impl SettingsView {
                 )
             });
         let padding = len(if row.compact { space::SPACE_2 } else { space::SPACE_3 });
-        let line = if chrome::cyberdeck() {
+        let line = if chrome::look().setting_rows == saturn_design::SettingRows::Slabs {
             // Each setting its own slab, notched along the top, a few pixels from the next.
             div()
                 .id(("setting", index))

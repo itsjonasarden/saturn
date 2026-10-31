@@ -83,7 +83,7 @@ fn component_theme(appearance: Appearance) -> gpui_kit::component::ThemeConfig {
         "border": relative(0.1),
         "input.border": relative(0.16),
         // Cyberdeck is monochrome: focus is ink, as its selections are.
-        "ring": hex(if saturn_design::theme() == saturn_design::Theme::Cyberdeck { c::INK } else { c::BLUE }),
+        "ring": hex(saturn_design::look().focus),
         "muted.background": hex(c::CONTROL),
         "muted.foreground": hex(c::INK_MUTED),
         "accent.background": hex(c::CONTROL_HOVER),
@@ -114,16 +114,16 @@ fn component_theme(appearance: Appearance) -> gpui_kit::component::ThemeConfig {
         // Dark mode's red is light: dark ink on it, as on green.
         "danger.foreground": hex(if appearance == Appearance::Dark { c::INK_ON_SIGNAL } else { c::INK_ON_ACCENT }),
     });
-    let cyberdeck = saturn_design::theme() == saturn_design::Theme::Cyberdeck;
+    let number_only = saturn_design::look().current_line == saturn_design::CurrentLine::Number;
     let highlight = serde_json::json!({
         // The editor sits in a well, which draws the glass; its own background stays clear.
         "editor.background": "#00000000",
         "editor.foreground": hex(c::INK_BODY),
-        // The kit paints the current line's fill across the line numbers too; Cyberdeck has none,
-        // and marks the line by its number in full ink instead.
-        "editor.active_line.background": if cyberdeck { "#00000000".to_owned() } else { hex(c::SURFACE_RAISED) },
+        // The kit paints the current line's fill across the line numbers too; a theme that marks
+        // the line by its number alone has no fill, and the number in full ink.
+        "editor.active_line.background": if number_only { "#00000000".to_owned() } else { hex(c::SURFACE_RAISED) },
         "editor.line_number": hex(c::INK_FAINT),
-        "editor.active_line_number": hex(if cyberdeck { c::INK } else { c::INK_MUTED }),
+        "editor.active_line_number": hex(if number_only { c::INK } else { c::INK_MUTED }),
         "editor.invisible": hex(c::LINE_STRONG),
         "editor.gutter.background": "#00000000",
         // Language server underlines, in the palette: errors red, warnings the warm text colour
@@ -137,7 +137,7 @@ fn component_theme(appearance: Appearance) -> gpui_kit::component::ThemeConfig {
     serde_json::from_value(serde_json::json!({
         "name": "Saturn",
         "mode": if appearance == Appearance::Dark { "dark" } else { "light" },
-        "font.family": saturn_design::sans(),
+        "font.family": saturn_design::look().sans,
         "font.size": 13,
         "mono_font.family": font::MONO,
         "mono_font.size": 13,
@@ -213,7 +213,7 @@ pub fn apply(settings: &Settings, cx: &mut gpui_kit::App) {
     use gpui_kit::component::{Theme, ThemeMode};
 
     let setting = settings.appearance;
-    saturn_design::set_theme(settings.theme.design());
+    saturn_design::set_theme(&settings.theme);
     // Following the system means no override, so macOS reports its own appearance again.
     cx.set_window_appearance(match setting {
         AppearanceSetting::System => None,

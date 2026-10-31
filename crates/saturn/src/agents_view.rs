@@ -23,8 +23,8 @@ fn tint(state: AgentState) -> (u32, u32, u32) {
 /// The gradient surface, tinted by `state`: deep to near black, the state's bright colour pooling
 /// in from the lower left. It sits 4px inside the sidebar's card (radius 10), so its corners are 6.
 pub fn surface(id: impl Into<ElementId>, state: AgentState) -> gpui_kit::Stateful<gpui_kit::Div> {
-    if crate::chrome::cyberdeck() {
-        // Cyberdeck has no gradients: a raised slab with its top right corner cut.
+    if crate::chrome::look().agent_cards == saturn_design::AgentCards::Slab {
+        // No gradient: a raised slab with its top right corner cut.
         let edge = theme::overlay(0.16);
         return div().id(id).relative().flex().flex_col().gap(len(space::SPACE_1)).p(len(space::SPACE_3)).child(
             crate::chrome::cut_surface(

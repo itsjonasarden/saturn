@@ -113,7 +113,11 @@ fn render_row(workspace: &WeakEntity<Workspace>, row: Row) -> impl IntoElement {
                 )
                 .children(detail.map(|detail| {
                     div()
-                        .font_family(if asks_permission { saturn_design::font::MONO } else { saturn_design::sans() })
+                        .font_family(if asks_permission {
+                            saturn_design::font::MONO
+                        } else {
+                            saturn_design::look().sans
+                        })
                         .text_size(px(12.))
                         .text_color(theme::color(color::INK))
                         .truncate()

@@ -9,7 +9,7 @@ use gpui_kit::{
     ParentElement as _, PathBuilder, Pixels, SharedString, StatefulInteractiveElement as _, Styled as _, Window,
     canvas, div, fill, linear_color_stop, linear_gradient, point, prelude::FluentBuilder as _, px, size, svg,
 };
-use saturn_design::{color, radius, space};
+use saturn_design::{Buttons, Choices, Corners, Look, Selection, Switch, Tabs, color, radius, space};
 
 use crate::theme::{self, len};
 
@@ -27,14 +27,13 @@ pub fn tip_for<A: Action + Clone>(
     move |window, cx| Tooltip::new(text).action(&action, None).build(window, cx)
 }
 
-/// Width of Cyberdeck's selectors and switches, the same for both so a column of settings lines up.
+/// Width of the selector and the boxed switch, the same for both so a column of settings lines up.
 const CHOICE_WIDTH: f32 = 136.;
 
 /// The gap between cards (panes, the sidebar, the editor, the status bar) and round the window's
-/// edge: Saturn's glass shows through 8px; Cyberdeck has no glass to show, so its cards sit 4px
-/// apart.
+/// edge, as the theme sets it.
 pub fn pane_gap() -> f32 {
-    if cyberdeck() { space::SPACE_1 } else { space::SPACE_2 }
+    look().card_gap
 }
 
 /// Height of every control: tabs, buttons, track items, segments. Dense, as development tools are.
@@ -46,14 +45,25 @@ pub fn icon(name: &str, size: f32, color: gpui_kit::Hsla) -> impl IntoElement {
     svg().path(SharedString::from(format!("icons/{name}.svg"))).size(px(size)).flex_none().text_color(color)
 }
 
-/// Whether the Cyberdeck theme is on: square panels with cut corners instead of glass and cards.
-pub fn cyberdeck() -> bool {
-    saturn_design::theme() == saturn_design::Theme::Cyberdeck
+/// The theme: what every component here draws by. Components ask it which version of themselves
+/// to draw, never which theme is on.
+pub fn look() -> &'static Look {
+    saturn_design::look()
 }
 
-/// How far along each edge Cyberdeck cuts a panel's corner, and a selection's.
-const PANEL_CUT: f32 = 12.;
-const SELECTION_CUT: f32 = 8.;
+/// Whether the theme cuts corners (and squares the rest) rather than rounding them.
+pub fn cut_corners() -> bool {
+    look().corners == Corners::Cut
+}
+
+/// How far along each edge the theme cuts a panel's corner, and a selection's or a button's.
+fn panel_cut() -> f32 {
+    look().panel_cut
+}
+
+fn control_cut() -> f32 {
+    look().control_cut
+}
 
 /// The corner Cyberdeck cuts: panels lose the top right, selections and buttons the bottom right.
 /// A row (a setting) has its bottom left cut and a raised notch along its top edge.
@@ -172,7 +182,7 @@ pub fn card_cut(corner: Cut) -> gpui_kit::Div {
 
 fn lit_panel_cut(glow: Option<saturn_design::Shadows>, corner: Cut) -> gpui_kit::Div {
     let dark = saturn_design::appearance() == saturn_design::Appearance::Dark;
-    if cyberdeck() {
+    if cut_corners() {
         let ring = glow.and_then(|glow| glow.get().first()).map(|layer| theme::layers(&[*layer])[0].color);
         let edge = ring.unwrap_or_else(|| theme::overlay(if dark { 0.16 } else { 0.18 }));
         return div()
@@ -184,7 +194,7 @@ fn lit_panel_cut(glow: Option<saturn_design::Shadows>, corner: Cut) -> gpui_kit:
             .min_h_0()
             .px(len(space::SPACE_1))
             .pt(len(space::SPACE_1))
-            .child(cut_surface(edge, theme::color(color::SURFACE), 1., PANEL_CUT, corner))
+            .child(cut_surface(edge, theme::color(color::SURFACE), 1., panel_cut(), corner))
             .overflow_hidden();
     }
     let edge = if dark {
@@ -277,8 +287,8 @@ pub fn on_glass(content: gpui_kit::Div) -> gpui_kit::Div {
 pub fn raised<E: gpui_kit::Styled>(item: E, pressed: bool) -> E {
     let dark = saturn_design::appearance() == saturn_design::Appearance::Dark;
     let item = item.border_1();
-    if cyberdeck() {
-        // Cyberdeck's selection is drawn by `selection`, under the item's children.
+    if look().selection == Selection::Outline {
+        // An outlined selection is drawn by `selection`, under the item's children.
         item.border_color(gpui_kit::transparent_black())
     } else if pressed && dark {
         item.bg(theme::overlay(0.14)).border_color(gpui_kit::transparent_black())
@@ -300,7 +310,7 @@ pub fn raised<E: gpui_kit::Styled>(item: E, pressed: bool) -> E {
 /// faint edge and a soft shadow, so it reads over whatever is under it.
 pub fn floating(element: gpui_kit::Div) -> gpui_kit::Div {
     let dark = saturn_design::appearance() == saturn_design::Appearance::Dark;
-    if cyberdeck() {
+    if cut_corners() {
         // Square, its bottom right corner cut, with a stronger edge than a panel's since it floats.
         let edge = theme::overlay(if dark { 0.3 } else { 0.32 });
         return element.relative().child(cut_surface(edge, theme::color(color::SURFACE), 1., 10., Cut::BottomRight));
@@ -328,9 +338,9 @@ pub fn track_item(id: impl Into<ElementId>, pressed: bool) -> gpui_kit::Stateful
         .font_weight(FontWeight::MEDIUM)
         .cursor_pointer()
         .map(|item| raised(item, pressed))
-        .when(pressed && cyberdeck(), |item| item.relative().child(selection()))
+        .when(pressed && look().selection == Selection::Outline, |item| item.relative().child(selection()))
         .map(|item| {
-            if cyberdeck() && !pressed {
+            if look().selection == Selection::Outline && !pressed {
                 item.text_color(theme::color(color::INK_MUTED)).hover(|s| s.text_color(theme::color(color::INK)))
             } else if pressed {
                 item.text_color(theme::color(color::INK))
@@ -343,7 +353,7 @@ pub fn track_item(id: impl Into<ElementId>, pressed: bool) -> gpui_kit::Stateful
 /// Cyberdeck's selection, under a selected item's children: an outline in ink round a faint fill,
 /// its bottom right corner cut, as a list marks the line you're on.
 pub fn selection() -> impl IntoElement {
-    cut_surface(theme::color(color::INK), theme::overlay(0.07), 1., SELECTION_CUT, Cut::BottomRight)
+    cut_surface(theme::color(color::INK), theme::overlay(0.07), 1., control_cut(), Cut::BottomRight)
 }
 
 /// Cyberdeck's hover, under a clickable line's children: a quieter `selection`, shown only while
@@ -356,13 +366,13 @@ pub fn hover_outline(group: &'static str) -> impl IntoElement {
         .size_full()
         .invisible()
         .group_hover(group, gpui_kit::Styled::visible)
-        .child(cut_surface(theme::overlay(0.4), theme::overlay(0.05), 1., SELECTION_CUT, Cut::BottomRight))
+        .child(cut_surface(theme::overlay(0.4), theme::overlay(0.05), 1., control_cut(), Cut::BottomRight))
 }
 
 /// A tab: one of a few views of the same place (Files and Changes, open files, repos). In Saturn's
 /// theme a track item; in Cyberdeck words over a bar, the bar lit under the tab you're on.
 pub fn tab(id: impl Into<ElementId>, selected: bool) -> gpui_kit::Stateful<gpui_kit::Div> {
-    if !cyberdeck() {
+    if look().tabs == Tabs::Track {
         return track_item(id, selected);
     }
     div()
@@ -389,7 +399,7 @@ pub fn tab(id: impl Into<ElementId>, selected: bool) -> gpui_kit::Stateful<gpui_
 
 /// A row of tabs: a track in Saturn's theme, bare in Cyberdeck, where each tab carries its own bar.
 pub fn tab_row() -> gpui_kit::Div {
-    if cyberdeck() { div().flex().flex_none().items_center().gap(px(2.)) } else { track() }
+    if look().tabs == Tabs::Underline { div().flex().flex_none().items_center().gap(px(2.)) } else { track() }
 }
 
 /// A text field as tall as every control, so it lines up with the button beside it.
@@ -408,7 +418,7 @@ pub fn selector(
     pick: impl Fn(usize, &mut Window, &mut App) + 'static,
 ) -> AnyElement {
     let pick = std::rc::Rc::new(pick);
-    if !cyberdeck() {
+    if look().choices == Choices::Segments {
         return track()
             .children(labels.iter().enumerate().map(|(index, label)| {
                 let pick = pick.clone();
@@ -457,7 +467,7 @@ pub fn selector(
         .text_size(px(13.))
         .font_weight(FontWeight::MEDIUM)
         .text_color(theme::color(color::INK))
-        .child(cut_surface(theme::overlay(0.3), theme::overlay(0.03), 1., SELECTION_CUT, Cut::BottomRight))
+        .child(cut_surface(theme::overlay(0.3), theme::overlay(0.03), 1., control_cut(), Cut::BottomRight))
         .child(step(labels.len(), true, current.checked_sub(1)))
         .child(
             div()
@@ -503,7 +513,7 @@ fn arrow(left: bool, enabled: bool) -> impl IntoElement {
 /// An on/off switch. In Cyberdeck it is the word, then a cut box with a block that
 /// sits right and lit when on, left and dim when off.
 pub fn switch(id: &'static str, on: bool, toggle: impl Fn(&bool, &mut Window, &mut App) + 'static) -> AnyElement {
-    if !cyberdeck() {
+    if look().switch == Switch::Toggle {
         return gpui_kit::component::switch::Switch::new(id).checked(on).on_click(toggle).into_any_element();
     }
     let block = div()
@@ -574,13 +584,15 @@ pub fn icon_button(id: impl Into<ElementId>, name: &str, quiet: bool) -> gpui_ki
 /// The cut of a button inset `SPACE_1` into a panel's cut corner, so the gap along the diagonal is
 /// as wide as along the top and the side: the panel's cut, less the inset on both edges, plus the
 /// inset measured across the diagonal.
-const CORNER_BUTTON_CUT: f32 = PANEL_CUT - (2. - std::f32::consts::SQRT_2) * space::SPACE_1;
+fn corner_button_cut() -> f32 {
+    panel_cut() - (2. - std::f32::consts::SQRT_2) * space::SPACE_1
+}
 
 /// A quiet icon button in a panel's top right corner, the last of its strip. In Cyberdeck the
 /// panel's corner is cut, so the button's fill (under the pointer, or `pressed` while its menu is
 /// open) has its top right corner cut along the same diagonal instead of poking past it.
 pub fn corner_button(id: impl Into<ElementId>, name: &str, pressed: bool) -> gpui_kit::Stateful<gpui_kit::Div> {
-    if !cyberdeck() {
+    if !cut_corners() {
         return icon_button(id, name, true).when(pressed, |button| button.bg(theme::fill_pressed()));
     }
     let fill = if pressed { theme::fill_pressed() } else { theme::fill_hover() };
@@ -601,7 +613,7 @@ pub fn corner_button(id: impl Into<ElementId>, name: &str, pressed: bool) -> gpu
                 .left_0()
                 .size_full()
                 .when(!pressed, |under| under.invisible().group_hover("corner-button", gpui_kit::Styled::visible))
-                .child(cut_surface(gpui_kit::transparent_black(), fill, 0., CORNER_BUTTON_CUT, Cut::TopRight)),
+                .child(cut_surface(gpui_kit::transparent_black(), fill, 0., corner_button_cut(), Cut::TopRight)),
         )
         .child(icon(name, 14., theme::color(color::INK_MUTED)))
 }
@@ -631,13 +643,13 @@ pub fn button(
         .map(|button| {
             if primary {
                 primary_surface(button)
-            } else if cyberdeck() {
+            } else if look().buttons == Buttons::Outline {
                 // Cyberdeck's button: an outline with its corner cut, lit under the pointer.
                 button
                     .relative()
                     .group("cyberdeck-button")
                     .text_color(theme::color(color::INK))
-                    .child(cut_surface(theme::overlay(0.3), theme::overlay(0.03), 1., SELECTION_CUT, Cut::BottomRight))
+                    .child(cut_surface(theme::overlay(0.3), theme::overlay(0.03), 1., control_cut(), Cut::BottomRight))
                     .child(hover_outline("cyberdeck-button"))
             } else {
                 button
@@ -659,13 +671,13 @@ pub fn primary_surface<E: gpui_kit::Styled + gpui_kit::ParentElement>(element: E
 /// `primary_surface` with Cyberdeck's cut on `corner`: the top right for New agent, which sits in
 /// the window's top right corner, above panels cut there too.
 pub fn primary_surface_cut<E: gpui_kit::Styled + gpui_kit::ParentElement>(element: E, corner: Cut) -> E {
-    if cyberdeck() {
+    if look().buttons == Buttons::Outline {
         // Cyberdeck's button, in blue: a blue outline round a faint blue fill, its corner cut.
         return element.relative().text_color(primary_ink()).child(cut_surface(
             theme::color(color::BLUE),
             theme::color(color::BLUE_VIVID).opacity(0.16),
             1.,
-            SELECTION_CUT,
+            control_cut(),
             corner,
         ));
     }
@@ -681,7 +693,7 @@ pub fn primary_surface_cut<E: gpui_kit::Styled + gpui_kit::ParentElement>(elemen
 /// The ink on the primary action: white on Saturn's blue fill, blue in Cyberdeck's blue outline.
 pub fn primary_ink() -> gpui_kit::Hsla {
     // Cyberdeck's buttons take their outline's colour for their words, as the game's do.
-    theme::color(if cyberdeck() { color::BLUE } else { color::INK_ON_ACCENT })
+    theme::color(if look().buttons == Buttons::Outline { color::BLUE } else { color::INK_ON_ACCENT })
 }
 
 /// A headline in two weights, the point in semibold: "No terminals **yet**".

@@ -222,11 +222,16 @@ const TITLEBAR_HEIGHT: f32 = 40.0;
 /// middle line (see `traffic_light_position` in main.rs).
 const TITLEBAR_CONTROL: f32 = 24.0;
 
+/// Whether the title bar's controls stand bare, not in tracks.
+fn bare_title_bar() -> bool {
+    chrome::look().title_bar == saturn_design::TitleBar::Bare
+}
+
 /// How tall the title bar's controls stand. In Saturn's theme they sit in tracks; Cyberdeck has
 /// none, so they fill the bar but for the gap between cards above and below them, as far from the
 /// panes as the panes are from each other.
 fn titlebar_control() -> f32 {
-    if chrome::cyberdeck() { TITLEBAR_HEIGHT - 2. * chrome::pane_gap() } else { TITLEBAR_CONTROL }
+    if bare_title_bar() { TITLEBAR_HEIGHT - 2. * chrome::pane_gap() } else { TITLEBAR_CONTROL }
 }
 /// The room macOS's buttons take, from the window's gutter: the toolbar starts 12px after the
 /// green one, as the buttons are 14px from the window's edge.
@@ -263,7 +268,7 @@ impl Render for DraggedTab {
             .text_size(px(13.))
             .font_weight(FontWeight::MEDIUM)
             .text_color(theme::color(color::INK))
-            .font_family(saturn_design::sans())
+            .font_family(saturn_design::look().sans)
             .child(self.name.clone())
     }
 }
@@ -2923,7 +2928,8 @@ impl Workspace {
     }
 
     pub fn change_settings(&mut self, change: impl FnOnce(&mut Settings), cx: &mut Context<Self>) {
-        let (appearance, look, menu_bar) = (self.settings.appearance, self.settings.theme, self.settings.menu_bar);
+        let (appearance, look, menu_bar) =
+            (self.settings.appearance, self.settings.theme.clone(), self.settings.menu_bar);
         let codex_status_line = self.settings.codex_status_line;
         change(&mut self.settings);
         settings::save(&self.settings);
@@ -4265,7 +4271,7 @@ impl Workspace {
                 );
             }
             // In Cyberdeck the counts stand bare, as the tabs do, as tall as them.
-            if chrome::cyberdeck() { track.p_0().bg(gpui_kit::transparent_black()) } else { chrome::on_glass(track) }
+            if bare_title_bar() { track.p_0().bg(gpui_kit::transparent_black()) } else { chrome::on_glass(track) }
         });
         div()
             .flex()
@@ -4278,7 +4284,7 @@ impl Workspace {
             // The repos, as a browser's tabs, then where the one showing works. The panels'
             // toggles and Settings are in the status bar, at the window's foot.
             // In Cyberdeck the tabs stand bare, each over its own bar.
-            .child(if chrome::cyberdeck() {
+            .child(if bare_title_bar() {
                 // A little way from the window's buttons, which a track's edge would otherwise keep.
                 self.render_repo_tabs(chrome::tab_row().ml(len(space::SPACE_3)).gap(len(space::SPACE_2)), cx)
             } else {
@@ -4296,7 +4302,7 @@ impl Workspace {
     /// once, again, on a schedule.
     fn render_new_agent(&self, cx: &mut Context<Self>) -> impl IntoElement {
         // As tall as the tracks beside it; in Cyberdeck, where nothing stands in a track, as the tabs.
-        let height = len(if chrome::cyberdeck() { titlebar_control() } else { TITLEBAR_CONTROL + 2. * space::SPACE_1 });
+        let height = len(if bare_title_bar() { titlebar_control() } else { TITLEBAR_CONTROL + 2. * space::SPACE_1 });
         // A part of the button, with no fill of its own: like the primary button, it doesn't light
         // up under the pointer, so the gradient stays whole. The arrow looks pressed while its menu
         // is open.
@@ -4306,7 +4312,11 @@ impl Workspace {
             .px(len(space::SPACE_2))
             .rounded_r(theme::corner(radius::RADIUS_MD))
             .when(open, |part| {
-                part.bg(if chrome::cyberdeck() { theme::overlay(0.1) } else { gpui_kit::white().opacity(0.1) })
+                part.bg(if chrome::look().buttons == saturn_design::Buttons::Outline {
+                    theme::overlay(0.1)
+                } else {
+                    gpui_kit::white().opacity(0.1)
+                })
             })
             .child(chrome::icon("chevron-down", 14., chrome::primary_ink()))
             .on_click(cx.listener(|this, _, _, cx| this.toggle_menu(OpenMenu::NewAgent, cx)));
@@ -4319,7 +4329,7 @@ impl Workspace {
             .font_weight(FontWeight::MEDIUM)
             .child(
                 part("new-agent")
-                    .px(len(if chrome::cyberdeck() { space::SPACE_3 } else { space::SPACE_4 }))
+                    .px(len(if bare_title_bar() { space::SPACE_3 } else { space::SPACE_4 }))
                     .rounded_l(theme::corner(radius::RADIUS_MD))
                     .child("New agent")
                     .on_click(cx.listener(|this, _, window, cx| {
@@ -4330,7 +4340,7 @@ impl Workspace {
                 div()
                     .flex_none()
                     .w(px(1.))
-                    .h(px(if chrome::cyberdeck() { 12. } else { 16. }))
+                    .h(px(if bare_title_bar() { 12. } else { 16. }))
                     .bg(chrome::primary_ink().opacity(0.3)),
             )
             .child(self.with_menu(OpenMenu::NewAgent, more, cx))
@@ -4446,7 +4456,7 @@ impl Workspace {
         }
         // Adding a repo belongs with the repos, set apart so it doesn't read as one. Square: a
         // track item is otherwise at least a full control wide.
-        track.when(!chrome::cyberdeck(), |track| track.child(chrome::track_separator())).child(
+        track.when(!bare_title_bar(), |track| track.child(chrome::track_separator())).child(
             chrome::track_item("add-repo", false)
                 .size(len(titlebar_control()))
                 .min_w(len(titlebar_control()))
@@ -4678,7 +4688,7 @@ impl Render for Workspace {
             // No fill: the title bar and the gaps are the window's glass (theme::overlay). The
             // status bar's card sets the space below.
             .text_color(theme::color(color::INK))
-            .font_family(saturn_design::sans())
+            .font_family(saturn_design::look().sans)
             .track_focus(&self.focus)
             .key_context("Workspace")
             .map(|element| Self::palette_actions(element, cx))

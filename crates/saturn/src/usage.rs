@@ -185,16 +185,16 @@ fn unix_now() -> i64 {
     SystemTime::now().duration_since(UNIX_EPOCH).map_or(0, |since| i64::try_from(since.as_secs()).unwrap_or(0))
 }
 
-/// White at `alpha`: the gradient card always carries white text. Cyberdeck's card is grey, so
-/// there it is the theme's ink.
+/// White at `alpha`: the gradient card always carries white text. A slab card is the theme's
+/// grey, so there it is the theme's ink.
 fn white(alpha: f32) -> Hsla {
-    if crate::chrome::cyberdeck() {
+    if crate::chrome::look().agent_cards == saturn_design::AgentCards::Slab {
         return crate::theme::color(saturn_design::color::INK).opacity(alpha);
     }
     gpui_kit::hsla(0., 0., 1., alpha)
 }
 
-/// Cyberdeck's meter: a row of square dots, the used ones filled, orange from 80%.
+/// The dotted meter: a row of square dots, the used ones filled, orange from 80%.
 fn dots(percent: f64) -> gpui_kit::Div {
     const DOTS: u8 = 25;
     #[expect(clippy::cast_possible_truncation, clippy::cast_sign_loss, reason = "a share of 25 dots")]
@@ -209,7 +209,7 @@ fn dots(percent: f64) -> gpui_kit::Div {
 
 /// A hairline meter on the gradient, white with a soft glow; orange from 80%.
 fn meter(percent: f64) -> gpui_kit::AnyElement {
-    if crate::chrome::cyberdeck() {
+    if crate::chrome::look().meters == saturn_design::Meters::Dots {
         return dots(percent).into_any_element();
     }
     #[expect(clippy::cast_possible_truncation, reason = "a share between 0 and 1")]

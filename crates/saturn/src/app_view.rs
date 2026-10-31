@@ -124,7 +124,7 @@ impl AppView {
             .size_full()
             .flex()
             .flex_col()
-            .font_family(saturn_design::sans())
+            .font_family(saturn_design::look().sans)
             .track_focus(&self.focus)
             .key_context("Welcome")
             .on_action(cx.listener(|_, _: &OpenProject, window, cx| Self::pick_folder(window, cx)))

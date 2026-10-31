@@ -85,7 +85,7 @@ fn lines(
                 .rounded(theme::corner(radius::RADIUS_SM))
                 .cursor_pointer()
                 .map(|line| {
-                    if chrome::cyberdeck() {
+                    if chrome::look().menus == saturn_design::Menus::Outline {
                         // As a choice list: the line under the pointer outlined, its corner cut.
                         line.relative().group("menu-line").child(chrome::hover_outline("menu-line"))
                     } else {
