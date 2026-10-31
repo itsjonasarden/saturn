@@ -723,13 +723,14 @@ pub fn sidebar(
         .into_any_element()
 }
 
-/// The sidebar's header: the folder it shows, its branch and path below, and an action.
+/// The sidebar's header: the folder it shows, its branch and path below, and an action. Its two
+/// lines are as tall as a control together, so the folder's mark and the buttons sit as far from
+/// the card's top as from its sides.
 pub fn sidebar_header(name: &str, detail: &str, action: impl IntoElement) -> impl IntoElement {
     div()
         .flex()
         .items_center()
         .gap(len(space::SPACE_3))
-        .pl(len(space::SPACE_1))
         // The folder's mark, not a button: nothing happens on a click, so nothing on hover either.
         .child(
             div()
@@ -749,7 +750,7 @@ pub fn sidebar_header(name: &str, detail: &str, action: impl IntoElement) -> imp
                 .child(
                     div()
                         .text_size(px(15.))
-                        .line_height(px(20.))
+                        .line_height(px(16.))
                         .font_weight(FontWeight::MEDIUM)
                         .text_color(theme::color(color::INK))
                         .truncate()
@@ -758,7 +759,7 @@ pub fn sidebar_header(name: &str, detail: &str, action: impl IntoElement) -> imp
                 .child(
                     div()
                         .text_size(px(11.))
-                        .line_height(px(14.))
+                        .line_height(px(12.))
                         .text_color(theme::color(color::INK_FAINT))
                         .truncate()
                         .child(detail.to_owned()),
