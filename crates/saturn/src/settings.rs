@@ -26,8 +26,8 @@ pub struct Settings {
     /// Saturn's item in the menu bar, with how many agents are waiting for you.
     pub menu_bar: bool,
     pub appearance: AppearanceSetting,
-    /// The theme, by its id in design/tokens.json (`saturn`, `cyberdeck`); an unknown one draws as
-    /// the first.
+    /// The theme, by its id in design/tokens.json (`saturn`, `cyberdeck`); missing or unknown, the
+    /// default.
     #[serde(default = "default_theme")]
     pub theme: String,
     /// The text size of terminals and files, in points (⌘+, ⌘−, ⌘0).
@@ -208,9 +208,9 @@ impl AppearanceSetting {
     }
 }
 
-/// The first theme, Saturn's own.
+/// The theme a fresh install starts in, as design/tokens.json names it.
 fn default_theme() -> String {
-    saturn_design::THEMES[0].id.to_owned()
+    saturn_design::DEFAULT_THEME.to_owned()
 }
 
 /// The text size terminals and files start at, and go back to with ⌘0.
@@ -357,6 +357,14 @@ mod tests {
         let settings: Settings = serde_json::from_str(r#"{"name_tabs_after_sessions": false}"#).expect("loads");
         assert_eq!(settings.appearance, AppearanceSetting::System);
         assert!(!settings.name_tabs_after_sessions);
+    }
+
+    #[test]
+    fn a_fresh_install_starts_in_cyberdeck_but_a_chosen_theme_stays() {
+        let fresh: Settings = serde_json::from_str("{}").expect("loads");
+        assert_eq!(fresh.theme, saturn_design::DEFAULT_THEME);
+        let chosen: Settings = serde_json::from_str(r#"{"theme": "saturn"}"#).expect("loads");
+        assert_eq!(chosen.theme, "saturn");
     }
 
     #[test]

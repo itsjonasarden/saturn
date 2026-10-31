@@ -225,9 +225,10 @@ pub fn look() -> &'static Look {
     &THEMES[THEME.load(Ordering::Relaxed)]
 }
 
-/// Draws everything in the theme `id` names; an unknown one is the first, Saturn's own.
+/// Draws everything in the theme `id` names; an unknown one is the default.
 pub fn set_theme(id: &str) {
-    THEME.store(THEMES.iter().position(|theme| theme.id == id).unwrap_or(0), Ordering::Relaxed);
+    let index = |id: &str| THEMES.iter().position(|theme| theme.id == id);
+    THEME.store(index(id).or_else(|| index(DEFAULT_THEME)).unwrap_or(0), Ordering::Relaxed);
 }
 
 /// A corner's radius in the current theme: as the radius tokens give it where corners are round,
@@ -378,7 +379,8 @@ mod tests {
     fn themes_are_described_in_full_and_the_first_is_saturns() {
         assert_eq!(THEMES[0].id, "saturn");
         set_theme("no such theme");
-        assert_eq!(look().id, "saturn");
+        assert_eq!(look().id, DEFAULT_THEME);
+        assert_eq!(DEFAULT_THEME, "cyberdeck");
         let cyberdeck = THEMES.iter().find(|theme| theme.id == "cyberdeck").expect("cyberdeck");
         assert_eq!(cyberdeck.sans, "Rajdhani");
         assert_eq!(cyberdeck.corners, Corners::Cut);

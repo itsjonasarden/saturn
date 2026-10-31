@@ -280,10 +280,13 @@ fn looks(tokens: &Value, themes: &[Value]) -> String {
     }
     writeln!(
         out,
-        "/// Every theme, the default first.\npub const THEMES: [Look; THEME_COUNT] = [{}];",
+        "/// Every theme; the first one's colours are the ones the others borrow.\npub const THEMES: [Look; THEME_COUNT] = [{}];",
         looks.join(", ")
     )
     .ok();
+    let default = tokens["themes"]["default"].as_str().expect("a default theme");
+    assert!(themes.iter().any(|theme| theme["id"] == default), "the default theme is one of the themes");
+    writeln!(out, "/// The theme a fresh install starts in.\npub const DEFAULT_THEME: &str = {default:?};").ok();
 
     out
 }
