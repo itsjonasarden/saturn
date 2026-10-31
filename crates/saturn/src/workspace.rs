@@ -4170,42 +4170,42 @@ impl Workspace {
         grid.into_any_element()
     }
 
-    /// The panel toggles (raised while the panel is open) and Settings, in the title bar.
-    fn render_panel_toggles(&self, cx: &mut Context<Self>) -> gpui_kit::Div {
-        // Lit only while their panel is on screen: a maximised pane covers them all.
+    /// Which panels are on screen (none while a pane is maximised, as it covers them all), for
+    /// their toggles in the status bar: the sidebar, the editor, and the tickets when ClickUp is
+    /// connected.
+    pub fn panels_shown(&self) -> (bool, bool, Option<bool>) {
         let panels = self.panels.on_screen(self.layout.maximized.is_some());
-        let toggle = |id: &'static str, icon: &str, on: bool| {
-            chrome::track_item(id, on).size(len(TITLEBAR_CONTROL)).child(chrome::icon(
-                icon,
-                15.,
-                theme::color(if on { color::INK } else { color::INK_MUTED }),
-            ))
-        };
-        chrome::track()
-            .child(
-                toggle("toggle-sidebar", "panel-left", panels.sidebar)
-                    .tooltip(chrome::tip_for("Show or hide the sidebar", ToggleSidebar))
-                    .on_click(cx.listener(|this, _, _, cx| this.toggle_sidebar(cx))),
-            )
-            .child(
-                toggle("toggle-editor", "panel-top", panels.editor)
-                    .tooltip(chrome::tip_for("Show or hide the editor", ToggleEditor))
-                    .on_click(cx.listener(|this, _, _, cx| this.toggle_editor(cx))),
-            )
-            // Only with ClickUp connected: without it there's nothing to show.
-            .when(self.clickup.connected(), |track| {
-                track.child(
-                    toggle("toggle-tickets", "panel-right", panels.tickets)
-                        .tooltip(chrome::tip_for("Show or hide your tickets", ToggleTickets))
-                        .on_click(cx.listener(|this, _, window, cx| this.toggle_tickets(window, cx))),
-                )
-            })
-            .child(chrome::track_separator())
-            .child(
-                toggle("open-settings", "settings", false)
-                    .tooltip(chrome::tip_for("Settings", OpenSettings))
-                    .on_click(cx.listener(|this, _, window, cx| this.open_settings(window, cx))),
-            )
+        (panels.sidebar, panels.editor, self.clickup.connected().then_some(panels.tickets))
+    }
+
+    /// Where the repo showing works, after its tab: the worktree when the sidebar follows a pane
+    /// into one, and the branch checked out there.
+    fn render_place(&self) -> Option<AnyElement> {
+        let branch = self.roots.get(&self.root).and_then(|views| views.branch.clone());
+        let worktree = (self.root != self.page)
+            .then(|| self.root.file_name().map(|name| name.to_string_lossy().into_owned()))
+            .flatten();
+        if branch.is_none() && worktree.is_none() {
+            return None;
+        }
+        let faint = theme::color(color::INK_FAINT);
+        Some(
+            div()
+                .flex()
+                .flex_none()
+                .items_center()
+                .gap(len(space::SPACE_1))
+                .text_size(px(13.))
+                .text_color(theme::color(color::INK_MUTED))
+                .when_some(worktree.clone(), |place, worktree| {
+                    place.child(chrome::icon("folder-git", 13., faint)).child(worktree)
+                })
+                .when(worktree.is_some() && branch.is_some(), |place| {
+                    place.child(div().px(len(space::SPACE_1)).text_color(faint).child("/"))
+                })
+                .when_some(branch, |place, branch| place.child(chrome::icon("git-branch", 13., faint)).child(branch))
+                .into_any_element(),
+        )
     }
 
     fn render_titlebar(&self, cx: &mut Context<Self>) -> impl IntoElement {
@@ -4267,11 +4267,10 @@ impl Workspace {
             // No padding of its own on the right: the window's gutter alone, so New agent's edge
             // lines up with the cards' below it.
             .child(empty("titlebar-lights").flex_none().w(len(TRAFFIC_LIGHTS_WIDTH)))
-            // One toolbar: the panels and Settings, then the repos.
-            .child(chrome::on_glass({
-                let toggles = self.render_panel_toggles(cx).child(chrome::track_separator());
-                self.render_repo_tabs(toggles, cx)
-            }))
+            // The repos, as a browser's tabs, then where the one showing works. The panels'
+            // toggles and Settings are in the status bar, at the window's foot.
+            .child(chrome::on_glass(self.render_repo_tabs(chrome::track(), cx)))
+            .children(self.render_place())
             .child(empty("titlebar-middle").flex_1())
             .children(activity)
             .child(self.render_new_agent(cx))

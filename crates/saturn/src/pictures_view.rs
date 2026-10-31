@@ -7,7 +7,7 @@
 use std::path::PathBuf;
 
 use gpui_kit::component::WindowExt as _;
-use gpui_kit::component::input::{Input, InputState};
+use gpui_kit::component::input::InputState;
 use gpui_kit::{
     AppContext as _, Context, Entity, FontWeight, InteractiveElement as _, IntoElement, ObjectFit, ParentElement as _,
     Render, StatefulInteractiveElement as _, Styled as _, StyledImage as _, Window, div, img, px,
@@ -216,7 +216,7 @@ impl Render for PicturesView {
                 .items_center()
                 .gap(len(space::SPACE_2))
                 .child(servers)
-                .child(div().flex_1().min_w_0().child(Input::new(&self.pages)))
+                .child(div().flex_1().min_w_0().child(crate::chrome::input(&self.pages)))
                 .child(
                     chrome::button("take-pictures", if self.taking { "Taking…" } else { "Take pictures" }, None, true)
                         .on_click(cx.listener(|this, _, _, cx| {

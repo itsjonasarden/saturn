@@ -82,7 +82,8 @@ fn component_theme(appearance: Appearance) -> gpui_kit::component::ThemeConfig {
         "foreground": hex(c::INK),
         "border": relative(0.1),
         "input.border": relative(0.16),
-        "ring": hex(c::BLUE),
+        // Cyberdeck is monochrome: focus is ink, as its selections are.
+        "ring": hex(if saturn_design::theme() == saturn_design::Theme::Cyberdeck { c::INK } else { c::BLUE }),
         "muted.background": hex(c::CONTROL),
         "muted.foreground": hex(c::INK_MUTED),
         "accent.background": hex(c::CONTROL_HOVER),

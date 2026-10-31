@@ -83,7 +83,8 @@ Each pane shows whether its agent is working, waiting for you, done or failed.
 - Several repos in one window, as tabs in the title bar (the + after them, or ⌘O, adds one). Each
   repo has its own grid and open files, as a browser tab has its own page: click a repo and its terminals and files show,
   while the others' keep running out of sight. A repo whose agent waits for you shows a dot on its
-  tab, and ⌘⇧A goes to it.
+  tab, and ⌘⇧A goes to it. After the tabs, the branch the repo showing is on (and the worktree,
+  when the sidebar follows a pane into one).
 - Turn on Follow (the target beside the repo's name), and the sidebar follows the focused pane into
   its worktree.
 
@@ -154,8 +155,9 @@ Each pane shows whether its agent is working, waiting for you, done or failed.
   threads count beside it (💬 2): click to hand them to the agent too. When the repo deploys pull
   requests, ↗ Preview opens this one's. "Edit the pull request's description" (the pane's ⋯) edits it
   against the repo's template, or hands the writing to the agent.
-- **Status bar**: errors and warnings, the cursor, the language, and the branch with how many
-  commits wait to be pushed and pulled.
+- **Status bar**: first the toggles for the sidebar, the editor and the tickets, and Settings; then
+  errors and warnings, the cursor, the language, and the branch with how many commits wait to be
+  pushed and pulled.
 
 | ![History: every branch as a graph](images/history.png) | ![Impact: what the uncommitted changes reach](images/impact.png) |
 | :-----------------------------------------------------: | :--------------------------------------------------------------: |

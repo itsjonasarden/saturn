@@ -7,7 +7,7 @@ use std::path::{Path, PathBuf};
 use std::time::Duration;
 
 use gpui_kit::component::WindowExt as _;
-use gpui_kit::component::input::{Input, InputState};
+use gpui_kit::component::input::InputState;
 use gpui_kit::{
     Action, AnyElement, App, AppContext as _, Context, EventEmitter, InteractiveElement as _, IntoElement, MouseButton,
     MouseDownEvent, ParentElement as _, Pixels, Point, PromptLevel, Render, StatefulInteractiveElement as _,
@@ -461,7 +461,7 @@ fn ask_name(
                     .text_color(theme::color(color::INK_MUTED))
                     .child(note.clone()),
             )
-            .child(Input::new(&input))
+            .child(crate::chrome::input(&input))
             .children(wrong.map(|why| {
                 div().pt(len(space::SPACE_2)).text_size(px(13.)).text_color(theme::color(color::RED)).child(why)
             }))

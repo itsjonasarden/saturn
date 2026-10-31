@@ -6,7 +6,7 @@
 use std::sync::{LazyLock, Mutex};
 
 use gpui_kit::component::WindowExt as _;
-use gpui_kit::component::input::{Input, InputEvent, InputState};
+use gpui_kit::component::input::{InputEvent, InputState};
 use gpui_kit::{
     AppContext as _, Context, Entity, FontWeight, InteractiveElement as _, IntoElement, ParentElement as _, Render,
     StatefulInteractiveElement as _, Styled as _, Subscription, WeakEntity, Window, div, px,
@@ -195,7 +195,7 @@ impl Render for SessionsView {
                 }
             }
         }
-        div().flex().flex_col().gap(len(space::SPACE_3)).child(Input::new(&self.query)).child(list)
+        div().flex().flex_col().gap(len(space::SPACE_3)).child(crate::chrome::input(&self.query)).child(list)
     }
 }
 

@@ -372,6 +372,107 @@ pub fn tab_row() -> gpui_kit::Div {
     if cyberdeck() { div().flex().flex_none().items_center().gap(px(2.)) } else { track() }
 }
 
+/// A text field as tall as every control, so it lines up with the button beside it.
+pub fn input(state: &gpui_kit::Entity<gpui_kit::component::input::InputState>) -> gpui_kit::component::input::Input {
+    gpui_kit::component::input::Input::new(state).h(len(CONTROL_HEIGHT))
+}
+
+/// A choice of a few values. In Saturn's theme a track with the chosen one raised; in Cyberdeck a
+/// selector: the value between two arrows that step through the others, over a dash for
+/// each one, the chosen dash lit. Clicking the value steps on, round to the first.
+pub fn selector(
+    id: &'static str,
+    labels: &[SharedString],
+    current: usize,
+    pick: impl Fn(usize, &mut Window, &mut App) + 'static,
+) -> AnyElement {
+    let pick = std::rc::Rc::new(pick);
+    if !cyberdeck() {
+        return track()
+            .children(labels.iter().enumerate().map(|(index, label)| {
+                let pick = pick.clone();
+                track_item((id, index), index == current)
+                    .px(len(space::SPACE_3))
+                    .child(label.clone())
+                    .on_click(move |_, window, cx| pick(index, window, cx))
+            }))
+            .into_any_element();
+    }
+    let last = labels.len().saturating_sub(1);
+    let step = |slot: usize, left: bool, to: Option<usize>| {
+        let pick = pick.clone();
+        div()
+            .id((id, slot))
+            .flex()
+            .flex_none()
+            .items_center()
+            .justify_center()
+            .w(len(CONTROL_HEIGHT))
+            .h_full()
+            .when(to.is_some(), gpui_kit::Styled::cursor_pointer)
+            .child(arrow(left, to.is_some()))
+            .when_some(to, |arrow, to| arrow.on_click(move |_, window, cx| pick(to, window, cx)))
+    };
+    // A dash for each value, while there are few enough to count at a glance.
+    let dashes = (labels.len() <= 8).then(|| {
+        div().absolute().bottom(px(3.)).flex().gap(px(3.)).children((0..labels.len()).map(|index| {
+            div().w(px(10.)).h(px(2.)).bg(if index == current { theme::color(color::INK) } else { theme::overlay(0.2) })
+        }))
+    });
+    let next = pick.clone();
+    div()
+        .relative()
+        .flex()
+        .flex_none()
+        .items_center()
+        .min_w(px(168.))
+        .h(len(CONTROL_HEIGHT))
+        .text_size(px(13.))
+        .font_weight(FontWeight::MEDIUM)
+        .text_color(theme::color(color::INK))
+        .child(cut_surface(theme::overlay(0.3), theme::overlay(0.03), 1., SELECTION_CUT, Cut::BottomRight))
+        .child(step(labels.len(), true, current.checked_sub(1)))
+        .child(
+            div()
+                .id((id, labels.len() + 2))
+                .relative()
+                .flex_1()
+                .h_full()
+                .flex()
+                .items_center()
+                .justify_center()
+                .cursor_pointer()
+                .child(labels.get(current).cloned().unwrap_or_default())
+                .children(dashes)
+                .on_click(move |_, window, cx| next(if current >= last { 0 } else { current + 1 }, window, cx)),
+        )
+        .child(step(labels.len() + 1, false, (current < last).then_some(current + 1)))
+        .into_any_element()
+}
+
+/// The selector's arrow: an outlined triangle pointing left or right, faint where it can't step.
+fn arrow(left: bool, enabled: bool) -> impl IntoElement {
+    let ink = if enabled { theme::color(color::INK) } else { theme::overlay(0.2) };
+    canvas(
+        |_, _, _| (),
+        move |bounds: Bounds<Pixels>, (), window: &mut Window, _: &mut App| {
+            let (x, y) = (bounds.origin.x, bounds.origin.y);
+            let (width, height) = (bounds.size.width, bounds.size.height);
+            let (tip, back) = if left { (x, x + width) } else { (x + width, x) };
+            let mut path = PathBuilder::stroke(px(1.2));
+            path.move_to(point(back, y));
+            path.line_to(point(tip, y + height / 2.));
+            path.line_to(point(back, y + height));
+            path.close();
+            if let Ok(path) = path.build() {
+                window.paint_path(path, ink);
+            }
+        },
+    )
+    .w(px(9.))
+    .h(px(11.))
+}
+
 /// An on/off switch. In Cyberdeck it is the word, then a cut box with a block that
 /// sits right and lit when on, left and dim when off.
 pub fn switch(id: &'static str, on: bool, toggle: impl Fn(&bool, &mut Window, &mut App) + 'static) -> AnyElement {
@@ -487,20 +588,14 @@ pub fn button(
 /// split button lays its parts on one surface, so the gradient and the bloom run across both.
 pub fn primary_surface<E: gpui_kit::Styled + gpui_kit::ParentElement>(element: E) -> E {
     if cyberdeck() {
-        // Cyberdeck's button, in blue: a blue outline round a faint blue fill, its corner cut, and a
-        // heavier bar down its left edge.
-        let blue = theme::color(color::BLUE);
-        return element
-            .relative()
-            .text_color(theme::color(color::INK))
-            .child(cut_surface(
-                blue,
-                theme::color(color::BLUE_VIVID).opacity(0.16),
-                1.,
-                SELECTION_CUT,
-                Cut::BottomRight,
-            ))
-            .child(div().absolute().top_0().bottom_0().left_0().w(px(3.)).bg(blue));
+        // Cyberdeck's button, in blue: a blue outline round a faint blue fill, its corner cut.
+        return element.relative().text_color(theme::color(color::INK)).child(cut_surface(
+            theme::color(color::BLUE),
+            theme::color(color::BLUE_VIVID).opacity(0.16),
+            1.,
+            SELECTION_CUT,
+            Cut::BottomRight,
+        ));
     }
     element.text_color(theme::color(color::INK_ON_ACCENT)).bg(accent_fill()).shadow(vec![gpui_kit::BoxShadow {
         color: theme::color(color::BLUE_VIVID).opacity(0.35),

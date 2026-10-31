@@ -9,7 +9,7 @@ use std::sync::{Mutex, PoisonError};
 use std::time::Duration;
 
 use gpui_kit::component::WindowExt as _;
-use gpui_kit::component::input::{Input, InputState, Textarea, TextareaState};
+use gpui_kit::component::input::{InputState, Textarea, TextareaState};
 use gpui_kit::{
     App, AppContext as _, Context, Entity, FontWeight, InteractiveElement as _, IntoElement, ParentElement as _,
     Render, StatefulInteractiveElement as _, Styled as _, WeakEntity, Window, div, px,
@@ -310,46 +310,42 @@ impl RoutinesView {
     }
 
     fn form(&self, cx: &mut Context<Self>) -> impl IntoElement + use<> {
-        let mut kinds = chrome::track();
-        for (index, (kind, label)) in
-            [(Kind::Daily, "Every day"), (Kind::Weekdays, "Weekdays"), (Kind::Every, "Every few hours")]
-                .into_iter()
-                .enumerate()
-        {
-            kinds = kinds.child(
-                chrome::track_item(("routine-kind", index), self.kind == kind)
-                    .px(len(space::SPACE_3))
-                    .text_size(px(12.))
-                    .child(label)
-                    .on_click(cx.listener(move |this, _, _, cx| {
-                        this.kind = kind;
-                        cx.notify();
-                    })),
-            );
-        }
+        const KINDS: [(Kind, &str); 3] =
+            [(Kind::Daily, "Every day"), (Kind::Weekdays, "Weekdays"), (Kind::Every, "Every few hours")];
+        const HOURS: [u32; 5] = [1, 2, 4, 6, 12];
+        let view = cx.weak_entity();
+        let kinds = chrome::selector(
+            "routine-kind",
+            &KINDS.map(|(_, label)| gpui_kit::SharedString::from(label)),
+            KINDS.iter().position(|(kind, _)| *kind == self.kind).unwrap_or(0),
+            move |index, _, cx| {
+                let _ = view.update(cx, |this, cx| {
+                    this.kind = KINDS[index].0;
+                    cx.notify();
+                });
+            },
+        );
         let when = if self.kind == Kind::Every {
-            let mut hours = chrome::track();
-            for count in [1, 2, 4, 6, 12] {
-                hours = hours.child(
-                    chrome::track_item(("routine-hours", count as usize), self.hours == count)
-                        .px(len(space::SPACE_3))
-                        .text_size(px(12.))
-                        .child(format!("{count} h"))
-                        .on_click(cx.listener(move |this, _, _, cx| {
-                            this.hours = count;
-                            cx.notify();
-                        })),
-                );
-            }
-            hours.into_any_element()
+            let view = cx.weak_entity();
+            chrome::selector(
+                "routine-hours",
+                &HOURS.map(|count| gpui_kit::SharedString::from(format!("{count} h"))),
+                HOURS.iter().position(|count| *count == self.hours).unwrap_or(0),
+                move |index, _, cx| {
+                    let _ = view.update(cx, |this, cx| {
+                        this.hours = HOURS[index];
+                        cx.notify();
+                    });
+                },
+            )
         } else {
-            div().w(px(90.)).child(Input::new(&self.at)).into_any_element()
+            div().w(px(90.)).child(crate::chrome::input(&self.at)).into_any_element()
         };
         div()
             .flex()
             .flex_col()
             .gap(len(space::SPACE_2))
-            .child(Input::new(&self.name))
+            .child(crate::chrome::input(&self.name))
             .child(Textarea::new(&self.prompt).h(px(80.)))
             .children(crate::agent_choice::row("routine-agent", "Agent", cx))
             .child(

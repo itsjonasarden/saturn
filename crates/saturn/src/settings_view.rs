@@ -242,7 +242,7 @@ impl SettingsView {
         })
     }
 
-    /// A choice of a few values, as a track; the chosen one is raised.
+    /// A choice of a few values (`chrome::selector`).
     fn choice<T: Copy + PartialEq + 'static>(
         &self,
         id: &'static str,
@@ -250,16 +250,15 @@ impl SettingsView {
         current: T,
         apply: fn(&mut Settings, T),
     ) -> impl IntoElement {
-        chrome::track().children(options.iter().map(|&(label, value)| {
-            let workspace = self.workspace.clone();
-            chrome::track_item(ElementId::Name(format!("{id}-{label}").into()), value == current)
-                .px(len(space::SPACE_3))
-                .child(label)
-                .on_click(move |_, _, cx| {
-                    let _ = workspace
-                        .update(cx, |workspace, cx| workspace.change_settings(|settings| apply(settings, value), cx));
-                })
-        }))
+        let labels: Vec<SharedString> = options.iter().map(|&(label, _)| label.into()).collect();
+        let values: Vec<T> = options.iter().map(|&(_, value)| value).collect();
+        let current = values.iter().position(|value| *value == current).unwrap_or(0);
+        let workspace = self.workspace.clone();
+        chrome::selector(id, &labels, current, move |index, _, cx| {
+            let value = values[index];
+            let _ =
+                workspace.update(cx, |workspace, cx| workspace.change_settings(|settings| apply(settings, value), cx));
+        })
     }
 
     fn general(&self, settings: &Settings) -> Vec<Row> {
@@ -341,13 +340,25 @@ impl SettingsView {
                 Section::Appearance,
                 "Text size",
                 "Of terminals and files, in points; the rest of Saturn stays as it is. ⌘+ and ⌘− change it too, ⌘0 goes back to 13.",
-                div()
-                    .flex()
-                    .items_center()
-                    .gap(len(space::SPACE_2))
-                    .child(step("text-smaller", "−", -1, "Smaller text"))
-                    .child(div().w(px(28.)).text_center().text_size(px(13.)).child(size.to_string()))
-                    .child(step("text-bigger", "+", 1, "Bigger text")),
+                if chrome::cyberdeck() {
+                    // Cyberdeck's selector, a step either way.
+                    let sizes: Vec<SharedString> = TEXT_SIZES.map(|size| size.to_string().into()).collect();
+                    let current = usize::from(size.saturating_sub(*TEXT_SIZES.start()));
+                    let workspace = self.workspace.clone();
+                    chrome::selector("text-size", &sizes, current, move |index, _, cx| {
+                        let by = i16::try_from(index).unwrap_or(0) - i16::try_from(current).unwrap_or(0);
+                        let _ = workspace.update(cx, |workspace, cx| workspace.change_text_size(Some(by), cx));
+                    })
+                } else {
+                    div()
+                        .flex()
+                        .items_center()
+                        .gap(len(space::SPACE_2))
+                        .child(step("text-smaller", "−", -1, "Smaller text"))
+                        .child(div().w(px(28.)).text_center().text_size(px(13.)).child(size.to_string()))
+                        .child(step("text-bigger", "+", 1, "Bigger text"))
+                        .into_any_element()
+                },
             ),
             Row::new(
                 Section::Appearance,
@@ -470,7 +481,7 @@ impl SettingsView {
                 Section::Agents,
                 "Start Codex with",
                 "What every Codex agent Saturn starts or resumes is started with: codex, or your own alias. Saturn types what it needs after it, its profile too (-p saturn), so it still hears what Codex does.",
-                Input::new(&self.start_codex),
+                crate::chrome::input(&self.start_codex),
             )
             .wide(),
             Row::new(
@@ -494,7 +505,7 @@ impl SettingsView {
                 Section::Agents,
                 "Start Claude Code with",
                 "What every Claude Code agent Saturn starts or resumes is started with: claude, or your own alias (cdsk, say). Saturn types what it needs after it, so a resumed session is cdsk --resume ….",
-                Input::new(&self.start_claude),
+                crate::chrome::input(&self.start_claude),
             )
             .wide(),
             Row::new(
@@ -677,7 +688,7 @@ impl SettingsView {
                         .flex()
                         .items_center()
                         .gap(len(space::SPACE_2))
-                        .child(div().flex_1().child(Input::new(&self.token)))
+                        .child(div().flex_1().child(crate::chrome::input(&self.token)))
                         .child(connect),
                 )
                 .wide(),
@@ -714,14 +725,14 @@ impl SettingsView {
                 Section::ClickUp,
                 format!("Starting Claude Code on a ticket in {project_name}"),
                 "Runs in the new pane. {ticket} becomes the ticket's id (ABC-236), {title} its title. To have the agent start straight away, give it a first message: claude -n {ticket} \"/start {ticket}\".",
-                Input::new(&self.command),
+                crate::chrome::input(&self.command),
             )
             .wide(),
             Row::new(
                 Section::ClickUp,
                 format!("Starting Codex on a ticket in {project_name}"),
                 "The same for Codex, which has no flag to name its session: codex \"Work on {ticket}: {title}\".",
-                Input::new(&self.codex_command),
+                crate::chrome::input(&self.codex_command),
             )
             .wide(),
             Row::new(

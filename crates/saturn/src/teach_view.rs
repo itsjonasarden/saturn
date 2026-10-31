@@ -7,7 +7,7 @@
 use std::path::PathBuf;
 
 use gpui_kit::component::WindowExt as _;
-use gpui_kit::component::input::{Input, InputState};
+use gpui_kit::component::input::InputState;
 use gpui_kit::{
     AppContext as _, Context, Entity, FontWeight, InteractiveElement as _, IntoElement, ParentElement as _, Render,
     StatefulInteractiveElement as _, Styled as _, WeakEntity, Window, div, px,
@@ -171,7 +171,7 @@ impl Render for TeachView {
                     .child("Pick what you told the agent, then say it as a lesson for every session after this one."),
             )
             .child(list)
-            .child(Input::new(&self.lesson))
+            .child(crate::chrome::input(&self.lesson))
             .child(
                 div()
                     .flex()

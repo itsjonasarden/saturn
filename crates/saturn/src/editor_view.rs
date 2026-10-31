@@ -8,7 +8,7 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use gpui_kit::component::diff::{Diff, DiffFile, DiffMode, DiffState};
-use gpui_kit::component::input::{Editor, EditorState, Input, InputEvent, InputState};
+use gpui_kit::component::input::{Editor, EditorState, InputEvent, InputState};
 use gpui_kit::{
     AnyElement, AppContext as _, Context, Entity, EventEmitter, FontWeight, InteractiveElement as _, IntoElement,
     MouseButton, ParentElement as _, Render, StatefulInteractiveElement as _, Styled as _, Subscription, Task, Window,
@@ -607,7 +607,7 @@ impl EditorView {
                 .items_center()
                 .gap(len(space::SPACE_2))
                 .child(div().text_size(px(12.)).text_color(theme::color(color::INK_MUTED)).child("Rename to"))
-                .child(div().w(px(200.)).child(Input::new(&rename.input)))
+                .child(div().w(px(200.)).child(crate::chrome::input(&rename.input)))
                 .into_any_element(),
         )
     }

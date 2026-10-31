@@ -112,20 +112,17 @@ impl StartView {
 
 impl Render for StartView {
     fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
-        let mut counts = chrome::track();
-        for count in 2..=best_of::MOST {
-            counts = counts.child(
-                chrome::track_item(("best-of-count", count), self.agents.len() == count)
-                    .px(len(space::SPACE_3))
-                    .text_size(px(12.))
-                    .child(format!("{count} agents"))
-                    .on_click(cx.listener(move |this, _, _, cx| {
-                        let last = this.agents.last().copied().unwrap_or(Agent::Claude);
-                        this.agents.resize(count, last);
-                        cx.notify();
-                    })),
-            );
-        }
+        let labels: Vec<gpui_kit::SharedString> =
+            (2..=best_of::MOST).map(|count| format!("{count} agents").into()).collect();
+        let view = cx.weak_entity();
+        let counts =
+            chrome::selector("best-of-count", &labels, self.agents.len().saturating_sub(2), move |index, _, cx| {
+                let _ = view.update(cx, |this, cx| {
+                    let last = this.agents.last().copied().unwrap_or(Agent::Claude);
+                    this.agents.resize(index + 2, last);
+                    cx.notify();
+                });
+            });
         let mixing = crate::agent_choice::ready(cx).len() > 1;
         div()
             .flex()

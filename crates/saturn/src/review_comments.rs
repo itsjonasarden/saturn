@@ -11,7 +11,7 @@
 use std::path::PathBuf;
 
 use gpui_kit::component::diff::{DiffAnnotation, DiffLinePosition, DiffLineRange, DiffSide};
-use gpui_kit::component::input::{Input, InputEvent, InputState};
+use gpui_kit::component::input::{InputEvent, InputState};
 use gpui_kit::{
     AnyElement, AppContext as _, Context, Entity, EventEmitter, InteractiveElement as _, IntoElement,
     ParentElement as _, StatefulInteractiveElement as _, Styled as _, Subscription, Window, div, px,
@@ -322,7 +322,7 @@ impl ReviewComments {
             let Some(writing) = &self.writing else { return div().into_any_element() };
             return card()
                 .items_center()
-                .child(div().flex_1().min_w_0().child(Input::new(&writing.input)))
+                .child(div().flex_1().min_w_0().child(crate::chrome::input(&writing.input)))
                 .child(
                     chrome::button("review-add", "Add comment", None, true)
                         .on_click(cx.listener(|this, _, _, cx| this.add(cx))),

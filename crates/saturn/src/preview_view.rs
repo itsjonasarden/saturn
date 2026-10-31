@@ -6,7 +6,7 @@
 use std::path::PathBuf;
 use std::time::Duration;
 
-use gpui_kit::component::input::{Input, InputEvent, InputState};
+use gpui_kit::component::input::{InputEvent, InputState};
 use gpui_kit::{
     AppContext as _, Context, Entity, InteractiveElement as _, IntoElement, ObjectFit, ParentElement as _, Render,
     StatefulInteractiveElement as _, Styled as _, StyledImage as _, Subscription, Task, Window, div, img, px,
@@ -178,7 +178,7 @@ impl Render for PreviewView {
                     .items_center()
                     .gap(len(space::SPACE_2))
                     .child(servers)
-                    .child(div().flex_1().min_w_0().child(Input::new(&self.path)))
+                    .child(div().flex_1().min_w_0().child(crate::chrome::input(&self.path)))
                     .child(chrome::track().child(size("preview-desktop", "Desktop", false, cx)).child(size(
                         "preview-mobile",
                         "Phone",

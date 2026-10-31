@@ -10,7 +10,7 @@ use gpui_kit::component::tooltip::Tooltip;
 use gpui_kit::{
     AnyElement, App, AppContext as _, Context, ElementId, Entity, EntityId, InteractiveElement as _, IntoElement,
     ParentElement as _, Render, SharedString, StatefulInteractiveElement as _, Styled as _, Subscription, WeakEntity,
-    Window, div, px,
+    Window, div, prelude::FluentBuilder as _, px,
 };
 use saturn_core::git;
 use saturn_design::{color, radius, space};
@@ -19,7 +19,7 @@ use crate::chrome;
 use crate::editor_view::{EditorView, ServerState};
 use crate::problems_view;
 use crate::theme::{self, len};
-use crate::workspace::Workspace;
+use crate::workspace::{OpenSettings, ToggleEditor, ToggleSidebar, ToggleTickets, Workspace};
 
 pub const HEIGHT: f32 = 28.;
 
@@ -148,6 +148,50 @@ impl StatusBar {
             .collect()
     }
 
+    /// The panels' toggles and Settings, first in the bar as an editor's are: lit while their
+    /// panel is on screen.
+    fn render_toggles(&self, cx: &App) -> Vec<AnyElement> {
+        let Some(workspace) = self.workspace.upgrade() else { return Vec::new() };
+        let (sidebar, editor, tickets) = workspace.read(cx).panels_shown();
+        let toggle = |id: &'static str, icon: &str, on: bool| {
+            Self::item(id)
+                .justify_center()
+                .w(px(24.))
+                .px_0()
+                .cursor_pointer()
+                .when(on, |item| item.bg(theme::overlay(0.1)))
+                .hover(|s| s.bg(theme::fill_hover()))
+                .child(chrome::icon(icon, 13., theme::color(if on { color::INK } else { color::INK_MUTED })))
+        };
+        let mut toggles = vec![
+            toggle("toggle-sidebar", "panel-left", sidebar)
+                .tooltip(chrome::tip_for("Show or hide the sidebar", ToggleSidebar))
+                .on_click(|_, window, cx| window.dispatch_action(Box::new(ToggleSidebar), cx))
+                .into_any_element(),
+            toggle("toggle-editor", "panel-top", editor)
+                .tooltip(chrome::tip_for("Show or hide the editor", ToggleEditor))
+                .on_click(|_, window, cx| window.dispatch_action(Box::new(ToggleEditor), cx))
+                .into_any_element(),
+        ];
+        // Only with ClickUp connected: without it there's nothing to show.
+        if let Some(tickets) = tickets {
+            toggles.push(
+                toggle("toggle-tickets", "panel-right", tickets)
+                    .tooltip(chrome::tip_for("Show or hide your tickets", ToggleTickets))
+                    .on_click(|_, window, cx| window.dispatch_action(Box::new(ToggleTickets), cx))
+                    .into_any_element(),
+            );
+        }
+        toggles.push(
+            toggle("open-settings", "settings", false)
+                .tooltip(chrome::tip_for("Settings", OpenSettings))
+                .on_click(|_, window, cx| window.dispatch_action(Box::new(OpenSettings), cx))
+                .into_any_element(),
+        );
+        toggles.push(chrome::track_separator().into_any_element());
+        toggles
+    }
+
     fn render_problems(errors: usize, warnings: usize, cx: &mut Context<Self>) -> AnyElement {
         let count = |severity, count: usize| {
             let (icon, colour) = problems_view::mark(severity);
@@ -223,6 +267,7 @@ impl Render for StatusBar {
             .px(len(space::SPACE_1))
             .text_size(px(12.))
             .text_color(theme::color(color::INK_MUTED))
+            .children(self.render_toggles(cx))
             .child(Self::render_problems(status.errors, status.warnings, cx))
             .children(server)
             .children(self.render_services(cx))

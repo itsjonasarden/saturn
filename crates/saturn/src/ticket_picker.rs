@@ -4,7 +4,7 @@
 //! starts the agent here, with no task.
 
 use gpui_kit::component::WindowExt as _;
-use gpui_kit::component::input::{Input, InputState};
+use gpui_kit::component::input::InputState;
 use gpui_kit::{
     App, AppContext as _, Entity, FontWeight, InteractiveElement as _, IntoElement, ParentElement as _,
     StatefulInteractiveElement as _, Styled as _, WeakEntity, Window, div, prelude::FluentBuilder as _, px, rgb,
@@ -66,7 +66,7 @@ pub fn open(workspace: WeakEntity<Workspace>, connected: bool, window: &mut Wind
             .w(px(600.))
             // Room around the field inside the dialog, which clips at its edge, so the focus ring is
             // whole.
-            .child(div().px(px(3.)).child(Input::new(&search)))
+            .child(div().px(px(3.)).child(crate::chrome::input(&search)))
             .children(kind_row(cx))
             .children(also_in_row(&workspace, cx))
             .children(note.map(|note| {
