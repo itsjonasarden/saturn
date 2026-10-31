@@ -221,6 +221,13 @@ const TITLEBAR_HEIGHT: f32 = 40.0;
 /// thin strip. Their tracks are this plus the track's padding, and macOS's buttons sit on the same
 /// middle line (see `traffic_light_position` in main.rs).
 const TITLEBAR_CONTROL: f32 = 24.0;
+
+/// How tall the title bar's controls stand. In Saturn's theme they sit in tracks; Cyberdeck has
+/// none, so they fill the bar but for the gap between cards above and below them, as far from the
+/// panes as the panes are from each other.
+fn titlebar_control() -> f32 {
+    if chrome::cyberdeck() { TITLEBAR_HEIGHT - 2. * chrome::pane_gap() } else { TITLEBAR_CONTROL }
+}
 /// The room macOS's buttons take, from the window's gutter: the toolbar starts 12px after the
 /// green one, as the buttons are 14px from the window's edge.
 const TRAFFIC_LIGHTS_WIDTH: f32 = 66.0;
@@ -4236,7 +4243,7 @@ impl Workspace {
                 }
                 track = track.child(
                     chrome::track_item(label, false)
-                        .h(len(TITLEBAR_CONTROL))
+                        .h(len(titlebar_control()))
                         .px(len(space::SPACE_3))
                         .when(state == AgentState::Working, |item| {
                             item.bg(theme::color(color::BLUE_VIVID).opacity(0.14)).text_color(theme::color(color::BLUE))
@@ -4289,7 +4296,7 @@ impl Workspace {
     /// once, again, on a schedule.
     fn render_new_agent(&self, cx: &mut Context<Self>) -> impl IntoElement {
         // As tall as the tracks beside it; in Cyberdeck, where nothing stands in a track, as the tabs.
-        let height = len(if chrome::cyberdeck() { TITLEBAR_CONTROL } else { TITLEBAR_CONTROL + 2. * space::SPACE_1 });
+        let height = len(if chrome::cyberdeck() { titlebar_control() } else { TITLEBAR_CONTROL + 2. * space::SPACE_1 });
         // A part of the button, with no fill of its own: like the primary button, it doesn't light
         // up under the pointer, so the gradient stays whole. The arrow looks pressed while its menu
         // is open.
@@ -4396,7 +4403,7 @@ impl Workspace {
             let group = gpui_kit::SharedString::from(format!("repo-{index}"));
             track = track.child(
                 chrome::tab(("repo", index), selected)
-                    .h(len(TITLEBAR_CONTROL))
+                    .h(len(titlebar_control()))
                     .relative()
                     .group(group.clone())
                     .px(len(space::SPACE_3))
@@ -4441,8 +4448,8 @@ impl Workspace {
         // track item is otherwise at least a full control wide.
         track.when(!chrome::cyberdeck(), |track| track.child(chrome::track_separator())).child(
             chrome::track_item("add-repo", false)
-                .size(len(TITLEBAR_CONTROL))
-                .min_w(len(TITLEBAR_CONTROL))
+                .size(len(titlebar_control()))
+                .min_w(len(titlebar_control()))
                 .child(chrome::icon("plus", 13., theme::color(color::INK_MUTED)))
                 .tooltip(chrome::tip_for("Add repo", OpenProject))
                 .on_click(cx.listener(|_, _, window, cx| Self::open_project(window, cx))),
