@@ -257,7 +257,7 @@ fn looks(tokens: &Value, themes: &[Value]) -> String {
         })
         .collect();
         looks.push(format!(
-            "Look {{ id: {:?}, name: {:?}, description: {:?}, sans: font::{}, panel_cut: {:?}, control_cut: {:?}, card_gap: {:?}, focus: color::{}, {} }}",
+            "Look {{ id: {:?}, name: {:?}, description: {:?}, sans: font::{}, panel_cut: {:?}, control_cut: {:?}, card_gap: {:?}, control_column: {:?}, focus: color::{}, {} }}",
             text("id"),
             text("name"),
             text("description"),
@@ -265,6 +265,7 @@ fn looks(tokens: &Value, themes: &[Value]) -> String {
             number("panelCut"),
             number("controlCut"),
             spacing[text("cardGap")],
+            number("controlColumn"),
             const_name(text("focus")),
             options.join(", ")
         ));

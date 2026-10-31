@@ -168,6 +168,9 @@ pub struct Look {
     pub control_cut: f32,
     /// The gap between cards, and round the window's edge.
     pub card_gap: f32,
+    /// The width a setting's control is given, right-aligned, so the words beside every control
+    /// wrap at one place; the selector and the boxed switch fill it.
+    pub control_column: f32,
     /// The colour of focus.
     pub focus: Token,
     pub surfaces: Surfaces,

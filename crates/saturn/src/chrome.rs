@@ -29,9 +29,6 @@ pub fn tip_for<A: Action + Clone>(
     move |window, cx| Tooltip::new(text).action(&action, None).build(window, cx)
 }
 
-/// Width of the selector and the boxed switch, the same for both so a column of settings lines up.
-const CHOICE_WIDTH: f32 = 136.;
-
 /// The gap between cards (panes, the sidebar, the editor, the status bar) and round the window's
 /// edge, as the theme sets it.
 pub fn pane_gap() -> f32 {
@@ -468,7 +465,7 @@ pub fn selector(
         .flex()
         .flex_none()
         .items_center()
-        .w(px(CHOICE_WIDTH))
+        .w(px(look().control_column))
         .h(len(CONTROL_HEIGHT))
         .text_scale(text::LABEL)
         .font_weight(FontWeight::MEDIUM)
@@ -543,7 +540,7 @@ pub fn switch(id: &'static str, on: bool, toggle: impl Fn(&bool, &mut Window, &m
         .gap(len(space::SPACE_3))
         // As wide as a selector, the switch at its right end, so every setting's words wrap at the
         // same place.
-        .w(px(CHOICE_WIDTH))
+        .w(px(look().control_column))
         .cursor_pointer()
         .text_scale(text::LABEL)
         .font_weight(FontWeight::MEDIUM)

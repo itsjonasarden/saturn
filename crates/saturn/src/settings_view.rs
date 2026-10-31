@@ -810,7 +810,10 @@ impl SettingsView {
                 .justify_between()
                 .gap(len(space::SPACE_6))
                 .child(words)
-                .child(div().flex_none().child(row.control))
+                // Every control in a column as wide as the theme gives it, so the words wrap at one place.
+                .child(
+                    div().flex_none().flex().justify_end().min_w(px(chrome::look().control_column)).child(row.control),
+                )
                 .into_any_element()
         }
     }
