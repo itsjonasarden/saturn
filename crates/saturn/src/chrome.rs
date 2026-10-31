@@ -377,7 +377,8 @@ pub fn tab_row() -> gpui_kit::Div {
 
 /// A text field as tall as every control, so it lines up with the button beside it.
 pub fn input(state: &gpui_kit::Entity<gpui_kit::component::input::InputState>) -> gpui_kit::component::input::Input {
-    gpui_kit::component::input::Input::new(state).h(len(CONTROL_HEIGHT))
+    // The style's height: `Input::h` sets only a multi-line field's.
+    gpui_kit::Styled::h(gpui_kit::component::input::Input::new(state), len(CONTROL_HEIGHT))
 }
 
 /// A choice of a few values. In Saturn's theme a track with the chosen one raised; in Cyberdeck a
